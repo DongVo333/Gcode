@@ -5,6 +5,7 @@ from django.http import HttpResponse,HttpResponseRedirect
 from .models import Gcode
 from .forms import GcodeForm
 from django.contrib import messages
+from tablib import Dataset
 import csv
 import xlwt
 
@@ -80,3 +81,29 @@ def savedata(request):
 def displaydata(request):
     results = Gcode.objects.all()
     return render(request, 'gcodedb/show.html',{'Gcodes':results})
+def import_xls(request):
+    if request.method == 'POST':
+        dataset = Dataset()
+        new_persons = request.FILES['myfile']
+
+        imported_data = dataset.load(new_persons.read(),format='xlsx')
+        #print(imported_data)
+        for data in imported_data:
+            counter = Gcode.objects.filter(ma=data[1]).count()
+            gcode = Gcode()
+            if counter>0:
+                gcode = Gcode.objects.get(ma=data[1])
+                gcode.mote = data[2]
+                gcode.xuatxu = data[3]
+                gcode.markupdinhmuc = data[4]
+                gcode.save()
+            else:
+        	    gcode = Gcode(
+        		    data[0],
+        		    data[1],
+        		     data[2],
+        		     data[3],
+                    data[4]
+        		    )
+        	    gcode.save()       
+    return render(request, 'gcodedb/show.html')

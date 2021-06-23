@@ -20,6 +20,11 @@ Show Data
    Markup định mức: <input type="number" step="0.01" name="markupdinhmuc" value="{{form.markupdinhmuc}}"><br/> -->
    <input type="submit" value="Add"/>
 </form>
+<form method="POST" action="{% url 'import_xls' %}" enctype="multipart/form-data">
+   {% csrf_token %}
+   <input type="file" name="myfile">
+   <button type="submit">Upload</button>
+ </form>
 <!-- <table style="border: 1px;">
    <tr style="border: 1px;">
       <th>Gcode</th>

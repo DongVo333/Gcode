@@ -6,5 +6,6 @@ urlpatterns = [
     path('export/csv', views.export_users_csv, name='export_users_csv'),
     path('export/xls', views.export_users_xls, name='export_users_xls'),
     path('display/', views.displaydata),
-    path('savedata/', views.savedata, name ='savedata')
+    path('savedata/', views.savedata, name ='savedata'),
+    path('import/xls', views.import_xls, name='import_xls')
 ]
