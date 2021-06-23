@@ -1,0 +1,10 @@
+{% extends "pages/base.html" %}
+
+{% block title %}{{gcodekey.ma}}{% endblock %}
+
+{% block content %}
+<h3><a href = "/gcodedb/{{gcodekey.id}}">{{gcodekey.ma}}</a></h4>
+<h6> {{gcodekey.mota}}</h6>
+<h6> {{gcodekey.xuatxu}}</h6>
+<h6> {{gcodekey.markupdinhmuc}}</h6>
+{% endblock %}
