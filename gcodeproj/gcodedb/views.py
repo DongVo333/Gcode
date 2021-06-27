@@ -1,13 +1,14 @@
 from django import forms
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView,CreateView
+from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse,HttpResponseRedirect
-from django.forms import ModelForm, formsets, inlineformset_factory,modelformset_factory
+from django.forms import ModelForm, formsets, inlineformset_factory,modelformset_factory,formset_factory
 from .models import Gcode,Inquiry,Client
-from django.db import transaction
-from .forms import GcodeForm
+from django.db import transaction,IntegrityError
+from .forms import GcodeForm, SearchQueryForm, ClientForm, InquiryForm
 from django.contrib import messages
 from tablib import Dataset
+from django.db.models import Q
 import csv
 import xlwt
 
@@ -109,7 +110,7 @@ def import_xls(request):
 def index(request,clientcode_id):
     client = Client.objects.get(pk=clientcode_id)
     #InquiryFormSet = modelformset_factory(Inquiry,fields=('inquirycode','datesubmitbid',))
-    InquiryFormSet = inlineformset_factory(Client,Inquiry,fields=('inquirycode','datesubmitbid',),extra=1,max_num=2)
+    InquiryFormSet = inlineformset_factory(Client,Inquiry,fields=('inquirycode','datesubmitbid',),extra=1)
     if request.method == "POST":
         #formset = InquiryFormSet(request.POST,queryset=Inquiry.objects.filter(clientcode_id=client.clientcode))
         formset = InquiryFormSet(request.POST,instance = client)
@@ -123,3 +124,48 @@ def index(request,clientcode_id):
     #formset = InquiryFormSet(queryset=Inquiry.objects.filter(clientcode_id=client.clientcode))
     formset = InquiryFormSet(instance = client)
     return render(request,'gcodedb/entryclient.html', {'formset':formset})
+class NestedSearch(FormView):
+    form_class = formset_factory(SearchQueryForm)
+    template_name = 'gcodedb/searchclient.html'
+    success_url = ''
+
+    def form_valid(self, form):
+        # Build the query chain
+        qs = []
+        for form_query in form.cleaned_data:
+            q = {'{0}__{1}'.format(form_query['query_field'], form_query['lookup']): form_query['query']}
+            qs.append(Q(**q))
+
+        results = Client.objects.filter(*qs)
+
+        return self.render_to_response(self.get_context_data(results=results, form=form))
+
+def create(request):
+	context = {}
+	InquiryFormSet = modelformset_factory(Inquiry, form=InquiryForm)	
+	form = ClientForm(request.POST or None)
+	formset = InquiryFormSet(request.POST or None, queryset= Inquiry.objects.none(), prefix='fk_Inquiryclient')
+	if request.method == "POST":
+		if form.is_valid() and formset.is_valid():
+			try:
+				with transaction.atomic():
+					client = form.save(commit=False)
+					client.save()
+
+					for inquiry in formset:
+						data = inquiry.save(commit=False)
+						data.clientcode = client
+						data.save()
+			except IntegrityError:
+				print("Error Encountered")
+
+			return redirect('gcodedb:list')
+
+
+	context['formset'] = formset
+	context['form'] = form
+	return render(request, 'gcodedb/create.html', context)
+
+def list(request):
+	datas = Client.objects.all()
+	return render(request, 'gcodedb/list.html', {'datas':datas})

@@ -1,0 +1,42 @@
+{% extends  "base.html" %}
+
+{% block title %}Search Form{% endblock %}
+  
+{% block content %}
+<form action="" method="POST">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                {% for f in form %}
+                    <div class="form-group row nestedqueryformset">
+                        <div class="col-md-2">
+                            {{ f.query_field }}
+                        </div>
+                        <div class="col-md-1">
+                            {{ f.lookup }}
+                        </div>
+                        <div class="col-md-9">
+                            {{ f.query }}
+                            <label class="error">{{ f.query.errors }}</label>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+    
+            <br>
+    
+            <button type="submit" class="btn btn-primary">Search</button>
+            {{ form.management_form }}
+        </div>
+    </div>
+</form>
+{% if results %}
+    <hr>
+    <h2>Results</h2>
+
+    {% for result in results %}
+        {% include '_my_result_partial.html' with book=result %}
+    {% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,4 +1,4 @@
-{% extends  "pages/base.html" %}
+{% extends  "base.html" %}
 {% block title %}
 Entry Client
 {% endblock %}
@@ -6,13 +6,55 @@ Entry Client
 {% block content %}
 <form method="POST" action="">
     {% csrf_token %}
-    {{formset}}
-    {% if link_formset.non_form_errors %}
-        {% for error in link_formset.non_form_errors %}
-            {{ error|escape }}
+<!--     {{ formset.management_form }}
+    <table>
+        {% for link_form in formset %}
+        <div class="inquiryform">
+            {{ link_form.inquirycode}}
+            {{ link_form.datesubmitbid}}   
+        </div>
+    {% endfor %}
+    </table>
+    <button type="submit">Save</button> -->
+    {{ formset.as_p}}
+    <table class="table form-table table-bordered table-sm">
+        <thead class="text-center">
+        <tr>
+            <th>Inquiry No</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for form_data in formset %}
+            <tr class="item">
+                <td>
+                    {{ form_data.inquirycode }}
+                </td>
+                <td>
+                    {{ form_data.english }}
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm remove-form-row"
+                            id="{{ formset.prefix }}">
+                        
+                        Delete
+                    </button>
+                </td>
+            </tr>
         {% endfor %}
-    {% endif %}
-    <button type="submit">Save</button>
+        <tr>
+            <td colspan="9"
+                style="border-left: none!important; border-right: none !important; border-bottom: none!important;">
+                <button type="button" class="btn btn-sm btn-success add-form-row"
+                        id="{{ formset.prefix }}">
+                    Add
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    {{ formset.management_form }}
+    <button type="submit">Submit</button>
 </form>
-
 {% endblock %}

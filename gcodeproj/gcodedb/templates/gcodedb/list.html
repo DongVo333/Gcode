@@ -1,0 +1,23 @@
+{% extends  "base.html" %}
+{% block title %}
+List All Client
+{% endblock %}
+{% load static %}
+{% block content %}
+<table>
+    <thead>
+        <th>
+            Tên viết tắt
+        </th>
+        <th>Tên đầy đủ</th>
+    </thead>   
+    <tbody>
+        {% for data in datas %}
+          <tr>
+               <td>{{ data.clientcode }}</td>
+               <td>{{ data.fullname }}</td>
+          </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

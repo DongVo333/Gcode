@@ -35,6 +35,8 @@ class Client(models.Model):
     fullname = models.CharField(max_length=200)
     def __str__(self):
         return self.clientcode
+    class Meta:
+        db_table = "gcodedb_client"
 class Supplier (models.Model):
     suppliercode = models.CharField(max_length=20, primary_key=True)
     fullname = models.CharField(max_length=200)
@@ -47,6 +49,8 @@ class Inquiry (models.Model):
     clientcode  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_Inquiryclient")
     def __str__(self):
         return self.inquirycode
+    class Meta:
+        db_table = "gcodedb_inquiry"
 class Contract (models.Model):
     contractcode  = models.CharField(max_length=50, primary_key=True)
     contractnoclient = models.CharField(max_length=50)
