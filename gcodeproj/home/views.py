@@ -7,5 +7,3 @@ def contract(request):
    return render(request, 'pages/contract.html')
 def po(request):
    return render(request, 'pages/po.html')
-def inquiry(request):
-   return render(request, 'pages/inquiry.html')

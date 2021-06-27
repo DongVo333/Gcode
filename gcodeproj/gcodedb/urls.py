@@ -7,5 +7,6 @@ urlpatterns = [
     path('export/xls', views.export_users_xls, name='export_users_xls'),
     path('display/', views.displaydata),
     path('savedata/', views.savedata, name ='savedata'),
-    path('import/xls', views.import_xls, name='import_xls')
+    path('import/xls', views.import_xls, name='import_xls'),
+    path('<clientcode_id>/',views.index,name = 'index'),
 ]

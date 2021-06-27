@@ -5,5 +5,4 @@ urlpatterns = [
    path('', views.index),
    path('contract/', views.contract),
    path('po/', views.po),
-   path('inquiry/', views.inquiry)
 ]

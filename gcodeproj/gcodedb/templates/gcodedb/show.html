@@ -13,11 +13,10 @@ Show Data
 <br> -->
 <form action="{% url 'savedata' %}" method="POST">
    {% csrf_token %}
-   Gcode: <input type="text" name="ma" value="{{form.ma}}"><br/>
+<!--    Gcode: <input type="text" name="ma" value="{{form.ma}}"><br/>
    Mô tả: <input type="text" name="mota" value="{{form.mota}}"><br/>
-<!--    <textarea cols="50" rows="4" name="mota"></textarea><br/>-->
-   Xuất xứ: <input type="text" name="xuatxu" value="{{form.xuatxu}}"><br/> 
-   Markup định mức: <input type="number" step="0.01" name="markupdinhmuc" value="{{form.markupdinhmuc}}"><br/> -->
+   Markup định mức: <input type="number" step="0.01" name="markupdinhmuc" value="{{form.markupdinhmuc}}"><br/> --> 
+   {{form.as_p}}
    <input type="submit" value="Add"/>
 </form>
 <form method="POST" action="{% url 'import_xls' %}" enctype="multipart/form-data">
@@ -29,14 +28,12 @@ Show Data
    <tr style="border: 1px;">
       <th>Gcode</th>
       <th>Mô tả</th>
-      <th>Xuất xứ</th>
       <th>Markup</th>
    </tr>
    {% for gcode in Gcodes %}
    <tr style="border:1px;">
       <td>{{gcode.ma}}</td>
       <td>{{gcode.mota}}</td>
-      <td>{{gcode.xuatxu}}</td>
       <td>{{gcode.markupdinhmuc}}</td>
    </tr>
    {% endfor %}

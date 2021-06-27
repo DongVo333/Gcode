@@ -1,0 +1,18 @@
+{% extends  "pages/base.html" %}
+{% block title %}
+Entry Client
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="">
+    {% csrf_token %}
+    {{formset}}
+    {% if link_formset.non_form_errors %}
+        {% for error in link_formset.non_form_errors %}
+            {{ error|escape }}
+        {% endfor %}
+    {% endif %}
+    <button type="submit">Save</button>
+</form>
+
+{% endblock %}
