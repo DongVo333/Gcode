@@ -3,11 +3,12 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import ModelForm, formsets, inlineformset_factory,modelformset_factory,formset_factory
-from .models import Gcode,Inquiry,Client
+from .models import G1code, Gcode,Inquiry,Client
 from django.db import transaction,IntegrityError
-from .forms import GcodeForm, SearchQueryForm, ClientForm, InquiryForm
+from .forms import GcodeForm, OfferForm, SearchQueryForm, ClientForm, InquiryForm
 from django.contrib import messages
 from tablib import Dataset
+from .filters import ClientFilter
 from django.db.models import Q
 import csv
 import xlwt
@@ -169,3 +170,30 @@ def create(request):
 def list(request):
 	datas = Client.objects.all()
 	return render(request, 'gcodedb/list.html', {'datas':datas})
+def search(request):
+    client_list = Client.objects.all()
+    client_filter = ClientFilter(request.GET, queryset=client_list)
+    return render(request, 'gcodedb/search.html', {'filter': client_filter})
+def CreateOffer(request):
+	context = {}
+	OfferFormSet = modelformset_factory(G1code, form=OfferForm)	
+	form = InquiryForm(request.POST or None)
+	formset = OfferFormSet(request.POST or None, queryset= G1code.objects.none(), prefix='fk_g1codeinquiry')
+	if request.method == "POST":
+		if form.is_valid() and formset.is_valid():
+			try:
+				with transaction.atomic():
+					inquiry = form.save(commit=False)
+					inquiry.save()
+
+					for offer in formset:
+						data = offer.save(commit=False)
+						data.inquirycode = inquiry
+						data.save()
+			except IntegrityError:
+				print("Error Encountered")
+			#return redirect('gcodedb:CreateOffer')
+
+	context['formset'] = formset
+	context['form'] = form
+	return render(request, 'gcodedb/createoffer.html', context)

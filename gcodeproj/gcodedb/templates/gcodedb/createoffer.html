@@ -1,0 +1,73 @@
+{% extends  'base.html' %}
+{% load static %}
+
+{% block content %}
+	<form method="POST">
+		{% csrf_token %}
+		{{ form.as_p}}
+		
+		<table class="table form-table table-bordered table-sm">
+            <thead class="text-center">
+            <tr>
+                <td>Gcode</td>
+                <td>Ký mã hiệu</td>
+                <td>Đơn vị</td>
+                <td>Số lượng</td>
+                <td>Supplier</td>
+                <td>NSX</td>
+                <td>STT in ITB</td>
+                <td>Group in ITB</td>
+                <td>Sales</td>
+                <td>Đơn giá mua</td>
+                <td>Thành tiền mua</td>
+                <td>Đơn giá chào</td>
+                <td>Thành tiền chào</td>
+                <td>Markup</td>
+                <td>Kết quả</td>
+                <td>Ghi chú</td>    
+                <td>GDV</td>            
+            </tr>
+            </thead>
+            <tbody>
+            {% for f in formset %}
+                <tr class="g1codeformset">
+                    <td>{{f.gcode}}</td>
+                    <td>{{f.kymahieuinq}}</td>
+                    <td>{{f.unit}}</td>
+                    <td>{{f.qtyinq}}</td>
+                    <td>{{f.suppliercode}}</td>
+                    <td>{{f.nsxinq}}</td>
+                    <td>{{f.sttitb}}</td>
+                    <td>{{f.groupitb}}</td>
+                    <td>{{f.sales}}</td>
+                    <td>{{f.dongiamuainq}}</td>
+                    <td>{{f.thanhtienmuainq}}</td>
+                    <td>{{f.dongiachaoinq}}</td>
+                    <td>{{f.thanhtienchaoinq}}</td>
+                    <td>{{f.markupinq}}</td>
+                    <td>{{f.resultinq}}</td>
+                    <td>
+                        <textarea id="autosize" style="width:200px;" value = "{{f.ghichu}}"></textarea>
+                    </td>
+                    <td>{{f.gdvinq}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {{ formset.management_form }}
+
+		<button type="submit">Submit</button>
+	</form>
+{% endblock %}
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/autosize.js/4.0.2/autosize.min.js"></script>
+<script>autosize(document.querySelectorAll('#autosize'));</script>
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+<script type="text/javascript">
+    $('.g1codeformset').formset({
+      addText: 'add',
+      deleteText: 'remove'
+    });
+</script>
+{% endblock%}

@@ -18,6 +18,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('home.urls')),
-    path('gcodedb/', include('gcodedb.urls')),
+    path('', include('gcodedb.urls')),
 ]

@@ -1,5 +1,5 @@
 {% extends  "base.html" %}
-
+{% load static %}
 {% block title %}Search Form{% endblock %}
   
 {% block content %}
@@ -39,4 +39,15 @@
         {% include '_my_result_partial.html' with book=result %}
     {% endfor %}
 {% endif %}
+
+{% endblock %}
+{% block extra_script %}
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+<script type="text/javascript">
+    $('.nestedqueryformset').formset({
+      addText: 'add',
+      deleteText: 'remove'
+    });
+</script>
 {% endblock %}

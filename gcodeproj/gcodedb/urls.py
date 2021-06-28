@@ -4,9 +4,10 @@ from . import views
 app_name = "gcodedb"
 
 urlpatterns = [
-    path('',views.NestedSearch.as_view(), name='searchclient'),
+    path('offer/',views.CreateOffer, name='createoffer'),
     path('create/', views.create, name="create"),
     path('list/', views.list, name="list"),
+    path('search/', views.search, name='search'),
     path('<int:pk>/', views.PostDetailView.as_view(),name='gcodedetail'),
     path('export/csv', views.export_users_csv, name='export_users_csv'),
     path('export/xls', views.export_users_xls, name='export_users_xls'),

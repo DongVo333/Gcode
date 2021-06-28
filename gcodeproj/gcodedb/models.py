@@ -115,7 +115,7 @@ class G1code(models.Model):
     ngayout = models.DateField(null=True)
     ghichu = models.TextField(null=True)
     gdvinq = models.ForeignKey(GDV, on_delete=PROTECT)
-    dateupdate  = models.DateField(auto_now_add=True)
+    dateupdate  = models.DateField()
     class Meta:
        unique_together = ("gcode", "inquirycode")
     def __str__(self):
