@@ -1,8 +1,12 @@
 from django import forms
 from django import forms
 from django.db.models import fields
-from .models import Gcode, Client, Inquiry
+from django.forms.widgets import Textarea, Widget
+from .models import G1code, Gcode, Client, Inquiry
 from django.conf import settings
+
+class InputDate(forms.DateInput):
+    input_type = 'date'
 
 class GcodeForm(forms.ModelForm):
     class Meta:
@@ -55,13 +59,37 @@ class ClientForm(forms.ModelForm):
 class InquiryForm(forms.ModelForm):
 	class Meta:
 		model = Inquiry
-
 		fields = [
 			'inquirycode',
 			'datesubmitbid',
+            'clientcode',
 		]
-
 		widgets = {
-			'inquirycode': forms.TextInput(attrs={'class': 'formset-field'}),
-			'datesubmitbid': forms.DateInput()
+			'datesubmitbid': InputDate(),
+		}
+class OfferForm(forms.ModelForm):
+    class Meta:
+        model = G1code
+        fields = [
+            'gcode',
+            'kymahieuinq',
+            'unit',
+            'qtyinq',
+            'suppliercode',
+            'nsxinq',
+            'sttitb',
+            'groupitb',
+            'sales',
+            'dongiamuainq',
+            'thanhtienmuainq',
+            'dongiachaoinq',
+            'thanhtienchaoinq',
+            'markupinq',
+            'resultinq',
+            'ghichu',
+            'gdvinq',
+        ]
+        widgets = {
+            ''
+			'ghichu': Textarea(attrs={'cols':30, 'rows':1})
 		}
