@@ -3,6 +3,7 @@ from django.db.models.aggregates import Max
 from django.db.models.base import Model
 from django.db.models.deletion import CASCADE, PROTECT
 from django.forms import ModelForm
+from django.db.models import F
 
 UNITS_CHOICES = (
     ("bộ", "bộ"),
@@ -30,6 +31,15 @@ STATUS_CHOICES =(
     ("Open","Open"),
     ("Close","Close"),
 )
+class AnnotationManager(models.Manager):
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.annotations = kwargs
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(**self.annotations)
+
 class Client(models.Model):
     clientcode = models.CharField(max_length=20, primary_key=True)
     fullname = models.CharField(max_length=200)
@@ -92,7 +102,7 @@ class Gcode(models.Model):
         return self.ma
 
 class G1code(models.Model):
-    g1code = models.CharField(max_length=50, null= True)
+    _g1code = None
     gcode = models.ForeignKey(Gcode, on_delete=PROTECT, related_name= "fk_g1codegcode")
     inquirycode = models.ForeignKey(Inquiry,on_delete=PROTECT, related_name= "fk_g1codeinquiry")
     kymahieuinq = models.CharField(max_length=100)
@@ -108,18 +118,15 @@ class G1code(models.Model):
     dongiachaoinq = models.FloatField()
     thanhtienchaoinq = models.FloatField()
     markupinq = models.FloatField()
-    resultinq = models.CharField(max_length=10, choices= RESULTS_CHOICES,default="Win", null= True)
+    resultinq = models.CharField(max_length=10, choices= RESULTS_CHOICES,default="Win", null= True, blank= True)
     lydowincode = models.ManyToManyField(lydowin, related_name='fk_g1codelydowin')
     lydooutcode = models.ManyToManyField(lydoout, related_name='fk_g1codelydoout')
-    ngaywin = models.DateField(null=True)
-    ngayout = models.DateField(null=True)
-    ghichu = models.TextField(null=True)
+    ngaywin = models.DateField(null=True, blank=True)
+    ngayout = models.DateField(null=True, blank= True)
+    ghichu = models.TextField(null=True,blank= True)
     gdvinq = models.ForeignKey(GDV, on_delete=PROTECT)
     dateupdate  = models.DateField()
     class Meta:
        unique_together = ("gcode", "inquirycode")
     def __str__(self):
         return self.g1code
-    @property
-    def g1code(self):
-        return str(self.gcode) +str('-') + str(self.inquirycode)

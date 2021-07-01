@@ -10,6 +10,7 @@ from django.contrib import messages
 from tablib import Dataset
 from .filters import ClientFilter
 from django.db.models import Q
+from datetime import date
 import csv
 import xlwt
 
@@ -108,23 +109,6 @@ def import_xls(request):
         		    )
         	    gcode.save()       
     return render(request, 'gcodedb/show.html')
-def index(request,clientcode_id):
-    client = Client.objects.get(pk=clientcode_id)
-    #InquiryFormSet = modelformset_factory(Inquiry,fields=('inquirycode','datesubmitbid',))
-    InquiryFormSet = inlineformset_factory(Client,Inquiry,fields=('inquirycode','datesubmitbid',),extra=1)
-    if request.method == "POST":
-        #formset = InquiryFormSet(request.POST,queryset=Inquiry.objects.filter(clientcode_id=client.clientcode))
-        formset = InquiryFormSet(request.POST,instance = client)
-        if formset.is_valid():
-            formset.save()
-            """ instances = formset.save(commit=False)
-            for instance in instances:
-                instance.clientcode_id = client.clientcode
-                instance.save() """
-            return redirect('index',clientcode_id = client.clientcode)
-    #formset = InquiryFormSet(queryset=Inquiry.objects.filter(clientcode_id=client.clientcode))
-    formset = InquiryFormSet(instance = client)
-    return render(request,'gcodedb/entryclient.html', {'formset':formset})
 class NestedSearch(FormView):
     form_class = formset_factory(SearchQueryForm)
     template_name = 'gcodedb/searchclient.html'
@@ -175,25 +159,34 @@ def search(request):
     client_filter = ClientFilter(request.GET, queryset=client_list)
     return render(request, 'gcodedb/search.html', {'filter': client_filter})
 def CreateOffer(request):
-	context = {}
-	OfferFormSet = modelformset_factory(G1code, form=OfferForm)	
-	form = InquiryForm(request.POST or None)
-	formset = OfferFormSet(request.POST or None, queryset= G1code.objects.none(), prefix='fk_g1codeinquiry')
-	if request.method == "POST":
-		if form.is_valid() and formset.is_valid():
-			try:
-				with transaction.atomic():
-					inquiry = form.save(commit=False)
-					inquiry.save()
-
-					for offer in formset:
-						data = offer.save(commit=False)
-						data.inquirycode = inquiry
-						data.save()
-			except IntegrityError:
-				print("Error Encountered")
+    counter = 0
+    context = {}
+    OfferFormSet = modelformset_factory(G1code, form=OfferForm)	
+    form = InquiryForm(request.POST or None)
+    formset = OfferFormSet(request.POST or None, queryset= G1code.objects.none(), prefix='fk_g1codeinquiry')
+    if request.method == "POST":
+        print('confirm POST!')
+        if form.is_valid() and formset.is_valid():
+            print('check input form done!')
+            try:
+                with transaction.atomic():
+                    inquiry = form.save(commit=False)
+                    inquiry.save()
+                    print('Save Inquiry done!')
+                    for offer in formset:
+                        data = offer.save(commit=False)
+                        data.inquirycode = inquiry
+                        data.dateupdate = date.today()
+                        data.save()
+                        counter = counter + 1
+                        print('Save Offer done Offer %s!' %counter)
+            except IntegrityError:
+                print("Error Encountered")
 			#return redirect('gcodedb:CreateOffer')
+        else:
+            print(form.errors)
+            print(formset.errors)
+    context['formset'] = formset
+    context['form'] = form
+    return render(request, 'gcodedb/createoffer.html', context)
 
-	context['formset'] = formset
-	context['form'] = form
-	return render(request, 'gcodedb/createoffer.html', context)

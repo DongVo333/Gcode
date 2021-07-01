@@ -5,6 +5,7 @@ app_name = "gcodedb"
 
 urlpatterns = [
     path('offer/',views.CreateOffer, name='createoffer'),
+    path('searchclient/',views.NestedSearch),
     path('create/', views.create, name="create"),
     path('list/', views.list, name="list"),
     path('search/', views.search, name='search'),
@@ -14,5 +15,4 @@ urlpatterns = [
     path('display/', views.displaydata),
     path('savedata/', views.savedata, name ='savedata'),
     path('import/xls', views.import_xls, name='import_xls'),
-    path('<clientcode_id>/',views.index, name= 'index'),
 ]

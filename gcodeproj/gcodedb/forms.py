@@ -1,7 +1,8 @@
 from django import forms
 from django import forms
 from django.db.models import fields
-from django.forms.widgets import Textarea, Widget
+from django.forms import widgets
+from django.forms.widgets import NumberInput, Textarea, Widget
 from .models import G1code, Gcode, Client, Inquiry
 from django.conf import settings
 
@@ -41,6 +42,7 @@ class SearchQueryForm(forms.Form):
     )
 
     query = forms.CharField(widget=forms.TextInput())
+    
 class ClientForm(forms.ModelForm):
 	class Meta:
 		model = Client
@@ -57,16 +59,16 @@ class ClientForm(forms.ModelForm):
 
 
 class InquiryForm(forms.ModelForm):
-	class Meta:
-		model = Inquiry
-		fields = [
-			'inquirycode',
-			'datesubmitbid',
+    class Meta:
+        model = Inquiry
+        fields = [
+            'inquirycode',
+            'datesubmitbid',
             'clientcode',
 		]
-		widgets = {
-			'datesubmitbid': InputDate(),
-		}
+        widgets = {
+            'datesubmitbid':InputDate()
+        }
 class OfferForm(forms.ModelForm):
     class Meta:
         model = G1code
@@ -90,6 +92,9 @@ class OfferForm(forms.ModelForm):
             'gdvinq',
         ]
         widgets = {
-            ''
-			'ghichu': Textarea(attrs={'cols':30, 'rows':1})
+			'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'dongiamuainq': NumberInput(attrs={'class':'dgm'}),
+            'thanhtienmuainq': NumberInput(attrs={'class':'ttm'}),
+            'dongiachaoinq': NumberInput(attrs={'class':'dgc'}),
+            'thanhtienchaoinq': NumberInput(attrs={'class':'ttc'}),
 		}

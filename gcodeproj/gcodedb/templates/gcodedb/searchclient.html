@@ -36,7 +36,7 @@
     <h2>Results</h2>
 
     {% for result in results %}
-        {% include '_my_result_partial.html' with book=result %}
+        {% result.fullname %}
     {% endfor %}
 {% endif %}
 
