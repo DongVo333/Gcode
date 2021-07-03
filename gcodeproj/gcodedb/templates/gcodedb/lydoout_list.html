@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+<table class="table table-borderless">
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>Lý do out</td>
+            <td>Mô tả</td>
+            <td>
+                <a href="/lydoout/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lydoout in lydoout_list %}
+            <tr>
+                <td>{{lydoout.lydooutcode}}</td>
+                <td><textarea id="autosize" cols="30" rows="1">{{lydoout.detail}}</textarea></td>
+                <td>
+                    <a href="/lydoout/update/{{lydoout.lydooutcode}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/lydoout/delete/{{lydoout.lydooutcode}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+
+{% block extra_script %}
+<script src="{% static 'js/autosize.min.js' %}"></script>
+<script>autosize(document.querySelectorAll('#autosize'));</script>
+{% endblock%}

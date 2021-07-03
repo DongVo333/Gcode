@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+<table class="table table-borderless">
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>Gcode</td>
+            <td>Mô tả</td>
+            <td>Markup định mức</td>
+            <td>
+                <a href="/gcode/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for gcode in gcode_list %}
+            <tr>
+                <td>{{gcode.ma}}</td>
+                <td><textarea id="autosize" cols="30" rows="1">{{gcode.mota}}</textarea></td>
+                <td> {{gcode.markupdinhmuc}}</td>
+                <td>
+                    <a href="/gcode/update/{{gcode.ma}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/gcode/delete/{{gcode.ma}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+
+{% block extra_script %}
+<script src="{% static 'js/autosize.min.js' %}"></script>
+<script>autosize(document.querySelectorAll('#autosize'));</script>
+{% endblock%}

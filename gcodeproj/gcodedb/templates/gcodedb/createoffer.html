@@ -34,7 +34,7 @@
                     <td>{{f.gcode}}</td>
                     <td>{{f.kymahieuinq}}</td>
                     <td>{{f.unit}}</td>
-                    <td>{{f.qtyinq}}</td>
+                    <td class="soluong">{{f.qtyinq}}</td>
                     <td>{{f.suppliercode}}</td>
                     <td>{{f.nsxinq}}</td>
                     <td>{{f.sttitb}}</td>
@@ -95,34 +95,23 @@
         });
         $(".totalmua :input").val(totals);
     } */
-    $("input.ttm").change(function(){
-    sum=0
+    setInterval(function() {
+
+    $('tr.g1codeformset').each(function(){
+        dongiamua = $(this).children('td.dongiamua').children('input').val();
+        soluong  = $(this).children('td.soluong').children('input').val();
+        $(this).children('td.thanhtienmua').children('input').val(dongiamua*soluong);
+    });
+    sum=0;
     $("input.ttm").each(function(){
         sum += parseInt($(this).val());
-        })
+        });
     $(".totalmua :input").val(sum);
-    });
-    $("input.ttc").change(function(){
-    sum=0
+    sum1=0;
     $("input.ttc").each(function(){
-        sum += parseInt($(this).val());
-        })
-    $(".totalchao :input").val(sum);
-    });
-    $(document).ready(function() {
-        let tableInstance = $('#offer input.ttm');
-        let totals = 0.0;
-        var str1;
-        tableInstance.each(function() {
-            totals = totals + Math.floor($(this).val());
+        sum1 += parseInt($(this).val());
         });
-        $(".totalmua :input").val(totals);
-        let tableInstance1 = $('#offer input.ttc');
-        let totals1 = 0;
-        tableInstance1.each(function() {
-            totals1 = totals1 + parseFloat($(this).val());
-        });
-        $(".totalchao :input").val(totals1);
-    });
+    $(".totalchao :input").val(sum1);
+    }, 2000);
 </script>
 {% endblock%}

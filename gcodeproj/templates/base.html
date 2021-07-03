@@ -3,6 +3,8 @@
 <head>
     {% load static %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
 <!--     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" type="text/css"> -->
     <style>
         body {margin:0;font-family:Arial}
@@ -126,7 +128,7 @@
     <div class="topnav" id="myTopnav">
         <a style="margin:0% "><img src="{% static 'images/logo_vam.jpg' %}" class="responsive-img" style="max-height: 25px; margin: 0px 0px"/></a>
         <a href="/offer">OFFER</a>
-        <a href="/contract">CONTRACT</a>
+        <a href="/contractgcode">CONTRACT</a>
         <a href="/po">PURCHASING ORDER</a>
         <a href="/freight">FREIGHT & WARE HOUSE</a>
         <a href="/delivery">DELIVERY</a>
@@ -137,30 +139,46 @@
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-content">
-                <a href="/selller">Seller</a>
+                <a href="/gdv">Seller</a>
                 <a href="/inquiry">Inquiry</a>
                 <a href="/supplier">Supplier</a>
-                <a href="/contract1">Contract1</a>
+                <a href="/contract">Contract1</a>
                 <a href="/gcode">Gcode</a>
                 <a href="/client">Client</a>
-                <a href="/reasonwin">Reason Win</a>
-                <a href="/reasonout">Reason Out</a>
+                <a href="/lydowin">Reason Win</a>
+                <a href="/lydoout">Reason Out</a>
                 <a href="/evaluate">Evaluate Code</a>
             </div>
         </div> 
         <a href="#Logout" class="active">LOGOUT</a>
         <a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
-      </div>
-    <div style="padding-left:16px">
-        {% block content %}
+    </div>
+    <div class="container">
+        <div class="col-md-10 offset-md-1 mt-5">
+            <div class="jumbotron">
+                <hr class="my-4">
+                {% block content %}
             
-        {% endblock %}
-        {% block extra_script %}
-        {% endblock %}
+                {% endblock %}
+                {% block extra_script %}
+                {% endblock %}
+            </div>
+        </div>
     </div>
     <div class="footer">
         <p><a href="/">BitrixGT</a>| <a href="/">BitrixEP</a></p>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
 </body>
 <script>
     function myFunction() {

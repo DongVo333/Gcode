@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<table class="table table-borderless">
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>Inquiry</td>
+            <td>Date submit</td>
+            <td>Client</td>
+            <td>
+                <a href="/inquiry/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inquiry in inquiry_list %}
+            <tr>
+                <td>{{inquiry.inquirycode}}</td>
+                <td>{{inquiry.datesubmitbid}}</td>
+                <td>{{inquiry.clientcode}}</td>
+                <td>
+                    <a href="/inquiry/update/{{inquiry.inquirycode}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/inquiry/delete/{{inquiry.inquirycode}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}

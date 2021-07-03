@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<form action="" method="post" autocomplete="off">
+    {% csrf_token %}
+    {{form.suppliercode|as_crispy_field}}
+    {{form.fullname|as_crispy_field}}
+    {{form.duyetpomax|as_crispy_field}}
+    <div class="row">
+        <div class="col-md-8">
+            <button type="submit" class="btn btn-success btn-block btn-lg"><i class="fas fa-database"></i>
+                Submit</button>
+        </div>
+        <div class="col-md-4">
+            <a href="/supplier/" class="btn btn-secondary btn-block btn-lg">
+                <i class="fas fa-stream"></i> Back to list
+            </a>
+        </div>
+    </div>
+
+</form>
+{% endblock content %}
+
+{% block extra_script %}
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script type="text/javascript">
+    var currencyInput = document.querySelector('input[type="currency"]')
+    var currency = 'USD' 
+    // format inital value
+    onBlur({target:currencyInput})
+    // bind event listeners
+    currencyInput.addEventListener('focus', onFocus)
+    currencyInput.addEventListener('blur', onBlur)
+    function localStringToNumber( s ){
+        return Number(String(s).replace(/[^0-9.-]+/g,""))
+    }
+    function onFocus(e){
+        var value = e.target.value;
+        e.target.value = value ? localStringToNumber(value) : ''
+    }
+    function onBlur(e){
+        var value = e.target.value
+        var options = {
+            maximumFractionDigits : 2,
+            currency              : currency,
+            style                 : "currency",
+            currencyDisplay       : "symbol"
+        }
+        e.target.value = value 
+            ? localStringToNumber(value).toLocaleString(undefined, options)
+            : ''
+    }
+</script>
+{% endblock%}

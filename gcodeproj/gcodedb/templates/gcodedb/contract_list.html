@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<table class="table table-borderless">
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>Contract</td>
+            <td>Contract No. Client</td>
+            <td>Date Sign</td>
+            <td>Client</td>
+            <td>Deadline 1</td>
+            <td>Deadline 1</td>
+            <td>Selling Price</td>
+            <td>Status</td>
+            <td>Date Delivery Latest</td>
+            <td>
+                <a href="/contract/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for contract in contract_list %}
+            <tr>
+                <td>{{contract.contractcode}}</td>
+                <td>{{contract.contractnoclient}}</td>
+                <td>{{contract.datesign}}</td>
+                <td>{{contract.clientcode}}</td>
+                <td>{{contract.dealine1}}</td>
+                <td>{{contract.dealine2}}</td>
+                <td>{{contract.sellcost}}</td>
+                <td>{{contract.status}}</td>
+                <td>{{contract.datedeliverylatest}}</td>
+                <td>
+                    <a href="/contract/update/{{contract.contractcode}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/contract/delete/{{contract.contractcode}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}

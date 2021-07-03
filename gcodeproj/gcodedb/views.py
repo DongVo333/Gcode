@@ -3,9 +3,9 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import ModelForm, formsets, inlineformset_factory,modelformset_factory,formset_factory
-from .models import G1code, Gcode,Inquiry,Client
+from .models import Contract, G1code, GDV, Gcode,Inquiry,Client,Supplier,lydowin,lydoout
 from django.db import transaction,IntegrityError
-from .forms import GcodeForm, OfferForm, SearchQueryForm, ClientForm, InquiryForm
+from .forms import GcodeForm, OfferForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm
 from django.contrib import messages
 from tablib import Dataset
 from .filters import ClientFilter
@@ -190,3 +190,224 @@ def CreateOffer(request):
     context['form'] = form
     return render(request, 'gcodedb/createoffer.html', context)
 
+def inquiry_list(request):
+	inquiry_list = Inquiry.objects.all()
+	return render(request, 'gcodedb/inquiry_list.html', {'inquiry_list':inquiry_list})
+
+def inquiry_form(request, inquirycode=None):
+    if request.method == "GET":
+        if inquirycode == None:
+            form = InquiryForm()
+        else:
+            inquiry = Inquiry.objects.get(pk=inquirycode)
+            form = InquiryForm(instance=inquiry)
+        return render(request, "gcodedb/inquiry_form.html", {'form': form})
+    else:
+        if inquirycode == None:
+            form = InquiryForm(request.POST)
+        else:
+            inquiry = Inquiry.objects.get(pk=inquirycode)
+            form = InquiryForm(request.POST,instance= inquiry)
+        if form.is_valid():
+            form.save()
+        return redirect('/inquiry/')
+
+
+def inquiry_delete(request,inquirycode):
+    inquiry = Inquiry.objects.get(pk=inquirycode)
+    inquiry.delete()
+    return redirect('/inquiry/')
+
+def client_list(request):
+	client_list = Client.objects.all()
+	return render(request, 'gcodedb/client_list.html', {'client_list':client_list})
+
+def client_form(request, clientcode=None):
+    if request.method == "GET":
+        if clientcode == None:
+            form = ClientForm()
+        else:
+            client = Client.objects.get(pk=clientcode)
+            form = ClientForm(instance=client)
+        return render(request, "gcodedb/client_form.html", {'form': form})
+    else:
+        if clientcode == None:
+            form = ClientForm(request.POST)
+        else:
+            client = Client.objects.get(pk=clientcode)
+            form = ClientForm(request.POST,instance= client)
+        if form.is_valid():
+            form.save()
+        return redirect('/client/')
+
+
+def client_delete(request,clientcode):
+    client = Client.objects.get(pk=clientcode)
+    client.delete()
+    return redirect('/client/')
+
+def gcode_list(request):
+	gcode_list = Gcode.objects.all()
+	return render(request, 'gcodedb/gcode_list.html', {'gcode_list':gcode_list})
+
+def gcode_form(request, ma=None):
+    if request.method == "GET":
+        if ma == None:
+            form = GcodeForm()
+        else:
+            gcode = Gcode.objects.get(pk=ma)
+            form = GcodeForm(instance=gcode)
+        return render(request, "gcodedb/gcode_form.html", {'form': form})
+    else:
+        if ma == None:
+            form = GcodeForm(request.POST)
+        else:
+            gcode = Gcode.objects.get(pk=ma)
+            form = GcodeForm(request.POST,instance= gcode)
+        if form.is_valid():
+            form.save()
+        return redirect('/gcode/')
+
+
+def gcode_delete(request,ma):
+    gcode = Gcode.objects.get(pk=ma)
+    gcode.delete()
+    return redirect('/gcode/')
+
+def gdv_list(request):
+	gdv_list = GDV.objects.all()
+	return render(request, 'gcodedb/gdv_list.html', {'gdv_list':gdv_list})
+
+def gdv_form(request, gdvcode=None):
+    if request.method == "GET":
+        if gdvcode == None:
+            form = GDVForm()
+        else:
+            gdv = GDV.objects.get(pk=gdvcode)
+            form = GDVForm(instance=gdv)
+        return render(request, "gcodedb/gdv_form.html", {'form': form})
+    else:
+        if gdvcode == None:
+            form = GDVForm(request.POST)
+        else:
+            gdv = GDV.objects.get(pk=gdvcode)
+            form = GDVForm(request.POST,instance= gdv)
+        if form.is_valid():
+            form.save()
+        return redirect('/gdv/')
+
+
+def gdv_delete(request,gdvcode):
+    gdv = GDV.objects.get(pk=gdvcode)
+    gdv.delete()
+    return redirect('/gdv/')
+
+def supplier_list(request):
+	supplier_list = Supplier.objects.all()
+	return render(request, 'gcodedb/supplier_list.html', {'supplier_list':supplier_list})
+
+def supplier_form(request, suppliercode=None):
+    if request.method == "GET":
+        if suppliercode == None:
+            form = SupplierForm()
+        else:
+            supplier = Supplier.objects.get(pk=suppliercode)
+            form = SupplierForm(instance=supplier)
+        return render(request, "gcodedb/supplier_form.html", {'form': form})
+    else:
+        if suppliercode == None:
+            form = SupplierForm(request.POST)
+        else:
+            supplier = Supplier.objects.get(pk=suppliercode)
+            form = SupplierForm(request.POST,instance= supplier)
+        if form.is_valid():
+            form.save()
+        return redirect('/supplier/')
+
+
+def supplier_delete(request,suppliercode):
+    supplier = Supplier.objects.get(pk=suppliercode)
+    supplier.delete()
+    return redirect('/supplier/')
+
+def contract_list(request):
+	contract_list = Contract.objects.all()
+	return render(request, 'gcodedb/contract_list.html', {'contract_list':contract_list})
+
+def contract_form(request, contractcode=None):
+    if request.method == "GET":
+        if contractcode == None:
+            form = ContractForm()
+        else:
+            contract = Contract.objects.get(pk=contractcode)
+            form = ContractForm(instance=contract)
+        return render(request, "gcodedb/contract_form.html", {'form': form})
+    else:
+        if contractcode == None:
+            form = ContractForm(request.POST)
+        else:
+            contract = Contract.objects.get(pk=contractcode)
+            form = ContractForm(request.POST,instance= contract)
+        if form.is_valid():
+            form.save()
+        return redirect('/contract/')
+
+
+def contract_delete(request,contractcode):
+    contract = Contract.objects.get(pk=contractcode)
+    contract.delete()
+    return redirect('/contract/')
+
+def lydowin_list(request):
+	lydowin_list = lydowin.objects.all()
+	return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list})
+
+def lydowin_form(request, lydowincode=None):
+    if request.method == "GET":
+        if lydowincode == None:
+            form = LydowinForm()
+        else:
+            varlydowin = lydowin.objects.get(pk=lydowincode)
+            form = LydowinForm(instance=varlydowin)
+        return render(request, "gcodedb/lydowin_form.html", {'form': form})
+    else:
+        if lydowincode == None:
+            form = LydowinForm(request.POST)
+        else:
+            varlydowin = lydowin.objects.get(pk=lydowincode)
+            form = LydowinForm(request.POST,instance= varlydowin)
+        if form.is_valid():
+            form.save()
+        return redirect('/lydowin/')
+
+def lydowin_delete(request,lydowincode):
+    varlydowin = lydowin.objects.get(pk=lydowincode)
+    varlydowin.delete()
+    return redirect('/lydowin/')
+
+def lydoout_list(request):
+	lydoout_list = lydoout.objects.all()
+	return render(request, 'gcodedb/lydoout_list.html', {'lydoout_list':lydoout_list})
+
+def lydoout_form(request, lydooutcode=None):
+    if request.method == "GET":
+        if lydooutcode == None:
+            form = LydooutForm()
+        else:
+            varlydoout = lydoout.objects.get(pk=lydooutcode)
+            form = LydooutForm(instance=varlydoout)
+        return render(request, "gcodedb/lydoout_form.html", {'form': form})
+    else:
+        if lydooutcode == None:
+            form = LydooutForm(request.POST)
+        else:
+            varlydoout = lydoout.objects.get(pk=lydooutcode)
+            form = LydooutForm(request.POST,instance= varlydoout)
+        if form.is_valid():
+            form.save()
+        return redirect('/lydoout/')
+
+def lydoout_delete(request,lydooutcode):
+    varlydoout = lydoout.objects.get(pk=lydooutcode)
+    varlydoout.delete()
+    return redirect('/lydoout/')

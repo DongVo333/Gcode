@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<table class="table table-borderless">
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>Tên viết tắt</td>
+            <td>Full Name</td>
+            <td>
+                <a href="/gdv/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for gdv in gdv_list %}
+            <tr>
+                <td>{{gdv.gdvcode}}</td>
+                <td>{{gdv.fullname}}</td>
+                <td>
+                    <a href="/gdv/update/{{gdv.gdvcode}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/gdv/delete/{{gdv.gdvcode}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}

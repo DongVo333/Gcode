@@ -3,7 +3,7 @@ from django import forms
 from django.db.models import fields
 from django.forms import widgets
 from django.forms.widgets import NumberInput, Textarea, Widget
-from .models import G1code, Gcode, Client, Inquiry
+from .models import G1code, Gcode, Client, Inquiry,GDV, Supplier,Contract,lydowin,lydoout
 from django.conf import settings
 
 class InputDate(forms.DateInput):
@@ -19,11 +19,9 @@ class GcodeForm(forms.ModelForm):
             'markupdinhmuc':'Markup định mức'
         }
         widgets = {
-            'mota':forms.Textarea(attrs={'cols':30, 'rows':4})
+            'mota':forms.Textarea(attrs={'cols':30,'rows':1, 'id':'autosize'})
         }
-"""     ma = forms.CharField(max_length=50, label='Gcode')
-    mota = forms.CharField(max_length=100, label='Mô tả')
-    markupdinhmuc = forms.FloatField(label='Markup định mức') """
+
 class SearchQueryForm(forms.Form):
     query_field = forms.ChoiceField(
         choices=(
@@ -69,6 +67,8 @@ class InquiryForm(forms.ModelForm):
         widgets = {
             'datesubmitbid':InputDate()
         }
+
+
 class OfferForm(forms.ModelForm):
     class Meta:
         model = G1code
@@ -97,4 +97,73 @@ class OfferForm(forms.ModelForm):
             'thanhtienmuainq': NumberInput(attrs={'class':'ttm'}),
             'dongiachaoinq': NumberInput(attrs={'class':'dgc'}),
             'thanhtienchaoinq': NumberInput(attrs={'class':'ttc'}),
+            'qtyinq':NumberInput(attrs={'class':'qty'}),
 		}
+
+class GDVForm(forms.ModelForm):
+    class Meta:
+        model = GDV
+        fields = [
+            'gdvcode',
+            'fullname',
+		]
+
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = [
+            'suppliercode',
+            'fullname',
+            'duyetpomax',
+        ]
+        labels = {
+			'suppliercode': 'Supplier',
+			'fullname':'Tên đầy đủ',
+            'duyetpomax':'Duyệt PO (Max)',
+        }
+        widgets = {
+            'duyetpomax': NumberInput(attrs={'type':'currency'})
+        }
+
+class ContractForm(forms.ModelForm):
+    class Meta:
+        model= Contract
+        fields = [
+            'contractcode',
+            'contractnoclient',
+            'datesign',
+            'clientcode',
+            'dealine1',
+            'dealine2', 
+            'sellcost',
+            'status',
+            'datedeliverylatest',
+        ]
+        widgets = {
+            'datedeliverylatest':InputDate(),
+            'datesign':InputDate(),
+            'dealine1':InputDate(),
+            'dealine2':InputDate(),
+        }
+
+class LydowinForm(forms.ModelForm):
+    class Meta:
+        model = lydowin
+        fields = [
+            'lydowincode',
+            'detail',
+        ]
+        widgets = {
+			'detail': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+        }
+
+class LydooutForm(forms.ModelForm):
+    class Meta:
+        model = lydoout
+        fields = [
+            'lydooutcode',
+            'detail',
+        ]
+        widgets = {
+			'detail': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+        }
