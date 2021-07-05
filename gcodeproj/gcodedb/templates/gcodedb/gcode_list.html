@@ -1,6 +1,14 @@
 {% extends "base.html" %}
-{% block content %}
 {% load static %}
+{% block content %}
+<form method="POST" action="{% url 'gcodedb:importxls_gcode' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile">
+    <button type="submit">Import Excel</button>
+</form>
+<br>
+<a href="{% url 'gcodedb:exportxls_gcode' %}">Export to Excel</a>
+
 <table class="table table-borderless">
     <thead class="border-bottom font-weight-bold">
         <tr>
@@ -18,7 +26,7 @@
         {% for gcode in gcode_list %}
             <tr>
                 <td>{{gcode.ma}}</td>
-                <td><textarea id="autosize" cols="30" rows="1">{{gcode.mota}}</textarea></td>
+                <td><textarea id="autosize" cols="30" rows="1" disabled>{{gcode.mota}}</textarea></td>
                 <td> {{gcode.markupdinhmuc}}</td>
                 <td>
                     <a href="/gcode/update/{{gcode.ma}}" class="btn text-secondary px-0">

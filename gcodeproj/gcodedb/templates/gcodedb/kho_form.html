@@ -1,20 +1,22 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-{% load static %}
+
 
 {% block content %}
 <form action="" method="post" autocomplete="off">
     {% csrf_token %}
-    {{form.suppliercode|as_crispy_field}}
-    {{form.fullname|as_crispy_field}}
-    {{form.duyetpomax|as_crispy_field}}
+    {{form.g2code|as_crispy_field}}
+    {{form.qtykho|as_crispy_field}}
+    {{form.dongiafreight|as_crispy_field}}
+    {{form.ngaynhapkho|as_crispy_field}}
+    {{form.gdvkho|as_crispy_field}}
     <div class="row">
         <div class="col-md-8">
             <button type="submit" class="btn btn-success btn-block btn-lg"><i class="fas fa-database"></i>
                 Submit</button>
         </div>
         <div class="col-md-4">
-            <a href="/supplier/" class="btn btn-secondary btn-block btn-lg">
+            <a href="/kho/" class="btn btn-secondary btn-block btn-lg">
                 <i class="fas fa-stream"></i> Back to list
             </a>
         </div>
@@ -22,4 +24,3 @@
 
 </form>
 {% endblock content %}
-

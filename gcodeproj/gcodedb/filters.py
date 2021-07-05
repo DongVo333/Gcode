@@ -1,4 +1,5 @@
-from .models import Client
+from django import forms
+from .models import Client, G1code
 import django_filters
 
 class ClientFilter(django_filters.FilterSet):
@@ -7,3 +8,13 @@ class ClientFilter(django_filters.FilterSet):
     class Meta:
         model = Client
         fields = ['clientcode', 'fullname', ]
+
+class G1codeFilter(django_filters.FilterSet):
+    inquirycode = django_filters.CharFilter()
+    class Meta:
+        model = G1code
+        fields = ['inquirycode',]
+
+
+class InquiryFilter(forms.Form):
+    inquiryfilter = forms.CharField(max_length=40)

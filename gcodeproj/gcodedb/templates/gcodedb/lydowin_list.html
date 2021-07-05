@@ -2,6 +2,13 @@
 {% block content %}
 {% load static %}
 <table class="table table-borderless">
+    <form method="POST" action="{% url 'gcodedb:importxls_lydowin' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="myfile">
+        <button type="submit">Import Excel</button>
+    </form>
+    <br>
+    <a href="{% url 'gcodedb:exportxls_lydowin' %}">Export to Excel</a>
     <thead class="border-bottom font-weight-bold">
         <tr>
             <td>Lý do win</td>

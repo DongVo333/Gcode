@@ -3,12 +3,14 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import ModelForm, formsets, inlineformset_factory,modelformset_factory,formset_factory
-from .models import Contract, G1code, GDV, Gcode,Inquiry,Client,Supplier,lydowin,lydoout
+from django.views.generic import CreateView, ListView, UpdateView
+from .models import Contract, G1code, G2code, GDV, Gcode,Inquiry,Client, Kho,Supplier,Lydowin,Lydoout
 from django.db import transaction,IntegrityError
-from .forms import GcodeForm, OfferForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm
+from .forms import GcodeForm, KhoForm, OfferForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm,OfferResultForm
 from django.contrib import messages
+from django.urls import reverse_lazy
 from tablib import Dataset
-from .filters import ClientFilter
+from .filters import ClientFilter,G1codeFilter
 from django.db.models import Q
 from datetime import date
 import csv
@@ -38,35 +40,7 @@ def export_users_csv(request):
         writer.writerow(user)
 
     return response
-def export_users_xls(request):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="GcodeList.xls"'
 
-    wb = xlwt.Workbook(encoding='utf-8')
-    ws = wb.add_sheet('GcodeList')
-
-    # Sheet header, first row
-    row_num = 0
-
-    font_style = xlwt.XFStyle()
-    font_style.font.bold = True
-
-    columns = ['ID', 'Gcode', 'Mô tả', 'Xuất xứ','Markup dinh muc', ]
-
-    for col_num in range(len(columns)):
-        ws.write(row_num, col_num, columns[col_num], font_style)
-
-    # Sheet body, remaining rows
-    font_style = xlwt.XFStyle()
-
-    rows = Gcode.objects.all().values_list('id', 'ma', 'mota','markupdinhmuc')
-    for row in rows:
-        row_num += 1
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num], font_style)
-
-    wb.save(response)
-    return response
 def savedata(request):
     form = GcodeForm()
     if request.method == 'POST':
@@ -85,30 +59,7 @@ def savedata(request):
 def displaydata(request):
     results = Gcode.objects.all()
     return render(request, 'gcodedb/show.html',{'Gcodes':results})
-def import_xls(request):
-    if request.method == 'POST':
-        dataset = Dataset()
-        new_persons = request.FILES['myfile']
 
-        imported_data = dataset.load(new_persons.read(),format='xlsx')
-        #print(imported_data)
-        for data in imported_data:
-            counter = Gcode.objects.filter(ma=data[1]).count()
-            gcode = Gcode()
-            if counter>0:
-                gcode = Gcode.objects.get(ma=data[1])
-                gcode.mote = data[2]
-                gcode.markupdinhmuc = data[3]
-                gcode.save()
-            else:
-        	    gcode = Gcode(
-        		    data[0],
-        		    data[1],
-        		     data[2],
-        		     data[3],
-        		    )
-        	    gcode.save()       
-    return render(request, 'gcodedb/show.html')
 class NestedSearch(FormView):
     form_class = formset_factory(SearchQueryForm)
     template_name = 'gcodedb/searchclient.html'
@@ -159,27 +110,29 @@ def search(request):
     client_filter = ClientFilter(request.GET, queryset=client_list)
     return render(request, 'gcodedb/search.html', {'filter': client_filter})
 def CreateOffer(request):
-    counter = 0
     context = {}
     OfferFormSet = modelformset_factory(G1code, form=OfferForm)	
     form = InquiryForm(request.POST or None)
     formset = OfferFormSet(request.POST or None, queryset= G1code.objects.none(), prefix='fk_g1codeinquiry')
     if request.method == "POST":
-        print('confirm POST!')
         if form.is_valid() and formset.is_valid():
-            print('check input form done!')
             try:
                 with transaction.atomic():
                     inquiry = form.save(commit=False)
                     inquiry.save()
-                    print('Save Inquiry done!')
                     for offer in formset:
                         data = offer.save(commit=False)
                         data.inquirycode = inquiry
                         data.dateupdate = date.today()
                         data.save()
-                        counter = counter + 1
-                        print('Save Offer done Offer %s!' %counter)
+                        lydowins = offer.cleaned_data.get('lydowincode')
+                        for lydoitem in lydowins:
+                            data.lydowincode.add(lydoitem)
+                            data.save()
+                        lydoouts = offer.cleaned_data.get('lydooutcode')
+                        for lydoitem in lydoouts:
+                            data.lydooutcode.add(lydoitem)
+                            data.save()
             except IntegrityError:
                 print("Error Encountered")
 			#return redirect('gcodedb:CreateOffer')
@@ -359,7 +312,7 @@ def contract_delete(request,contractcode):
     return redirect('/contract/')
 
 def lydowin_list(request):
-	lydowin_list = lydowin.objects.all()
+	lydowin_list = Lydowin.objects.all()
 	return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list})
 
 def lydowin_form(request, lydowincode=None):
@@ -367,26 +320,26 @@ def lydowin_form(request, lydowincode=None):
         if lydowincode == None:
             form = LydowinForm()
         else:
-            varlydowin = lydowin.objects.get(pk=lydowincode)
+            varlydowin = Lydowin.objects.get(pk=lydowincode)
             form = LydowinForm(instance=varlydowin)
         return render(request, "gcodedb/lydowin_form.html", {'form': form})
     else:
         if lydowincode == None:
             form = LydowinForm(request.POST)
         else:
-            varlydowin = lydowin.objects.get(pk=lydowincode)
+            varlydowin = Lydowin.objects.get(pk=lydowincode)
             form = LydowinForm(request.POST,instance= varlydowin)
         if form.is_valid():
             form.save()
         return redirect('/lydowin/')
 
 def lydowin_delete(request,lydowincode):
-    varlydowin = lydowin.objects.get(pk=lydowincode)
+    varlydowin = Lydowin.objects.get(pk=lydowincode)
     varlydowin.delete()
     return redirect('/lydowin/')
 
 def lydoout_list(request):
-	lydoout_list = lydoout.objects.all()
+	lydoout_list = Lydoout.objects.all()
 	return render(request, 'gcodedb/lydoout_list.html', {'lydoout_list':lydoout_list})
 
 def lydoout_form(request, lydooutcode=None):
@@ -394,20 +347,61 @@ def lydoout_form(request, lydooutcode=None):
         if lydooutcode == None:
             form = LydooutForm()
         else:
-            varlydoout = lydoout.objects.get(pk=lydooutcode)
+            varlydoout = Lydoout.objects.get(pk=lydooutcode)
             form = LydooutForm(instance=varlydoout)
         return render(request, "gcodedb/lydoout_form.html", {'form': form})
     else:
         if lydooutcode == None:
             form = LydooutForm(request.POST)
         else:
-            varlydoout = lydoout.objects.get(pk=lydooutcode)
+            varlydoout = Lydoout.objects.get(pk=lydooutcode)
             form = LydooutForm(request.POST,instance= varlydoout)
         if form.is_valid():
             form.save()
         return redirect('/lydoout/')
 
 def lydoout_delete(request,lydooutcode):
-    varlydoout = lydoout.objects.get(pk=lydooutcode)
+    varlydoout = Lydoout.objects.get(pk=lydooutcode)
     varlydoout.delete()
     return redirect('/lydoout/')
+
+def kho_list(request):
+	kho_list = Kho.objects.all()
+	return render(request, 'gcodedb/kho_list.html', {'kho_list':kho_list})
+
+def kho_form(request, g2code_=None):
+    if request.method == "GET":
+        if g2code_ == None:
+            form = KhoForm()
+        else:
+            g2codes = G2code.objects.filter(g2code = g2code_)
+            kho = Kho.objects.get(pk=g2codes.g1code.id)
+            form = KhoForm(instance=kho)
+        return render(request, "gcodedb/kho_form.html", {'form': form})
+    else:
+        if g2code_ == None:
+            form = KhoForm(request.POST)
+        else:
+            g2codes = G2code.objects.filter(g2code = g2code_)
+            kho = Kho.objects.get(pk=g2codes.g1code.id)
+            form = KhoForm(request.POST,instance= kho)
+        if form.is_valid():
+            form.save()
+        return redirect('/kho/')
+
+def kho_delete(request,g2code_):
+    g2codes = G2code.objects.filter(g2code = g2code_)
+    kho = Kho.objects.get(pk=g2codes.g1code.id)
+    kho.delete()
+    return redirect('/kho/')
+
+def SearchHDB(request):
+    g1code_list = G1code.objects.filter(resultinq='Win')
+    g1code_filter = G1codeFilter(request.GET, queryset=g1code_list)
+    g1code_temp = G1code.objects.filter(resultinq='Win',inquirycode=request.GET or None)
+    for item in g1code_filter.qs:
+        g1code_ = G1code.objects.get(pk = item.id)
+        if G2code.objects.filter(g1code=g1code_).count()<=0:
+            g2code = G2code.objects.create(g1code=g1code_, dateupdate = date.today())
+    g2code_list = G2code.objects.all()
+    return render(request, 'gcodedb/hdb.html', {'g2code_list': g2code_list, 'filter':g1code_filter})

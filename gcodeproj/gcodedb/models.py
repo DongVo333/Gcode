@@ -1,9 +1,10 @@
 from django.db import models
 from django.db.models.aggregates import Max
-from django.db.models.base import Model
+from django.db.models.base import Model, ModelBase
 from django.db.models.deletion import CASCADE, PROTECT
 from django.forms import ModelForm
 from django.db.models import F
+from django.forms.fields import CharField
 
 UNITS_CHOICES = (
     ("bộ", "bộ"),
@@ -74,13 +75,13 @@ class Contract (models.Model):
     def __str__(self):
         return self.contractcode
 
-class lydowin(models.Model):
+class Lydowin(models.Model):
     lydowincode = models.CharField(max_length=100, primary_key=True)
     detail  = models.TextField()
     def __str__(self):
         return self.lydowincode
 
-class lydoout(models.Model):
+class Lydoout(models.Model):
     lydooutcode = models.CharField(max_length=100, primary_key= True)
     detail  = models.TextField()
     def __str__(self):
@@ -102,14 +103,15 @@ class Gcode(models.Model):
         return self.ma
 
 class G1code(models.Model):
-    _g1code = None
+    g1code = models.CharField(max_length=40,primary_key=True)
     gcode = models.ForeignKey(Gcode, on_delete=PROTECT, related_name= "fk_g1codegcode")
     inquirycode = models.ForeignKey(Inquiry,on_delete=PROTECT, related_name= "fk_g1codeinquiry")
     kymahieuinq = models.CharField(max_length=100)
     unit = models.CharField(max_length = 20,choices = UNITS_CHOICES,default = 'pcs')
     qtyinq = models.FloatField()
     suppliercode = models.ForeignKey(Supplier,on_delete=PROTECT, related_name= "fk_g1codesupplier")
-    nsxinq = models.CharField(max_length=10)
+    xuatxuinq = models.CharField(max_length=100)
+    nsxinq = models.CharField(max_length=50)
     sttitb = models.IntegerField()
     groupitb = models.CharField(max_length=5)
     sales = models.CharField(max_length=10,choices= SALES_CHOICES,default="TuanLQ")
@@ -119,8 +121,8 @@ class G1code(models.Model):
     thanhtienchaoinq = models.FloatField()
     markupinq = models.FloatField()
     resultinq = models.CharField(max_length=10, choices= RESULTS_CHOICES,default="Win", null= True, blank= True)
-    lydowincode = models.ManyToManyField(lydowin, related_name='fk_g1codelydowin')
-    lydooutcode = models.ManyToManyField(lydoout, related_name='fk_g1codelydoout')
+    lydowincode = models.ManyToManyField(Lydowin, related_name='fk_g1codelydowin',null= True, blank= True)
+    lydooutcode = models.ManyToManyField(Lydoout, related_name='fk_g1codelydoout',null= True, blank= True)
     ngaywin = models.DateField(null=True, blank=True)
     ngayout = models.DateField(null=True, blank= True)
     ghichu = models.TextField(null=True,blank= True)
@@ -130,3 +132,130 @@ class G1code(models.Model):
        unique_together = ("gcode", "inquirycode")
     def __str__(self):
         return self.g1code
+    @property
+    def g1code(self):
+        self.g1code = str(self.gcode)+'-'+str(self.inquirycode)
+        return self.g1code
+
+class G2code(models.Model):
+    contractcode = models.ForeignKey(Contract,to_field='contractcode',on_delete=PROTECT, related_name='fkg2code_contract',null=True)
+    dongiachaohdb = models.FloatField(null=True)
+    thanhtienchaohdb = models.FloatField(null=True)
+    pono = models.CharField(max_length=50,null=True)
+    status = models.CharField(max_length=30,null=True)
+    g1code = models.OneToOneField(G1code,on_delete=PROTECT,related_name='fkg2code_g1code',primary_key=True)
+    ghichu = models.TextField(null=True,blank= True)
+    gdvhdb = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fkg2code_gdv',null=True)
+    dateupdate  = models.DateField()
+    def __str__(self):
+        return str(self.g2code)
+    @property
+    def g2code(self):
+        return str(self.g1code.gcode)+'-'+str(self.contractcode)
+    def gcode(self):
+        return self.g1code.gcode
+class POdetail(models.Model):
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkpo_g2code',primary_key=True)
+    motapo = models.TextField(null=True)
+    kymahieupo = models.CharField(max_length=100,null=True)
+    unitpo = models.CharField(max_length = 20,choices = UNITS_CHOICES,default = 'pcs',null=True)
+    qtypo = models.FloatField()
+    suppliercodepo = models.ForeignKey(Supplier,on_delete=PROTECT, related_name= "fkg2code_supplier",null=True)
+    xuatxupo = models.CharField(max_length=100,null=True)
+    nsxpo = models.CharField(max_length=50,null=True)
+    dongiamuapo = models.FloatField(null=True)
+    thanhtienmuapo = models.FloatField(null=True)
+    ghichu = models.TextField(null=True)
+    gdvpo = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT, related_name='fkpo_gdv',null=True)
+    dateupdate  = models.DateField()
+    def __str__(self):
+        return str(self.g2code.gcode)+"-"+str(self.pono)
+class Kho(models.Model):
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkkho_g2code',primary_key=True)
+    qtykho = models.FloatField(null=True)
+    dongiafreight = models.FloatField(null=True)
+    ngaynhapkho = models.DateField(null=True)
+    gdvkho = models.ForeignKey(GDV, to_field='gdvcode',on_delete=PROTECT,related_name='fkkho_gdv',null=True)
+    dateupdate  = models.DateField()
+    def __str__(self):
+        return str(self.g2code) + "kho"
+    @property
+    def thanhtienfreight(self):
+        return (self.qtykho or 0)*(self.dongiafreight or 0)
+    def motahanghoa(self):
+        return POdetail.objects.get(g2code = self.g2code).motapo
+    def kymahieu(self):
+        return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    def donvitinh(self):
+        return POdetail.objects.get(g2code = self.g2code).unitpo
+
+class Giaohang(models.Model):
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkgiaohang_g2code',primary_key=True)
+    qtygiaohang = models.FloatField(null=True)
+    ngaygiaohang = models.DateField(null=True)
+    gdvgiaohang = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT,related_name='fkgiaohang_gdv',null=True)
+    dateupdate  = models.DateField()
+    def __str__(self):
+        return str(self.g2code) +"giao hang"
+    @property
+    def motahanghoa(self):
+        return POdetail.objects.get(g2code = self.g2code).motapo
+    def kymahieu(self):
+        return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    def donvitinh(self):
+        return POdetail.objects.get(g2code = self.g2code).unitpo
+class Phat(models.Model):
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkphat_g2code',primary_key=True)
+    qtyphat = models.FloatField(null=True)
+    tongphat = models.FloatField(null=True)
+    lydophat = models.TextField(null=True)
+    gdvphat = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT,related_name='fkphat_gdv',null=True)
+    dateupdate  = models.DateField()
+    def __str__(self):
+        return str(self.g2code) + "phat"
+    @property
+    def motahanghoa(self):
+        return POdetail.objects.get(g2code = self.g2code).motapo
+    def kymahieu(self):
+        return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    def donvitinh(self):
+        return POdetail.objects.get(g2code = self.g2code).unitpo
+
+class Danhgiacode(models.Model):
+    danhgiacode=models.CharField(max_length=100,primary_key=True)
+    def __str__(self):
+        return self.danhgiacode 
+
+class DanhgiaNSX(models.Model):
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkdanhgia_g2code',primary_key=True)
+    danhgiacode = models.ManyToManyField(Danhgiacode,related_name='fk_danhgiacode',null=True)
+    comment = models.TextField(null=True)
+    gdvdanhgia = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT,related_name='fkdanhgia_gdv',null=True)
+    dateupdate  = models.DateField()
+    def __str__(self):
+        return str(self.g2code) + "danh gia"   
+    @property
+    def motahanghoa(self):
+        return POdetail.objects.get(g2code = self.g2code).motapo
+    def kymahieu(self):
+        return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    def donvitinh(self):
+        return POdetail.objects.get(g2code = self.g2code).unitpo
+    def soluong(self):
+        return POdetail.objects.get(g2code = self.g2code).qtypo
+    def xuatxu(self):
+        return POdetail.objects.get(g2code = self.g2code).xuatxupo
+    def supplier(self):
+        return POdetail.objects.get(g2code = self.g2code).suppliercodepo
+    def dongiamua(self):
+        return POdetail.objects.get(g2code = self.g2code).dongiamuapo
+    def thanhtienmua(self):
+        return POdetail.objects.get(g2code = self.g2code).thanhtienmuapo
+
+class Tienve(models.Model):
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fktienve_g2code',primary_key=True)
+    qtytienve = models.FloatField(null=True)
+    dongiatienve = models.FloatField(null=True)
+    @property
+    def tongtienve(self):
+        return (self.qtytienve or 0)*(self.dongiatienve or 0)

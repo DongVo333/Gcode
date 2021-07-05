@@ -1,9 +1,8 @@
 from django import forms
-from django import forms
 from django.db.models import fields
 from django.forms import widgets
 from django.forms.widgets import NumberInput, Textarea, Widget
-from .models import G1code, Gcode, Client, Inquiry,GDV, Supplier,Contract,lydowin,lydoout
+from .models import G1code, Gcode, Client, Inquiry,GDV, Kho, Supplier,Contract,Lydowin,Lydoout
 from django.conf import settings
 
 class InputDate(forms.DateInput):
@@ -90,6 +89,8 @@ class OfferForm(forms.ModelForm):
             'resultinq',
             'ghichu',
             'gdvinq',
+            'lydowincode',
+            'lydooutcode',
         ]
         widgets = {
 			'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
@@ -98,6 +99,8 @@ class OfferForm(forms.ModelForm):
             'dongiachaoinq': NumberInput(attrs={'class':'dgc'}),
             'thanhtienchaoinq': NumberInput(attrs={'class':'ttc'}),
             'qtyinq':NumberInput(attrs={'class':'qty'}),
+            'lydowincode': forms.CheckboxSelectMultiple,
+            'lydooutcode': forms.CheckboxSelectMultiple,
 		}
 
 class GDVForm(forms.ModelForm):
@@ -148,7 +151,7 @@ class ContractForm(forms.ModelForm):
 
 class LydowinForm(forms.ModelForm):
     class Meta:
-        model = lydowin
+        model = Lydowin
         fields = [
             'lydowincode',
             'detail',
@@ -159,7 +162,7 @@ class LydowinForm(forms.ModelForm):
 
 class LydooutForm(forms.ModelForm):
     class Meta:
-        model = lydoout
+        model = Lydoout
         fields = [
             'lydooutcode',
             'detail',
@@ -167,3 +170,37 @@ class LydooutForm(forms.ModelForm):
         widgets = {
 			'detail': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
+
+class OfferResultForm(forms.ModelForm):
+    class Meta:
+        model = G1code
+        fields = [
+            'gcode',
+            'inquirycode',
+            'resultinq',
+            'lydowincode',
+            'lydooutcode',
+            'ngaywin',
+            'ngayout',
+        ]
+        labels = {
+            'gcode':'Gcode',
+            'inquirycode':'Inquiry',
+            'resultinq':'Result',
+            'lydowincode':'Lý do win',
+            'lydooutcode':'Lý do out',
+            'ngaywin':'Ngày out gần nhất',
+            'ngayout':'Ngày win gần nhất',
+        }
+        widgets = {
+			'ngaywin': InputDate(),
+            'ngayout': InputDate(),
+            'lydowincode': forms.CheckboxSelectMultiple,
+            'lydooutcode': forms.CheckboxSelectMultiple,
+        }
+
+class KhoForm(forms.ModelForm):
+    class Meta:
+        model = Kho
+        exclude = ['dateupdate',
+        ]
