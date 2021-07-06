@@ -90,7 +90,7 @@ def create(request):
 
 					for inquiry in formset:
 						data = inquiry.save(commit=False)
-						data.clientcode = client
+						data.client = client
 						data.save()
 			except IntegrityError:
 				print("Error Encountered")
@@ -147,27 +147,27 @@ def inquiry_list(request):
 	inquiry_list = Inquiry.objects.all()
 	return render(request, 'gcodedb/inquiry_list.html', {'inquiry_list':inquiry_list})
 
-def inquiry_form(request, inquirycode=None):
+def inquiry_form(request, id=None):
     if request.method == "GET":
-        if inquirycode == None:
+        if id == None:
             form = InquiryForm()
         else:
-            inquiry = Inquiry.objects.get(pk=inquirycode)
+            inquiry = Inquiry.objects.get(pk=id)
             form = InquiryForm(instance=inquiry)
         return render(request, "gcodedb/inquiry_form.html", {'form': form})
     else:
-        if inquirycode == None:
+        if id == None:
             form = InquiryForm(request.POST)
         else:
-            inquiry = Inquiry.objects.get(pk=inquirycode)
+            inquiry = Inquiry.objects.get(pk=id)
             form = InquiryForm(request.POST,instance= inquiry)
         if form.is_valid():
             form.save()
         return redirect('/inquiry/')
 
 
-def inquiry_delete(request,inquirycode):
-    inquiry = Inquiry.objects.get(pk=inquirycode)
+def inquiry_delete(request,id):
+    inquiry = Inquiry.objects.get(pk=id)
     inquiry.delete()
     return redirect('/inquiry/')
 
@@ -175,27 +175,27 @@ def client_list(request):
 	client_list = Client.objects.all()
 	return render(request, 'gcodedb/client_list.html', {'client_list':client_list})
 
-def client_form(request, clientcode=None):
+def client_form(request, id=None):
     if request.method == "GET":
-        if clientcode == None:
+        if id == None:
             form = ClientForm()
         else:
-            client = Client.objects.get(pk=clientcode)
+            client = Client.objects.get(pk=id)
             form = ClientForm(instance=client)
         return render(request, "gcodedb/client_form.html", {'form': form})
     else:
-        if clientcode == None:
+        if id == None:
             form = ClientForm(request.POST)
         else:
-            client = Client.objects.get(pk=clientcode)
+            client = Client.objects.get(pk=id)
             form = ClientForm(request.POST,instance= client)
         if form.is_valid():
             form.save()
         return redirect('/client/')
 
 
-def client_delete(request,clientcode):
-    client = Client.objects.get(pk=clientcode)
+def client_delete(request,id):
+    client = Client.objects.get(pk=id)
     client.delete()
     return redirect('/client/')
 
@@ -203,27 +203,27 @@ def gcode_list(request):
 	gcode_list = Gcode.objects.all()
 	return render(request, 'gcodedb/gcode_list.html', {'gcode_list':gcode_list})
 
-def gcode_form(request, ma=None):
+def gcode_form(request, id=None):
     if request.method == "GET":
-        if ma == None:
+        if id == None:
             form = GcodeForm()
         else:
-            gcode = Gcode.objects.get(pk=ma)
+            gcode = Gcode.objects.get(pk=id)
             form = GcodeForm(instance=gcode)
         return render(request, "gcodedb/gcode_form.html", {'form': form})
     else:
-        if ma == None:
+        if id == None:
             form = GcodeForm(request.POST)
         else:
-            gcode = Gcode.objects.get(pk=ma)
+            gcode = Gcode.objects.get(pk=id)
             form = GcodeForm(request.POST,instance= gcode)
         if form.is_valid():
             form.save()
         return redirect('/gcode/')
 
 
-def gcode_delete(request,ma):
-    gcode = Gcode.objects.get(pk=ma)
+def gcode_delete(request,id):
+    gcode = Gcode.objects.get(pk=id)
     gcode.delete()
     return redirect('/gcode/')
 
@@ -231,27 +231,27 @@ def gdv_list(request):
 	gdv_list = GDV.objects.all()
 	return render(request, 'gcodedb/gdv_list.html', {'gdv_list':gdv_list})
 
-def gdv_form(request, gdvcode=None):
+def gdv_form(request, id=None):
     if request.method == "GET":
-        if gdvcode == None:
+        if id == None:
             form = GDVForm()
         else:
-            gdv = GDV.objects.get(pk=gdvcode)
+            gdv = GDV.objects.get(pk=id)
             form = GDVForm(instance=gdv)
         return render(request, "gcodedb/gdv_form.html", {'form': form})
     else:
-        if gdvcode == None:
+        if id == None:
             form = GDVForm(request.POST)
         else:
-            gdv = GDV.objects.get(pk=gdvcode)
+            gdv = GDV.objects.get(pk=id)
             form = GDVForm(request.POST,instance= gdv)
         if form.is_valid():
             form.save()
         return redirect('/gdv/')
 
 
-def gdv_delete(request,gdvcode):
-    gdv = GDV.objects.get(pk=gdvcode)
+def gdv_delete(request,id):
+    gdv = GDV.objects.get(pk=id)
     gdv.delete()
     return redirect('/gdv/')
 
@@ -259,27 +259,27 @@ def supplier_list(request):
 	supplier_list = Supplier.objects.all()
 	return render(request, 'gcodedb/supplier_list.html', {'supplier_list':supplier_list})
 
-def supplier_form(request, suppliercode=None):
+def supplier_form(request, id=None):
     if request.method == "GET":
-        if suppliercode == None:
+        if id == None:
             form = SupplierForm()
         else:
-            supplier = Supplier.objects.get(pk=suppliercode)
+            supplier = Supplier.objects.get(pk=id)
             form = SupplierForm(instance=supplier)
         return render(request, "gcodedb/supplier_form.html", {'form': form})
     else:
-        if suppliercode == None:
+        if id == None:
             form = SupplierForm(request.POST)
         else:
-            supplier = Supplier.objects.get(pk=suppliercode)
+            supplier = Supplier.objects.get(pk=id)
             form = SupplierForm(request.POST,instance= supplier)
         if form.is_valid():
             form.save()
         return redirect('/supplier/')
 
 
-def supplier_delete(request,suppliercode):
-    supplier = Supplier.objects.get(pk=suppliercode)
+def supplier_delete(request,id):
+    supplier = Supplier.objects.get(pk=id)
     supplier.delete()
     return redirect('/supplier/')
 
@@ -287,27 +287,27 @@ def contract_list(request):
 	contract_list = Contract.objects.all()
 	return render(request, 'gcodedb/contract_list.html', {'contract_list':contract_list})
 
-def contract_form(request, contractcode=None):
+def contract_form(request, id=None):
     if request.method == "GET":
-        if contractcode == None:
+        if id == None:
             form = ContractForm()
         else:
-            contract = Contract.objects.get(pk=contractcode)
+            contract = Contract.objects.get(pk=id)
             form = ContractForm(instance=contract)
         return render(request, "gcodedb/contract_form.html", {'form': form})
     else:
-        if contractcode == None:
+        if id == None:
             form = ContractForm(request.POST)
         else:
-            contract = Contract.objects.get(pk=contractcode)
+            contract = Contract.objects.get(pk=id)
             form = ContractForm(request.POST,instance= contract)
         if form.is_valid():
             form.save()
         return redirect('/contract/')
 
 
-def contract_delete(request,contractcode):
-    contract = Contract.objects.get(pk=contractcode)
+def contract_delete(request,id):
+    contract = Contract.objects.get(pk=id)
     contract.delete()
     return redirect('/contract/')
 
@@ -315,26 +315,26 @@ def lydowin_list(request):
 	lydowin_list = Lydowin.objects.all()
 	return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list})
 
-def lydowin_form(request, lydowincode=None):
+def lydowin_form(request, id=None):
     if request.method == "GET":
-        if lydowincode == None:
+        if id == None:
             form = LydowinForm()
         else:
-            varlydowin = Lydowin.objects.get(pk=lydowincode)
+            varlydowin = Lydowin.objects.get(pk=id)
             form = LydowinForm(instance=varlydowin)
         return render(request, "gcodedb/lydowin_form.html", {'form': form})
     else:
-        if lydowincode == None:
+        if id == None:
             form = LydowinForm(request.POST)
         else:
-            varlydowin = Lydowin.objects.get(pk=lydowincode)
+            varlydowin = Lydowin.objects.get(pk=id)
             form = LydowinForm(request.POST,instance= varlydowin)
         if form.is_valid():
             form.save()
         return redirect('/lydowin/')
 
-def lydowin_delete(request,lydowincode):
-    varlydowin = Lydowin.objects.get(pk=lydowincode)
+def lydowin_delete(request,id):
+    varlydowin = Lydowin.objects.get(pk=id)
     varlydowin.delete()
     return redirect('/lydowin/')
 
@@ -342,26 +342,26 @@ def lydoout_list(request):
 	lydoout_list = Lydoout.objects.all()
 	return render(request, 'gcodedb/lydoout_list.html', {'lydoout_list':lydoout_list})
 
-def lydoout_form(request, lydooutcode=None):
+def lydoout_form(request, id=None):
     if request.method == "GET":
-        if lydooutcode == None:
+        if id == None:
             form = LydooutForm()
         else:
-            varlydoout = Lydoout.objects.get(pk=lydooutcode)
+            varlydoout = Lydoout.objects.get(pk=id)
             form = LydooutForm(instance=varlydoout)
         return render(request, "gcodedb/lydoout_form.html", {'form': form})
     else:
-        if lydooutcode == None:
+        if id == None:
             form = LydooutForm(request.POST)
         else:
-            varlydoout = Lydoout.objects.get(pk=lydooutcode)
+            varlydoout = Lydoout.objects.get(pk=id)
             form = LydooutForm(request.POST,instance= varlydoout)
         if form.is_valid():
             form.save()
         return redirect('/lydoout/')
 
-def lydoout_delete(request,lydooutcode):
-    varlydoout = Lydoout.objects.get(pk=lydooutcode)
+def lydoout_delete(request,id):
+    varlydoout = Lydoout.objects.get(pk=id)
     varlydoout.delete()
     return redirect('/lydoout/')
 
@@ -369,28 +369,28 @@ def kho_list(request):
 	kho_list = Kho.objects.all()
 	return render(request, 'gcodedb/kho_list.html', {'kho_list':kho_list})
 
-def kho_form(request, g2code_=None):
+def kho_form(request, id=None):
     if request.method == "GET":
-        if g2code_ == None:
+        if id == None:
             form = KhoForm()
         else:
-            g2codes = G2code.objects.filter(g2code = g2code_)
+            g2codes = G2code.objects.filter(g2code = id)
             kho = Kho.objects.get(pk=g2codes.g1code.id)
             form = KhoForm(instance=kho)
         return render(request, "gcodedb/kho_form.html", {'form': form})
     else:
-        if g2code_ == None:
+        if id == None:
             form = KhoForm(request.POST)
         else:
-            g2codes = G2code.objects.filter(g2code = g2code_)
+            g2codes = G2code.objects.filter(g2code = id)
             kho = Kho.objects.get(pk=g2codes.g1code.id)
             form = KhoForm(request.POST,instance= kho)
         if form.is_valid():
             form.save()
         return redirect('/kho/')
 
-def kho_delete(request,g2code_):
-    g2codes = G2code.objects.filter(g2code = g2code_)
+def kho_delete(request,id):
+    g2codes = G2code.objects.filter(g2code = id)
     kho = Kho.objects.get(pk=g2codes.g1code.id)
     kho.delete()
     return redirect('/kho/')

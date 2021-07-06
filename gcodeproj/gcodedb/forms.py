@@ -61,7 +61,7 @@ class InquiryForm(forms.ModelForm):
         fields = [
             'inquirycode',
             'datesubmitbid',
-            'clientcode',
+            'client',
 		]
         widgets = {
             'datesubmitbid':InputDate()
@@ -71,36 +71,14 @@ class InquiryForm(forms.ModelForm):
 class OfferForm(forms.ModelForm):
     class Meta:
         model = G1code
-        fields = [
-            'gcode',
-            'kymahieuinq',
-            'unit',
-            'qtyinq',
-            'suppliercode',
-            'nsxinq',
-            'sttitb',
-            'groupitb',
-            'sales',
-            'dongiamuainq',
-            'thanhtienmuainq',
-            'dongiachaoinq',
-            'thanhtienchaoinq',
-            'markupinq',
-            'resultinq',
-            'ghichu',
-            'gdvinq',
-            'lydowincode',
-            'lydooutcode',
-        ]
+        fields = '__all__'
         widgets = {
 			'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
             'dongiamuainq': NumberInput(attrs={'class':'dgm'}),
-            'thanhtienmuainq': NumberInput(attrs={'class':'ttm'}),
             'dongiachaoinq': NumberInput(attrs={'class':'dgc'}),
-            'thanhtienchaoinq': NumberInput(attrs={'class':'ttc'}),
             'qtyinq':NumberInput(attrs={'class':'qty'}),
-            'lydowincode': forms.CheckboxSelectMultiple,
-            'lydooutcode': forms.CheckboxSelectMultiple,
+            'lydowin': forms.CheckboxSelectMultiple,
+            'lydoout': forms.CheckboxSelectMultiple,
 		}
 
 class GDVForm(forms.ModelForm):
@@ -135,13 +113,24 @@ class ContractForm(forms.ModelForm):
             'contractcode',
             'contractnoclient',
             'datesign',
-            'clientcode',
+            'client',
             'dealine1',
             'dealine2', 
             'sellcost',
             'status',
             'datedeliverylatest',
         ]
+        labels = {
+            'contractcode':'Contract',
+            'contractnoclient':'Contract No. (Client)',
+            'datesign':'Ngày ký kết',
+            'client':'Khách hàng',
+            'dealine1':'Deadline 1',
+            'dealine2':'Deadline 2', 
+            'sellcost': 'Giá bán',
+            'status':'Trạng thái',
+            'datedeliverylatest': 'Ngày giao hàng cuối cùng',
+        }
         widgets = {
             'datedeliverylatest':InputDate(),
             'datesign':InputDate(),
@@ -176,27 +165,21 @@ class OfferResultForm(forms.ModelForm):
         model = G1code
         fields = [
             'gcode',
-            'inquirycode',
+            'inquiry',
             'resultinq',
-            'lydowincode',
-            'lydooutcode',
-            'ngaywin',
-            'ngayout',
+            'lydowin',
+            'lydoout',
         ]
         labels = {
             'gcode':'Gcode',
-            'inquirycode':'Inquiry',
+            'inquiry':'Inquiry',
             'resultinq':'Result',
-            'lydowincode':'Lý do win',
-            'lydooutcode':'Lý do out',
-            'ngaywin':'Ngày out gần nhất',
-            'ngayout':'Ngày win gần nhất',
+            'lydowin':'Lý do win',
+            'lydoout':'Lý do out',
         }
         widgets = {
-			'ngaywin': InputDate(),
-            'ngayout': InputDate(),
-            'lydowincode': forms.CheckboxSelectMultiple,
-            'lydooutcode': forms.CheckboxSelectMultiple,
+            'lydowin': forms.CheckboxSelectMultiple,
+            'lydoout': forms.CheckboxSelectMultiple,
         }
 
 class KhoForm(forms.ModelForm):

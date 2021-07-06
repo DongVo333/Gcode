@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models.aggregates import Max
 from django.db.models.base import Model, ModelBase
-from django.db.models.deletion import CASCADE, PROTECT
+from django.db.models.deletion import PROTECT, PROTECT
 from django.forms import ModelForm
 from django.db.models import F
 from django.forms.fields import CharField
@@ -42,31 +42,31 @@ class AnnotationManager(models.Manager):
         return super().get_queryset().annotate(**self.annotations)
 
 class Client(models.Model):
-    clientcode = models.CharField(max_length=20, primary_key=True)
+    clientcode = models.CharField(max_length=20)
     fullname = models.CharField(max_length=200)
     def __str__(self):
         return self.clientcode
     class Meta:
         db_table = "gcodedb_client"
 class Supplier (models.Model):
-    suppliercode = models.CharField(max_length=20, primary_key=True)
+    suppliercode = models.CharField(max_length=20)
     fullname = models.CharField(max_length=200)
     duyetpomax = models.FloatField()
     def __str__(self):
         return self.suppliercode
 class Inquiry (models.Model):
-    inquirycode = models.CharField(max_length=50, primary_key=True)
+    inquirycode = models.CharField(max_length=50)
     datesubmitbid = models.DateField()
-    clientcode  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_Inquiryclient")
+    client  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_Inquiryclient")
     def __str__(self):
         return self.inquirycode
     class Meta:
         db_table = "gcodedb_inquiry"
 class Contract (models.Model):
-    contractcode  = models.CharField(max_length=50, primary_key=True)
+    contractcode  = models.CharField(max_length=50)
     contractnoclient = models.CharField(max_length=50)
     datesign  = models.DateField()
-    clientcode  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_Contractclient")
+    client  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_Contractclient")
     dealine1 = models.DateField()
     dealine2 = models.DateField()
     sellcost = models.FloatField()
@@ -76,27 +76,29 @@ class Contract (models.Model):
         return self.contractcode
 
 class Lydowin(models.Model):
-    lydowincode = models.CharField(max_length=100, primary_key=True)
+    lydowincode = models.CharField(max_length=100)
     detail  = models.TextField()
     def __str__(self):
         return self.lydowincode
 
 class Lydoout(models.Model):
-    lydooutcode = models.CharField(max_length=100, primary_key= True)
+    lydooutcode = models.CharField(max_length=100)
     detail  = models.TextField()
     def __str__(self):
         return self.lydooutcode
 
 class GDV(models.Model):
-    gdvcode = models.CharField(max_length=10, primary_key=True)
+    gdvcode = models.CharField(max_length=10)
     fullname = models.CharField(max_length=50)
     def __str__(self):
         return self.gdvcode
 
 class Gcode(models.Model):
-    ma = models.CharField(max_length=20, primary_key= True)
+    ma = models.CharField(max_length=20)
     mota = models.TextField()
     markupdinhmuc = models.FloatField()
+    ngaywin = models.DateField(null=True, blank=True)
+    ngayout = models.DateField(null=True, blank= True)
     class Meta:
         db_table = "gcodedb_gcode"
     def __str__(self):
@@ -125,53 +127,59 @@ class G1code(models.Model):
     gdvinq = models.ForeignKey(GDV, on_delete=PROTECT)
     dateupdate  = models.DateField()
     class Meta:
-       unique_together = ("gcode", "inquirycode")
+       unique_together = ("gcode", "inquiry")
     def __str__(self):
         return self.g1code
     @property
-    def g1code(self):
-        self.g1code = str(self.gcode)+'-'+str(self.inquirycode)
-        return self.g1code
-
+    def thanhtienmua(self):
+        return (self.qtyinq or 0)*(self.dongiamuainq or 0)
+    def thanhtienchao(self):
+        return (self.qtyinq or 0)*(self.dongiachaoinq or 0)
+    def mota(self):
+        return self.gcode.mota
 class G2code(models.Model):
-    contractcode = models.ForeignKey(Contract,to_field='contractcode',on_delete=PROTECT, related_name='fkg2code_contract',null=True)
+    g2code = models.CharField(max_length=40)
+    contract = models.ForeignKey(Contract,on_delete=PROTECT, related_name='fk_g2codecontract',null=True)
     dongiachaohdb = models.FloatField(null=True)
-    thanhtienchaohdb = models.FloatField(null=True)
     pono = models.CharField(max_length=50,null=True)
     status = models.CharField(max_length=30,null=True)
-    g1code = models.OneToOneField(G1code,on_delete=PROTECT,related_name='fkg2code_g1code',primary_key=True)
+    g1code = models.OneToOneField(G1code,on_delete=PROTECT,related_name='fk_g2codeg1code',limit_choices_to={'resultinq': 'Win'})
     ghichu = models.TextField(null=True,blank= True)
-    gdvhdb = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fkg2code_gdv',null=True)
+    gdvhdb = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_g2codegdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
         return str(self.g2code)
     @property
-    def g2code(self):
-        return str(self.g1code.gcode)+'-'+str(self.contractcode)
-    def gcode(self):
-        return self.g1code.gcode
+    def thanhtienchaohdb(self):
+        return (self.g1code.qtyinq or 0)*(self.dongiachaohdb or 0)
+    def mota(self):
+        return (self.g1code.gcode.mota)
+    def unit(self):
+        return self.g1code.unitinq 
 class POdetail(models.Model):
-    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkpo_g2code',primary_key=True)
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_pog2code')
     motapo = models.TextField(null=True)
     kymahieupo = models.CharField(max_length=100,null=True)
     unitpo = models.CharField(max_length = 20,choices = UNITS_CHOICES,default = 'pcs',null=True)
     qtypo = models.FloatField()
-    suppliercodepo = models.ForeignKey(Supplier,on_delete=PROTECT, related_name= "fkg2code_supplier",null=True)
+    supplier = models.ForeignKey(Supplier,on_delete=PROTECT, related_name= "fk_g2codesupplier",null=True)
     xuatxupo = models.CharField(max_length=100,null=True)
     nsxpo = models.CharField(max_length=50,null=True)
     dongiamuapo = models.FloatField(null=True)
-    thanhtienmuapo = models.FloatField(null=True)
     ghichu = models.TextField(null=True)
-    gdvpo = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT, related_name='fkpo_gdv',null=True)
+    gdvpo = models.ForeignKey(GDV,on_delete=PROTECT, related_name='fk_pogdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
-        return str(self.g2code.gcode)+"-"+str(self.pono)
+        return str(self.g2code.g1code.gcode)+"-"+str(self.pono)
+    @property
+    def thanhtienmuapo(self):
+        return (self.qtypo or 0)*(self.dongiamuapo or 0)
 class Kho(models.Model):
-    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkkho_g2code',primary_key=True)
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_khog2code')
     qtykho = models.FloatField(null=True)
     dongiafreight = models.FloatField(null=True)
     ngaynhapkho = models.DateField(null=True)
-    gdvkho = models.ForeignKey(GDV, to_field='gdvcode',on_delete=PROTECT,related_name='fkkho_gdv',null=True)
+    gdvkho = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_khogdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
         return str(self.g2code) + "kho"
@@ -186,10 +194,10 @@ class Kho(models.Model):
         return POdetail.objects.get(g2code = self.g2code).unitpo
 
 class Giaohang(models.Model):
-    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkgiaohang_g2code',primary_key=True)
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_giaohangg2code')
     qtygiaohang = models.FloatField(null=True)
     ngaygiaohang = models.DateField(null=True)
-    gdvgiaohang = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT,related_name='fkgiaohang_gdv',null=True)
+    gdvgiaohang = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_giaohanggdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
         return str(self.g2code) +"giao hang"
@@ -201,11 +209,11 @@ class Giaohang(models.Model):
     def donvitinh(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
 class Phat(models.Model):
-    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkphat_g2code',primary_key=True)
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_phatg2code')
     qtyphat = models.FloatField(null=True)
     tongphat = models.FloatField(null=True)
     lydophat = models.TextField(null=True)
-    gdvphat = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT,related_name='fkphat_gdv',null=True)
+    gdvphat = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_phatgdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
         return str(self.g2code) + "phat"
@@ -216,17 +224,21 @@ class Phat(models.Model):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
     def donvitinh(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
-
+    def dongiaphat(self):
+        if self.qtyphat > 0:
+            return (self.tongphat or 0)/(self.qtyphat)
+        else:
+            return None
 class Danhgiacode(models.Model):
-    danhgiacode=models.CharField(max_length=100,primary_key=True)
+    danhgiacode=models.CharField(max_length=100)
     def __str__(self):
         return self.danhgiacode 
 
 class DanhgiaNSX(models.Model):
-    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fkdanhgia_g2code',primary_key=True)
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_danhgiag2code')
     danhgiacode = models.ManyToManyField(Danhgiacode,related_name='fk_danhgiacode',null=True)
     comment = models.TextField(null=True)
-    gdvdanhgia = models.ForeignKey(GDV,to_field='gdvcode',on_delete=PROTECT,related_name='fkdanhgia_gdv',null=True)
+    gdvdanhgia = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_danhgiagdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
         return str(self.g2code) + "danh gia"   
@@ -242,16 +254,18 @@ class DanhgiaNSX(models.Model):
     def xuatxu(self):
         return POdetail.objects.get(g2code = self.g2code).xuatxupo
     def supplier(self):
-        return POdetail.objects.get(g2code = self.g2code).suppliercodepo
+        return POdetail.objects.get(g2code = self.g2code).supplier
     def dongiamua(self):
         return POdetail.objects.get(g2code = self.g2code).dongiamuapo
     def thanhtienmua(self):
         return POdetail.objects.get(g2code = self.g2code).thanhtienmuapo
 
 class Tienve(models.Model):
-    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fktienve_g2code',primary_key=True)
+    g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_tienveg2code')
     qtytienve = models.FloatField(null=True)
     dongiatienve = models.FloatField(null=True)
+    def __str__(self):
+        return str(self.g2code) + "tien ve"   
     @property
     def tongtienve(self):
         return (self.qtytienve or 0)*(self.dongiatienve or 0)

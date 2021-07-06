@@ -4,7 +4,7 @@
 <table class="table table-borderless">
     <form method="POST" action="{% url 'gcodedb:importxls_gdv' %}" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="file" name="myfile">
+        <input type="file" name="myfile" accept=".xls">
         <button type="submit">Import Excel</button>
     </form>
     <br>
@@ -26,10 +26,10 @@
                 <td>{{gdv.gdvcode}}</td>
                 <td>{{gdv.fullname}}</td>
                 <td>
-                    <a href="/gdv/update/{{gdv.gdvcode}}" class="btn text-secondary px-0">
+                    <a href="/gdv/update/{{gdv.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>
                     </a>
-                    <a href="/gdv/delete/{{gdv.gdvcode}}" class="btn text-secondary px-0">
+                    <a href="/gdv/delete/{{gdv.id}}" class="btn text-secondary px-0">
                         <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
                     </a>
                 </td>

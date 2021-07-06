@@ -1,10 +1,10 @@
-from datetime import date
+from datetime import date, datetime
 import xlrd
 from .models import Contract, G1code, G2code, GDV, Gcode,Inquiry,Client, Kho,Supplier,Lydowin,Lydoout
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
-
+from django.utils.dateparse import parse_date
 
 def importxls_client(request):
     if request.method == 'POST':
@@ -12,16 +12,16 @@ def importxls_client(request):
         workbook = xlrd.open_workbook(file_contents=new_persons.read())
         sheet = workbook.sheet_by_name("Client")
         for r in range(1, sheet.nrows):
-            counter = Client.objects.filter(clientcode=sheet.cell(r,0).value).count()
+            counter = Client.objects.filter(clientcode=sheet.cell(r,1).value).count()
             client = Client()
             if counter>0:
-                client = Client.objects.get(clientcode=sheet.cell(r,0).value)
-                client.fullname = sheet.cell(r,1).value
+                client = Client.objects.get(clientcode=sheet.cell(r,1).value)
+                client.fullname = sheet.cell(r,2).value
                 client.save()
             else:
                 client = Client(
-        		    sheet.cell(r,0).value,
-        		    sheet.cell(r,1).value,
+        		    clientcode= sheet.cell(r,1).value,
+                    fullname=sheet.cell(r,2).value,
         		    )
                 client.save()  
         return redirect('/client/')     
@@ -63,27 +63,31 @@ def importxls_contract(request):
             if counter>0:
                 contract = Contract.objects.get(contractcode=str(sheet.cell(r,0).value))
                 contract.contractnoclient = sheet.cell(r,1).value
-                contract.datesign = sheet.cell(r,2).value
-                contract.clientcode = sheet.cell(r,3).value
-                contract.dealine1 = sheet.cell(r,4).value
-                contract.dealine2 = sheet.cell(r,5).value
+                ngayky = xlrd.xldate.xldate_as_datetime(sheet.cell(r,2).value,workbook.datemode).strftime("%Y-%m-%d")
+                contract.datesign = ngayky
+                contract.client =Client.objects.get(clientcode=sheet.cell(r,3).value) 
+                deadline1 = xlrd.xldate.xldate_as_datetime(sheet.cell(r,4).value,workbook.datemode).strftime("%Y-%m-%d")
+                contract.dealine1 = deadline1
+                deadline2 = xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,workbook.datemode).strftime("%Y-%m-%d")
+                contract.dealine2 = deadline2
                 contract.sellcost = float(sheet.cell(r,6).value)
                 contract.status = sheet.cell(r,7).value
-                contract.datedeliverylatest = sheet.cell(r,8).value
+                datedeliverylatest = xlrd.xldate.xldate_as_datetime(sheet.cell(r,8).value,workbook.datemode).strftime("%Y-%m-%d")
+                contract.datedeliverylatest = datedeliverylatest
                 contract.save()
             else:
                 contract = Contract(
         		    str(sheet.cell(r,0).value),
         		    sheet.cell(r,1).value,
-                    sheet.cell(r,2).value,
-        		    sheet.cell(r,3).value,
-                    sheet.cell(r,4).value,
-                    sheet.cell(r,5).value,
+                    xlrd.xldate.xldate_as_datetime(sheet.cell(r,2).value,0).strftime("%Y-%m-%d"),
+        		    Client.objects.get(clientcode=sheet.cell(r,3).value),
+                    xlrd.xldate.xldate_as_datetime(sheet.cell(r,4).value,0).strftime("%Y-%m-%d"),
+                    xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,0).strftime("%Y-%m-%d"),
                     float(sheet.cell(r,6).value),
                     sheet.cell(r,7).value,
-                    sheet.cell(r,8).value,
+                    xlrd.xldate.xldate_as_datetime(sheet.cell(r,8).value,0).strftime("%Y-%m-%d"),
         		    )
-                contract.save()  
+                contract.save()
         return redirect('/contract/')     
     return render(request, 'gcodedb/contract_list.html')
 
@@ -94,19 +98,18 @@ def importxls_inquiry(request):
         sheet = workbook.sheet_by_name("Inquiry")
         norow = sheet.nrows
         for r in range(1, norow):
-            counter = Inquiry.objects.filter(inquirycode=str(sheet.cell(r,0).value)).count()
+            counter = Inquiry.objects.filter(inquirycode=str(sheet.cell(r,1).value)).count()
             inquiry = Inquiry()
             if counter>0:
-                inquiry = Inquiry.objects.get(inquirycode=str(sheet.cell(r,0).value))
-                inquiry.datesubmitbid = sheet.cell(r,1).value
-                inquiry.clientcode = Client.objects.get(clientcode=sheet.cell(r,2).value)
-                print (Client.objects.get(clientcode=sheet.cell(r,2).value).clientcode)
+                inquiry = Inquiry.objects.get(inquirycode=str(sheet.cell(r,1).value))
+                inquiry.datesubmitbid = xlrd.xldate.xldate_as_datetime(sheet.cell(r,2).value,workbook.datemode).strftime("%Y-%m-%d")
+                inquiry.client = Client.objects.get(clientcode=sheet.cell(r,3).value)
                 inquiry.save()
             else:
                 inquiry = Inquiry(
-        		    str(sheet.cell(r,0).value),
-        		    sheet.cell(r,1).value,
-                    Client.objects.get(clientcode=sheet.cell(r,2).value),
+        		    inquirycode=str(sheet.cell(r,1).value),
+        		    datesubmitbid=xlrd.xldate.xldate_as_datetime(sheet.cell(r,2).value,workbook.datemode).strftime("%Y-%m-%d"),
+                    client=Client.objects.get(clientcode=sheet.cell(r,3).value),
         		    )
                 inquiry.save()  
         return redirect('/inquiry/')     
@@ -184,17 +187,17 @@ def importxls_lydoout(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
         workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Lydowin")
+        sheet = workbook.sheet_by_name("Lydoout")
         norow = sheet.nrows
         for r in range(1, norow):
-            counter = Lydowin.objects.filter(lydooutcode=str(sheet.cell(r,0).value)).count()
-            lydoout = Lydowin()
+            counter = Lydoout.objects.filter(lydooutcode=str(sheet.cell(r,0).value)).count()
+            lydoout = Lydoout()
             if counter>0:
-                lydoout = Lydowin.objects.get(lydooutcode=str(sheet.cell(r,0).value))
+                lydoout = Lydoout.objects.get(lydooutcode=str(sheet.cell(r,0).value))
                 lydoout.detail = sheet.cell(r,1).value
                 lydoout.save()
             else:
-                lydoout = Lydowin(
+                lydoout = Lydoout(
         		    str(sheet.cell(r,0).value),
         		    sheet.cell(r,1).value,
         		    )
@@ -223,3 +226,25 @@ def importxls_kho(request):
                 g2codekho.save()  
         return redirect('/kho/')     
     return render(request, 'gcodedb/kho_list.html')
+
+def importxls_offer(request):
+    if request.method == 'POST':
+        new_persons = request.FILES['myfile']
+        workbook = xlrd.open_workbook(file_contents=new_persons.read())
+        sheet = workbook.sheet_by_name("Offer")
+        norow = sheet.nrows
+        for r in range(1, norow):
+            counter = G1code.objects.filter(ma=str(sheet.cell(r,0).value)).count()
+            g1code = G1code()
+            if counter>0:
+                g1code = G1code.objects.get(g2code=str(sheet.cell(r,0).value))
+                g1code.detail = sheet.cell(r,1).value
+                g1code.save()
+            else:
+                g1code = G1code(
+        		    str(sheet.cell(r,0).value),
+        		    sheet.cell(r,1).value,
+        		    )
+                g1code.save()  
+        return redirect('/offer/')     
+    return render(request, 'gcodedb/offer_list.html')

@@ -4,7 +4,7 @@
 <table class="table table-borderless">
     <form method="POST" action="{% url 'gcodedb:importxls_lydoout' %}" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="file" name="myfile">
+        <input type="file" name="myfile" accept=".xls">
         <button type="submit">Import Excel</button>
     </form>
     <br>
@@ -26,10 +26,10 @@
                 <td>{{lydoout.lydooutcode}}</td>
                 <td><textarea id="autosize" cols="30" rows="1">{{lydoout.detail}}</textarea></td>
                 <td>
-                    <a href="/lydoout/update/{{lydoout.lydooutcode}}" class="btn text-secondary px-0">
+                    <a href="/lydoout/update/{{lydoout.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>
                     </a>
-                    <a href="/lydoout/delete/{{lydoout.lydooutcode}}" class="btn text-secondary px-0">
+                    <a href="/lydoout/delete/{{lydoout.id}}" class="btn text-secondary px-0">
                         <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
                     </a>
                 </td>

@@ -3,7 +3,7 @@
 {% block content %}
 <form method="POST" action="{% url 'gcodedb:importxls_gcode' %}" enctype="multipart/form-data">
     {% csrf_token %}
-    <input type="file" name="myfile">
+    <input type="file" name="myfile" accept=".xls">
     <button type="submit">Import Excel</button>
 </form>
 <br>
@@ -29,10 +29,10 @@
                 <td><textarea id="autosize" cols="30" rows="1" disabled>{{gcode.mota}}</textarea></td>
                 <td> {{gcode.markupdinhmuc}}</td>
                 <td>
-                    <a href="/gcode/update/{{gcode.ma}}" class="btn text-secondary px-0">
+                    <a href="/gcode/update/{{gcode.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>
                     </a>
-                    <a href="/gcode/delete/{{gcode.ma}}" class="btn text-secondary px-0">
+                    <a href="/gcode/delete/{{gcode.id}}" class="btn text-secondary px-0">
                         <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
                     </a>
                 </td>
