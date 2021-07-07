@@ -405,3 +405,35 @@ def SearchHDB(request):
             g2code = G2code.objects.create(g1code=g1code_, dateupdate = date.today())
     g2code_list = G2code.objects.all()
     return render(request, 'gcodedb/hdb.html', {'g2code_list': g2code_list, 'filter':g1code_filter})
+
+def offer_list(request):
+	offer_list = G1code.objects.all()
+	return render(request, 'gcodedb/offer_list.html', {'offer_list':offer_list})
+
+def offer_form(request, id=None):
+    if request.method == "GET":
+        if id == None:
+            form = OfferForm()
+        else:
+            g1codes = G1code.objects.filter(pk = id)
+            form = OfferForm(instance=g1codes)
+        return render(request, "gcodedb/offer_form.html", {'form': form})
+    else:
+        if id == None:
+            form = OfferForm(request.POST)
+        else:
+            g1codes = G1code.objects.filter(pk = id)
+            form = OfferForm(request.POST,instance= g1codes)
+        if form.is_valid():
+            g1code = form.save(commit=False)
+            g1code.dateupdate = date.today()
+            g1code.g1code = g1code.gcode +"-"+g1code.inquiry.inquirycode
+            g1code.save()
+        else:
+            print(form.add_error)
+        return redirect('/offer/')
+
+def offer_delete(request,id):
+    g1codes = G1code.objects.filter(pk = id)
+    g1codes.delete()
+    return redirect('/offer/')

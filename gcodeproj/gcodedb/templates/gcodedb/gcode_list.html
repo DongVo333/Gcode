@@ -15,6 +15,8 @@
             <td>Gcode</td>
             <td>Mô tả</td>
             <td>Markup định mức</td>
+            <td>Ngày Win gần nhất</td>
+            <td>Ngày Out gần nhất</td>
             <td>
                 <a href="/gcode/insert" class="btn btn-outline-success">
                     <i class="fas fa-plus"></i> Add New
@@ -28,6 +30,8 @@
                 <td>{{gcode.ma}}</td>
                 <td><textarea id="autosize" cols="30" rows="1" disabled>{{gcode.mota}}</textarea></td>
                 <td> {{gcode.markupdinhmuc}}</td>
+                <td> {{gcode.ngaywin}}</td>
+                <td> {{gcode.ngayout}}</td>
                 <td>
                     <a href="/gcode/update/{{gcode.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>

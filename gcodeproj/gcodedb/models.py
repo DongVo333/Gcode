@@ -104,6 +104,12 @@ class Gcode(models.Model):
     def __str__(self):
         return self.ma
 
+class Sales(models.Model):
+    salescode = models.CharField(max_length=20)
+    fullname = models.CharField(max_length=70)
+    def __str__(self):
+        return self.salescode
+        
 class G1code(models.Model):
     g1code = models.CharField(max_length=40)
     gcode = models.ForeignKey(Gcode, on_delete=PROTECT, related_name= "fk_g1codegcode")
@@ -116,7 +122,7 @@ class G1code(models.Model):
     nsxinq = models.CharField(max_length=50)
     sttitb = models.IntegerField()
     groupitb = models.CharField(max_length=5)
-    sales = models.CharField(max_length=10,choices= SALES_CHOICES,default="TuanLQ")
+    sales = models.ForeignKey(Sales,on_delete=PROTECT, related_name= "fk_g1codesales")
     dongiamuainq = models.FloatField()
     dongiachaoinq = models.FloatField()
     markupinq = models.FloatField()
@@ -237,7 +243,7 @@ class Danhgiacode(models.Model):
 class DanhgiaNSX(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_danhgiag2code')
     danhgiacode = models.ManyToManyField(Danhgiacode,related_name='fk_danhgiacode',null=True)
-    comment = models.TextField(null=True)
+    comment = models.TextField(null=True,blank=True)
     gdvdanhgia = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_danhgiagdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):

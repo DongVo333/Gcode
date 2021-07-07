@@ -2,7 +2,7 @@ from datetime import date
 import csv
 import xlwt
 from tablib import Dataset
-from .models import Contract, G1code, G2code, GDV, Gcode,Inquiry,Client, Kho, Lydowin,Supplier,Lydoout
+from .models import Contract, DanhgiaNSX, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat,Supplier,Lydoout, Tienve
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -44,7 +44,7 @@ def exportxls_gcode(request):
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Gcode')
     row_num = 0
-    columns = ['ID','Gcode', 'Mô tả', 'Markup định mức']
+    columns = ['ID','Gcode', 'Mô tả', 'Markup định mức','Ngày Out gần nhất','Ngày Win gần nhất']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
     for gcode in Gcode.objects.all():
@@ -53,8 +53,10 @@ def exportxls_gcode(request):
         ws.write(row_num, col_num, gcode.ma, style_data_row)
         ws.write(row_num, col_num, gcode.mota, style_data_row)
         ws.write(row_num, col_num, gcode.markupdinhmuc, style_number_row)
+        ws.write(row_num, col_num, gcode.ngaywin, style_date_row)
+        ws.write(row_num, col_num, gcode.ngayout, style_date_row)
     wb.save(response)
-    return 
+    return response
     
 def exportxls_contract(request):
     response = HttpResponse(content_type='application/ms-excel')
@@ -187,50 +189,186 @@ def exportxls_kho(request):
         ws.write(row_num, 3, kho.dongiafreight, style_number_row)
         ws.write(row_num, 4, kho.ngaynhapkho, style_date_row)
         ws.write(row_num, 5, kho.gdvkho.gdvcode, style_data_row)
-        ws.write(row_num, 6, kho.gdvkho.dateupdate, style_date_row)
+        ws.write(row_num, 6, kho.dateupdate, style_date_row)
     wb.save(response)
     return response
 
 def exportxls_offer(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Kho.xls"'
+    response['Content-Disposition'] = 'attachment; filename="Offer.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Offer')
     row_num = 0  
-    columns = ['ID', 'Gcode','Inquiry','Ký mã hiệu','Đơn vị','Số lượng','Supplier','Xuất xứ','NSX',
-    'STT in ITB','Group in ITB','Sale','Đơn giá mua','Thành tiền mua','Đơn giá chào','Thành tiền chào',
+    columns = ['ID','Gcode-Inquiry','Gcode','Inquiry','Ký mã hiệu','Đơn vị','Số lượng','Supplier','Xuất xứ','NSX',
+    'STT in ITB','Group in ITB','Sale','Đơn giá mua','Đơn giá chào',
     'Markup','Result','Lý do Win','Lý do Out','Ghi Chú','Giao dịch viên','Ngày cập nhật']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
     for offer in G1code.objects.all():
         row_num += 1
         ws.write(row_num, 0, offer.id, style_data_row)
-        ws.write(row_num, 1, offer.gcode.ma, style_data_row)
-        ws.write(row_num, 2, offer.inquiry.inquirycode, style_data_row)
-        ws.write(row_num, 3, offer.kymahieuinq, style_data_row)
-        ws.write(row_num, 4, offer.unitinq, style_data_row)
-        ws.write(row_num, 5, offer.qtyinq, style_number_row)
-        ws.write(row_num, 6, offer.supplier.suppliercode, style_data_row)
-        ws.write(row_num, 7, offer.xuatxuinq, style_data_row)
-        ws.write(row_num, 8, offer.nsxinq, style_data_row)
-        ws.write(row_num, 9, offer.sttitb, style_data_row)
-        ws.write(row_num, 10, offer.groupitb, style_data_row)
-        ws.write(row_num, 11, offer.sales, style_data_row)
-        ws.write(row_num, 12, offer.dongiamuainq, style_number_row)
-        ws.write(row_num, 13, offer.thanhtienmua, style_number_row)
+        ws.write(row_num, 1, offer.g1code, style_data_row)
+        ws.write(row_num, 2, offer.gcode.ma, style_data_row)
+        ws.write(row_num, 3, offer.inquiry.inquirycode, style_data_row)
+        ws.write(row_num, 4, offer.kymahieuinq, style_data_row)
+        ws.write(row_num, 5, offer.unitinq, style_data_row)
+        ws.write(row_num, 6, offer.qtyinq, style_number_row)
+        ws.write(row_num, 7, offer.supplier.suppliercode, style_data_row)
+        ws.write(row_num, 8, offer.xuatxuinq, style_data_row)
+        ws.write(row_num, 9, offer.nsxinq, style_data_row)
+        ws.write(row_num, 10, offer.sttitb, style_data_row)
+        ws.write(row_num, 11, offer.groupitb, style_data_row)
+        ws.write(row_num, 12, offer.sales.salescode, style_data_row)
+        ws.write(row_num, 13, offer.dongiamuainq, style_number_row)
         ws.write(row_num, 14, offer.dongiachaoinq, style_number_row)
-        ws.write(row_num, 15, offer.thanhtienchao, style_number_row)
-        ws.write(row_num, 16, offer.markupinq, style_number_row)
+        ws.write(row_num, 15, offer.markupinq, style_number_row)
         if offer.resultinq == 'Win':
-            ws.write(row_num, 17, offer.resultinq, style_green_row)
+            ws.write(row_num, 16, offer.resultinq, style_green_row)
         else:
-            ws.write(row_num, 17, offer.resultinq, style_red_row)
-        ws.write(row_num, 18, offer.lydowin, style_data_row)
-        ws.write(row_num, 19, offer.lydoout, style_data_row)
-        ws.write(row_num, 20, offer.ghichu, style_data_row)
-        ws.write(row_num, 21, offer.gdvinq.gdvcode, style_data_row)
-        ws.write(row_num, 22, offer.dateupdate, style_date_row)
+            ws.write(row_num, 16, offer.resultinq, style_red_row)
+        strlydowin =""
+        for lydowin in offer.lydowin:
+            strlydowin = lydowin.lydowincode + "," + strlydowin
+        ws.write(row_num, 17, strlydowin, style_data_row)
+        strlydoout =""
+        for lydoout in offer.lydoout:
+            strlydoout = lydoout.lydooutcode + "," + strlydoout
+        ws.write(row_num, 18, strlydoout, style_data_row)
+        ws.write(row_num, 19, offer.ghichu, style_data_row)
+        ws.write(row_num, 20, offer.gdvinq.gdvcode, style_data_row)
+        ws.write(row_num, 21, offer.dateupdate, style_date_row)
+    wb.save(response)
+    return response
 
+def exportxls_hdb(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Gcode-Contract.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Gcode-Contract')
+    row_num = 0  
+    columns = ['ID','Gcode-Contract', 'Contract No.','Đơn giá chào','PO No.','Status','Gcode-Inquiry','Ghi chú','Giao dịch viên','Ngày cập nhật']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for g2code_ in G2code.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, g2code_.id, style_data_row)
+        ws.write(row_num, 1, g2code_.g2code, style_data_row)
+        ws.write(row_num, 2, g2code_.contract.contractcode, style_data_row)
+        ws.write(row_num, 3, g2code_.dongiachaohdb, style_number_row)
+        ws.write(row_num, 4, g2code_.pono, style_data_row)
+        ws.write(row_num, 5, g2code_.status, style_data_row)
+        ws.write(row_num, 6, g2code_.g1code.g1code, style_data_row)
+        ws.write(row_num, 7, g2code_.ghichu, style_data_row)
+        ws.write(row_num, 8, g2code_.gdvhdb.gdvcode, style_data_row)
+        ws.write(row_num, 9, g2code_.dateupdate, style_date_row)
+    wb.save(response)
+    return response
 
+def exportxls_po(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Po.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Purchase Order')
+    row_num = 0  
+    columns = ['ID','Gcode-Contract', 'Mô tả','Ký hiệu mã','Đơn vị','Số lượng','Supplier','Xuất xứ','NSX','Đơn giá mua','Ghi chú','Giao dịch viên','Ngày cập nhật']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for g2code_ in POdetail.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, g2code_.id, style_data_row)
+        ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
+        ws.write(row_num, 2, g2code_.motapo, style_data_row)
+        ws.write(row_num, 3, g2code_.kymahieupo, style_data_row)
+        ws.write(row_num, 4, g2code_.unitpo, style_data_row)
+        ws.write(row_num, 5, g2code_.qtypo, style_number_row)
+        ws.write(row_num, 6, g2code_.supplier.suppliercode, style_data_row)
+        ws.write(row_num, 7, g2code_.xuatxupo, style_data_row)
+        ws.write(row_num, 8, g2code_.nsxpo, style_data_row)
+        ws.write(row_num, 9, g2code_.dongiamuapo, style_number_row)
+        ws.write(row_num, 10, g2code_.ghichu, style_data_row)
+        ws.write(row_num, 11, g2code_.gdvpo.gdvcode, style_data_row)
+        ws.write(row_num, 12, g2code_.dateupdate, style_date_row)
+    wb.save(response)
+    return response
+
+def exportxls_giaohang(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Giao hàng.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Giao hàng')
+    row_num = 0  
+    columns = ['ID','Gcode-Contract', 'Số lượng','Ngày giao hàng','Giao dịch viên','Ngày cập nhật']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for g2code_ in Giaohang.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, g2code_.id, style_data_row)
+        ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
+        ws.write(row_num, 2, g2code_.qtygiaohang, style_number_row)
+        ws.write(row_num, 3, g2code_.ngaygiaohang, style_date_row)
+        ws.write(row_num, 4, g2code_.gdvpo.gdvcode, style_data_row)
+        ws.write(row_num, 5, g2code_.dateupdate, style_date_row)
+    wb.save(response)
+    return response
+
+def exportxls_phat(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Phạt.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Phạt')
+    row_num = 0  
+    columns = ['ID','Gcode-Contract', 'Số lượng','Tổng tiền phạt','Lý do phạt','Giao dịch viên','Ngày cập nhật']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for g2code_ in Phat.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, g2code_.id, style_data_row)
+        ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
+        ws.write(row_num, 2, g2code_.qtyphat, style_number_row)
+        ws.write(row_num, 2, g2code_.tongphat, style_number_row)
+        ws.write(row_num, 3, g2code_.lydophat, style_data_row)
+        ws.write(row_num, 4, g2code_.gdvpo.gdvcode, style_data_row)
+        ws.write(row_num, 5, g2code_.dateupdate, style_date_row)
+    wb.save(response)
+    return response
+
+def exportxls_danhgiansx(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Đánh giá NSX.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Đánh giá NSX')
+    row_num = 0  
+    columns = ['ID','Gcode-Contract', 'Đánh giá Gcode','Comment','Giao dịch viên','Ngày cập nhật']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for g2code_ in DanhgiaNSX.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, g2code_.id, style_data_row)
+        ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
+        strdanhgiacode =""
+        for danhgia in g2code_.danhgiacode:
+            strdanhgiacode = danhgia.danhgiacode + ","+ strdanhgiacode
+        ws.write(row_num, 2, strdanhgiacode, style_data_row)
+        ws.write(row_num, 3, g2code_.comment, style_data_row)
+        ws.write(row_num, 4, g2code_.gdvpo.gdvcode, style_data_row)
+        ws.write(row_num, 5, g2code_.dateupdate, style_date_row)
+    wb.save(response)
+    return response
+
+def exportxls_tienve(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Tiền về.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Tiền về')
+    row_num = 0  
+    columns = ['ID','Gcode-Contract', 'Số lượng','Đơn giá tiền về']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for g2code_ in Tienve.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, g2code_.id, style_data_row)
+        ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
+        ws.write(row_num, 2, g2code_.qtytienve, style_number_row)
+        ws.write(row_num, 3, g2code_.dongiatienve, style_number_row)
     wb.save(response)
     return response

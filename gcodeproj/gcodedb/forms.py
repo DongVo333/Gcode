@@ -15,10 +15,14 @@ class GcodeForm(forms.ModelForm):
         labels = {
             'ma':'Gcode',
             'mota':'Mô tả',
-            'markupdinhmuc':'Markup định mức'
+            'markupdinhmuc':'Markup định mức',
+            'ngaywin':'Ngày Win gần nhất',
+            'ngayout':'Ngày Out gần nhất',
         }
         widgets = {
-            'mota':forms.Textarea(attrs={'cols':30,'rows':1, 'id':'autosize'})
+            'mota':forms.Textarea(attrs={'cols':30,'rows':1, 'id':'autosize'}),
+            'ngaywin':InputDate(),
+            'ngayout':InputDate(),
         }
 
 class SearchQueryForm(forms.Form):

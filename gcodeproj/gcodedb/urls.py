@@ -4,7 +4,14 @@ from . import views,importxls,exportxls
 app_name = "gcodedb"
 
 urlpatterns = [
-    path('offer/',views.CreateOffer, name='createoffer'),
+    path('offer/insert/', views.offer_form,name='offer_insert'),
+    path('offer/', views.offer_list,name='offer_list'),
+    path('offer/update/<int:id>/', views.offer_form,name='offer_update'), 
+    path('offer/delete/<int:id>/',views.offer_delete,name='offer_delete'),
+    path('offer/import/xls', importxls.importxls_offer, name='importxls_offer'),
+    path('offer/export/xls', exportxls.exportxls_offer, name='exportxls_offer'),
+
+
     path('searchclient/',views.NestedSearch, name='searchclient'),
     path('create/', views.create, name="create"),
     path('list/', views.list, name="list"),

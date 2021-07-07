@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<form action="" method="post" autocomplete="off">
+    {% csrf_token %}
+    {{form.gcode|as_crispy_field}}
+    {{form.inquiry|as_crispy_field}}
+    {{form.kymahieuinq|as_crispy_field}}
+    {{form.unitinq|as_crispy_field}}
+    {{form.qtyinq|as_crispy_field}}
+    {{form.supplier|as_crispy_field}}
+    {{form.xuatxuinq|as_crispy_field}}
+    {{form.nsxinq|as_crispy_field}}
+    {{form.sttitb|as_crispy_field}}
+    {{form.groupitb|as_crispy_field}}
+    {{form.sales|as_crispy_field}}
+    {{form.dongiamuainq|as_crispy_field}}
+    {{form.dongiachaoinq|as_crispy_field}}
+    {{form.markupinq|as_crispy_field}}
+    {{form.resultinq|as_crispy_field}}
+    {{form.lydowin|as_crispy_field}}
+    {{form.lydoout|as_crispy_field}}
+    {{form.ghichu|as_crispy_field}}
+    {{form.gdvinq|as_crispy_field}}
+    <div class="row">
+        <div class="col-md-8">
+            <button type="submit" class="btn btn-success btn-block btn-lg"><i class="fas fa-database"></i>
+                Submit</button>
+        </div>
+        <div class="col-md-4">
+            <a href="/offer/" class="btn btn-secondary btn-block btn-lg">
+                <i class="fas fa-stream"></i> Back to list
+            </a>
+        </div>
+    </div>
+
+</form>
+{% endblock content %}
