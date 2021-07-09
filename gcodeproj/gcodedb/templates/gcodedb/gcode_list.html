@@ -30,8 +30,8 @@
                 <td>{{gcode.ma}}</td>
                 <td><textarea id="autosize" cols="30" rows="1" disabled>{{gcode.mota}}</textarea></td>
                 <td> {{gcode.markupdinhmuc}}</td>
-                <td> {{gcode.ngaywin}}</td>
-                <td> {{gcode.ngayout}}</td>
+                <td> {{gcode.ngaywin|date:"d-m-Y"}}</td>
+                <td> {{gcode.ngayout|date:"d-m-Y"}}</td>
                 <td>
                     <a href="/gcode/update/{{gcode.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>

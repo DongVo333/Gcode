@@ -2,7 +2,7 @@ from django import forms
 from django.db.models import fields
 from django.forms import widgets
 from django.forms.widgets import NumberInput, Textarea, Widget
-from .models import G1code, Gcode, Client, Inquiry,GDV, Kho, Supplier,Contract,Lydowin,Lydoout
+from .models import DanhgiaNSX, G1code, G2code, Gcode, Client, Giaohang, Inquiry,GDV, Kho, POdetail, Phat, Sales, Supplier,Contract,Lydowin,Lydoout, Tienve, Danhgiacode
 from django.conf import settings
 
 class InputDate(forms.DateInput):
@@ -75,7 +75,10 @@ class InquiryForm(forms.ModelForm):
 class OfferForm(forms.ModelForm):
     class Meta:
         model = G1code
-        fields = '__all__'
+        exclude = [
+            'dateupdate',
+            'g1code',
+        ]
         widgets = {
 			'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
             'dongiamuainq': NumberInput(attrs={'class':'dgm'}),
@@ -191,3 +194,81 @@ class KhoForm(forms.ModelForm):
         model = Kho
         exclude = ['dateupdate',
         ]
+        widgets = {
+            'ngaynhapkho':InputDate(),
+        }
+
+class SalesForm(forms.ModelForm):
+    class Meta:
+        model=Sales
+        fields = '__all__'
+        labels ={
+            'salescode':'Tên viết tắt',
+            'fullname':'Tên đầy đủ',
+        }
+
+class HDBForm(forms.ModelForm):
+    class Meta:
+        model = G2code
+        exclude = [
+            'dateupdate',
+            'g2code',
+        ]
+
+class POForm(forms.ModelForm):
+    class Meta:
+        model = POdetail
+        exclude = [
+            'dateupdate',
+        ]
+        widgets = {
+			'motapo': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+        }
+
+class GiaohangForm(forms.ModelForm):
+    class Meta:
+        model = Giaohang
+        exclude = [
+            'dateupdate',
+        ]
+        widgets = {
+            'ngaygiaohang':InputDate,
+        }
+
+class TienveForm(forms.ModelForm):
+    class Meta:
+        model = Tienve
+        fields ='__all__'
+
+class DanhgiaNSXForm(forms.ModelForm):
+    class Meta:
+        model = DanhgiaNSX
+        exclude = [
+            'dateupdate',
+        ]
+        labels ={
+            'g2code':'Gcode-Contract',
+            'danhgiacode':'Đánh giá code',
+            'comment':'Comment',
+            'gdvdanhgia':'Giao dịch viên',
+        }
+        widgets = {
+            'comment':Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'danhgiacode':forms.CheckboxSelectMultiple,
+        }
+
+class DanhgiacodeForm(forms.ModelForm):
+    class Meta:
+        model = Danhgiacode
+        fields = '__all__'
+
+class PhatForm(forms.ModelForm):
+    class Meta:
+        model = Phat
+        exclude = [
+            'dateupdate',
+        ]
+        widgets = {
+            'lydophat':Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+        }

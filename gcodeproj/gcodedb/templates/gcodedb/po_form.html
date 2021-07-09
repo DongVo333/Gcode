@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<form action="" method="post" autocomplete="off">
+    {% csrf_token %}
+    {{form.g2code|as_crispy_field}}
+    {{form.motapo|as_crispy_field}}
+    {{form.kymahieupo|as_crispy_field}}
+    {{form.unitpo|as_crispy_field}}
+    {{form.qtypo|as_crispy_field}}
+    {{form.dongiamuapo|as_crispy_field}}
+    {{form.supplier|as_crispy_field}}
+    {{form.xuatxupo|as_crispy_field}}
+    {{form.nsxpo|as_crispy_field}}
+    {{form.ghichu|as_crispy_field}}
+    {{form.gdvpo|as_crispy_field}}
+    <div class="row">
+        <div class="col-md-8">
+            <button type="submit" class="btn btn-success btn-block btn-lg"><i class="fas fa-database"></i>
+                Submit</button>
+        </div>
+        <div class="col-md-4">
+            <a href="/hdb/" class="btn btn-secondary btn-block btn-lg">
+                <i class="fas fa-stream"></i> Back to list
+            </a>
+        </div>
+    </div>
+
+</form>
+{% endblock content %}

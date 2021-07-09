@@ -215,6 +215,24 @@ def importxls_lydoout(request):
         return redirect('/lydoout/')     
     return render(request, 'gcodedb/lydoout_list.html')
 
+def importxls_danhgiacode(request):
+    if request.method == 'POST':
+        new_persons = request.FILES['myfile']
+        workbook = xlrd.open_workbook(file_contents=new_persons.read())
+        sheet = workbook.sheet_by_name("Đánh giá code")
+        norow = sheet.nrows
+        for r in range(1, norow):
+            strdanhgiacode = sheet.cell(r,1).value.strip()
+            counter = Danhgiacode.objects.filter(danhgiacode=strdanhgiacode).count()
+            danhgiacode_ = Danhgiacode()
+            if counter<=0:
+                danhgiacode_ = Danhgiacode(
+        		    danhgiacode=sheet.cell(r,1).value,
+        		    )
+                danhgiacode_.save()  
+        return redirect('/danhgiacode/')     
+    return render(request, 'gcodedb/danhgiacode_list.html')
+
 def importxls_kho(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -230,7 +248,7 @@ def importxls_kho(request):
                 g2codekho.qtykho = sheet.cell(r,2).value
                 g2codekho.dongiafreight = sheet.cell(r,3).value
                 g2codekho.ngaynhapkho = xlrd.xldate.xldate_as_datetime(sheet.cell(r,4).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2codekho.gdvkho = GDV.objects.get(clientcode=sheet.cell(r,5).value)
+                g2codekho.gdvkho = GDV.objects.get(gdvcode=sheet.cell(r,5).value)
                 g2codekho.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,6).value,workbook.datemode).strftime("%Y-%m-%d")
                 g2codekho.save()
             else:
@@ -239,7 +257,7 @@ def importxls_kho(request):
         		    qtykho=sheet.cell(r,2).value,
                     dongiafreight=sheet.cell(r,3).value,
                     ngaynhapkho=xlrd.xldate.xldate_as_datetime(sheet.cell(r,4).value,workbook.datemode).strftime("%Y-%m-%d"),
-                    gdvkho=GDV.objects.get(clientcode=sheet.cell(r,5).value),
+                    gdvkho=GDV.objects.get(gdvcode=sheet.cell(r,5).value),
                     dateupdate=xlrd.xldate.xldate_as_datetime(sheet.cell(r,6).value,workbook.datemode).strftime("%Y-%m-%d"),
         		    )
                 g2codekho.save()  
@@ -257,7 +275,7 @@ def importxls_offer(request):
             g1code = G1code()
             if counter>0:
                 g1code = G1code.objects.get(g1code=sheet.cell(r,1).value)
-                g1code.gcode = Gcode.objects.get(gcode=sheet.cell(r,2).value)
+                g1code.gcode = Gcode.objects.get(ma=str(sheet.cell(r,2).value))
                 g1code.inquiry = Inquiry.objects.get(inquirycode=sheet.cell(r,3).value)
                 g1code.kymahieuinq = sheet.cell(r,4).value
                 g1code.unitinq = sheet.cell(r,5).value
@@ -270,24 +288,20 @@ def importxls_offer(request):
                 g1code.sales = Sales.objects.get(salescode=sheet.cell(r,12).value)
                 g1code.dongiamuainq = sheet.cell(r,13).value
                 g1code.dongiachaoinq = sheet.cell(r,14).value
-                g1code.markupinq = sheet.cell(r,15).value
+                g1code.markupinq = float('{:.2f}'.format(sheet.cell(r,15).value))
                 g1code.resultinq = sheet.cell(r,16).value
-                strlydowin = split(sheet.cell(r,17).value,",")
+                strlydowin = sheet.cell(r,17).value.split(",")
                 for item in strlydowin:
                     itemstrip = item.strip()
-                    if Lydowin.objects.filter(lydowincode=itemstrip).count<=0:
-                        lydowin = Lydowin(lydowincode = itemstrip, detail = 'Null')
-                        lydowin.save()
-                    lydowin_ = Lydowin.objects.get(lydowincode=itemstrip)
-                    g1code.lydowin.add(lydowin_)
-                strlydoout = split(sheet.cell(r,18).value,",")
+                    if Lydowin.objects.filter(lydowincode=itemstrip).count() > 0:
+                        lydowin_ = Lydowin.objects.get(lydowincode=itemstrip)
+                        g1code.lydowin.add(lydowin_)
+                strlydoout = sheet.cell(r,18).value.split(",")
                 for item in strlydoout:
                     itemstrip = item.strip()
-                    if Lydoout.objects.filter(lydooutcode=itemstrip).count<=0:
-                        lydoout = Lydoout(lydooutcode = itemstrip, detail = 'Null')
-                        lydoout.save()
-                    lydoout_ = Lydoout.objects.get(lydooutcode=itemstrip)
-                    g1code.lydoout.add(lydoout_)
+                    if Lydoout.objects.filter(lydooutcode=itemstrip).count() > 0:
+                        lydoout_ = Lydoout.objects.get(lydooutcode=itemstrip)
+                        g1code.lydoout.add(lydoout_)
                 g1code.ghichu = sheet.cell(r,19).value
                 g1code.gdvinq = GDV.objects.get(gdvcode = sheet.cell(r,20).value)
                 g1code.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,21).value,workbook.datemode).strftime("%Y-%m-%d")
@@ -296,7 +310,7 @@ def importxls_offer(request):
             else:
                 g1code = G1code(
                     g1code=sheet.cell(r,1).value,
-                    gcode = Gcode.objects.get(gcode=sheet.cell(r,2).value),
+                    gcode = Gcode.objects.get(ma=str(sheet.cell(r,2).value)),
                     inquiry = Inquiry.objects.get(inquirycode=sheet.cell(r,3).value),
                     kymahieuinq = sheet.cell(r,4).value,
                     unitinq = sheet.cell(r,5).value,
@@ -309,28 +323,25 @@ def importxls_offer(request):
                     sales = Sales.objects.get(salescode=sheet.cell(r,12).value),
                     dongiamuainq = sheet.cell(r,13).value,
                     dongiachaoinq = sheet.cell(r,14).value,
-                    markupinq = sheet.cell(r,15).value,
+                    markupinq = float('{:.2f}'.format(sheet.cell(r,15).value)),
                     resultinq = sheet.cell(r,16).value,
                     ghichu = sheet.cell(r,19).value,
                     gdvinq = GDV.objects.get(gdvcode = sheet.cell(r,20).value),
                     dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,21).value,workbook.datemode).strftime("%Y-%m-%d"),
         		    )
                 g1code.save()  
+                strlydowin = sheet.cell(r,17).value.split(",")
                 for item in strlydowin:
                     itemstrip = item.strip()
-                    if Lydowin.objects.filter(lydowincode=itemstrip).count<=0:
-                        lydowin = Lydowin(lydowincode = itemstrip, detail = 'Null')
-                        lydowin.save()
-                    lydowin_ = Lydowin.objects.get(lydowincode=itemstrip)
-                    g1code.lydowin.add(lydowin_)
-                strlydoout = split(sheet.cell(r,18).value,",")
+                    if Lydowin.objects.filter(lydowincode=itemstrip).count()>0:
+                        lydowin_ = Lydowin.objects.get(lydowincode=itemstrip)
+                        g1code.lydowin.add(lydowin_)
+                strlydoout = sheet.cell(r,18).value.split(",")
                 for item in strlydoout:
                     itemstrip = item.strip()
-                    if Lydoout.objects.filter(lydooutcode=itemstrip).count<=0:
-                        lydoout = Lydoout(lydooutcode = itemstrip, detail = 'Null')
-                        lydoout.save()
-                    lydoout_ = Lydoout.objects.get(lydooutcode=itemstrip)
-                    g1code.lydoout.add(lydoout_)
+                    if Lydoout.objects.filter(lydooutcode=itemstrip).count()>0:
+                        lydoout_ = Lydoout.objects.get(lydooutcode=itemstrip)
+                        g1code.lydoout.add(lydoout_)
         return redirect('/offer/')     
     return render(request, 'gcodedb/offer_list.html')
 
@@ -341,29 +352,29 @@ def importxls_hdb(request):
         sheet = workbook.sheet_by_name("Gcode-Contract")
         norow = sheet.nrows
         for r in range(1, norow):
-            counter = G2code.objects.filter(g2code=sheet.cell(r,1).value).count
+            counter = G2code.objects.filter(g2code=sheet.cell(r,1).value).count()
             g2code = G2code()
             if counter>0:
                 g2code = G2code.objects.get(g2code=sheet.cell(r,1).value)
-                g2code.contract = Contract.object.get(contractcode=sheet.cell(r,2).value)
+                g2code.contract = Contract.objects.get(contractcode=sheet.cell(r,2).value)
                 g2code.dongiachaohdb = sheet.cell(r,3).value
                 g2code.pono = sheet.cell(r,4).value
                 g2code.status = sheet.cell(r,5).value
                 g2code.g1code = G1code.objects.get(g1code=sheet.cell(r,6).value)
                 g2code.ghichu = sheet.cell(r,7).value
-                g2code.gdvhdb = GDV.objects.get(clientcode=sheet.cell(r,8).value)
+                g2code.gdvhdb = GDV.objects.get(gdvcode=sheet.cell(r,8).value)
                 g2code.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,9).value,workbook.datemode).strftime("%Y-%m-%d")
                 g2code.save()
             else:
                 g2codekho = G2code(
         		    g2code = sheet.cell(r,1).value,
-                    contract = Contract.object.get(contractcode=sheet.cell(r,2).value),
+                    contract = Contract.objects.get(contractcode=sheet.cell(r,2).value),
                     dongiachaohdb = sheet.cell(r,3).value,
                     pono = sheet.cell(r,4).value,
                     status = sheet.cell(r,5).value,
                     g1code = G1code.objects.get(g1code=sheet.cell(r,6).value),
                     ghichu = sheet.cell(r,7).value,
-                    gdvhdb = GDV.objects.get(clientcode=sheet.cell(r,8).value),
+                    gdvhdb = GDV.objects.get(gdvcode=sheet.cell(r,8).value),
                     dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,9).value,workbook.datemode).strftime("%Y-%m-%d"),
         		    )
                 g2codekho.save()  
@@ -485,14 +496,12 @@ def importxls_danhgiansx(request):
             g2codedg = DanhgiaNSX()
             if counter>0:
                 g2codedg = DanhgiaNSX.objects.get(g2code=g2code_)
-                strdanhgia = split(sheet.cell(r,2).value,",")
+                strdanhgia = sheet.cell(r,2).value.split(",")
                 for item in strdanhgia:
                     itemstrip = item.strip()
-                    if Danhgiacode.objects.filter(danhgiacode=itemstrip).count<=0:
-                        danhgia = Danhgiacode(danhgiacode = itemstrip)
-                        danhgia.save()
-                    danhgia_ = Danhgiacode.objects.get(danhgiacode=itemstrip)
-                    g2codedg.danhgiacode.add(danhgia_)
+                    if Danhgiacode.objects.filter(danhgiacode=itemstrip).count()>0:
+                        danhgia_ = Danhgiacode.objects.get(danhgiacode=itemstrip)
+                        g2codedg.danhgiacode.add(danhgia_)
                 g2codedg.comment = sheet.cell(r,3).value
                 g2codedg.gdvdanhgia = GDV.objects.get(gdvcode=sheet.cell(r,4).value)
                 g2codedg.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,workbook.datemode).strftime("%Y-%m-%d")
@@ -505,14 +514,12 @@ def importxls_danhgiansx(request):
                     dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,workbook.datemode).strftime("%Y-%m-%d"),
         		    )
                 g2codedg.save() 
-                strdanhgia = split(sheet.cell(r,2).value,",")
+                strdanhgia = sheet.cell(r,2).value.split(",")
                 for item in strdanhgia:
                     itemstrip = item.strip()
-                    if Danhgiacode.objects.filter(danhgiacode=itemstrip).count<=0:
-                        danhgia = Danhgiacode(danhgiacode = itemstrip)
-                        danhgia.save()
-                    danhgia_ = Danhgiacode.objects.get(danhgiacode=itemstrip)
-                    g2codedg.danhgiacode.add(danhgia_)
+                    if Danhgiacode.objects.filter(danhgiacode=itemstrip).count()>0:
+                        danhgia_ = Danhgiacode.objects.get(danhgiacode=itemstrip)
+                        g2codedg.danhgiacode.add(danhgia_)
         return redirect('/danhgia/')     
     return render(request, 'gcodedb/danhgia_list.html')
 
@@ -540,3 +547,25 @@ def importxls_tienve(request):
                 g2codetienve.save()  
         return redirect('/tienve/')     
     return render(request, 'gcodedb/tienve_list.html')
+
+def importxls_sales(request):
+    if request.method == 'POST':
+        new_persons = request.FILES['myfile']
+        workbook = xlrd.open_workbook(file_contents=new_persons.read())
+        sheet = workbook.sheet_by_name("Sales")
+        norow = sheet.nrows
+        for r in range(1, norow):
+            counter = Sales.objects.filter(salescode=sheet.cell(r,1).value).count()
+            sales = Sales()
+            if counter>0:
+                sales = Sales.objects.get(salescode=sheet.cell(r,1).value)
+                sales.fullname = sheet.cell(r,2).value
+                sales.save()
+            else:
+                sales = Sales(
+        		    salescode = sheet.cell(r,1).value,
+                    fullname = sheet.cell(r,2).value,
+        		    )
+                sales.save()  
+        return redirect('/sales/')     
+    return render(request, 'gcodedb/sales_list.html')

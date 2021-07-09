@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<table class="table table-borderless">
+<table class="table table-borderless" border="1px">
     <form method="POST" action="{% url 'gcodedb:importxls_offer' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="myfile" accept=".xls">
@@ -59,16 +59,16 @@
                 <td>{{offer.thanhtienmua}}</td>
                 <td>{{offer.dongiachaoinq}}</td>
                 <td>{{offer.thanhtienchao}}</td>
-                <td>{{offer.markupinq}}</td>
+                <td class="markup">{{offer.markupinq}}</td>
                 <td>{{offer.resultinq}}</td>
                 <td>
-                    {% for lydowin in offer.lydowin %}
+                    {% for lydowin in offer.lydowin.all %}
                         {{lydowin.lydowincode}},
                         <br>
                     {% endfor %}
                 </td>
                 <td>
-                    {% for lydoout in offer.lydoout %}
+                    {% for lydoout in offer.lydoout.all %}
                         {{lydoout.lydooutcode}},
                         <br>
                     {% endfor %}
@@ -88,3 +88,11 @@
     </tbody>
 </table>
 {% endblock content %}
+{% block extra_script %}
+
+<script type="text/javascript">
+    $( document ).ready(function() {
+        $('td.markup').text = parseFloat($('td.markup').text).toFixed(2);
+    });
+</script>
+{% endblock %}

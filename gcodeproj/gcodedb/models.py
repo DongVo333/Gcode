@@ -162,6 +162,20 @@ class G2code(models.Model):
         return (self.g1code.gcode.mota)
     def unit(self):
         return self.g1code.unitinq 
+    def qty(self):
+        return self.g1code.qtyinq
+    def inquiry(self):
+        return self.g1code.inquiry.inquirycode
+    def supplier(self):
+        return self.g1code.supplier.suppliercode
+    def kymahieu(self):
+        return self.g1code.kymahieuinq
+    def nsx(self):
+        return self.g1code.nsxinq
+    def xuatxu(self):
+        return self.g1code.xuatxuinq
+    def gcode(self):
+        return self.g1code.gcode.ma
 class POdetail(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_pog2code')
     motapo = models.TextField(null=True)
@@ -172,7 +186,7 @@ class POdetail(models.Model):
     xuatxupo = models.CharField(max_length=100,null=True)
     nsxpo = models.CharField(max_length=50,null=True)
     dongiamuapo = models.FloatField(null=True)
-    ghichu = models.TextField(null=True)
+    ghichu = models.TextField(null=True,blank=True)
     gdvpo = models.ForeignKey(GDV,on_delete=PROTECT, related_name='fk_pogdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
@@ -180,6 +194,10 @@ class POdetail(models.Model):
     @property
     def thanhtienmuapo(self):
         return (self.qtypo or 0)*(self.dongiamuapo or 0)
+    def gcode(self):
+        return (self.g2code.g1code.gcode.ma)
+    def pono(self):
+        return (self.g2code.pono)
 class Kho(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_khog2code')
     qtykho = models.FloatField(null=True)
@@ -198,6 +216,8 @@ class Kho(models.Model):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
     def donvitinh(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    def gcode(self):
+        return self.g2code.g1code.gcode.ma
 
 class Giaohang(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_giaohangg2code')
@@ -208,12 +228,16 @@ class Giaohang(models.Model):
     def __str__(self):
         return str(self.g2code) +"giao hang"
     @property
-    def motahanghoa(self):
+    def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
-    def donvitinh(self):
+    def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    def gcode(self):
+        return self.g2code.g1code.gcode.ma
+    def contract(self):
+        return self.g2code.contract.contractcode
 class Phat(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_phatg2code')
     qtyphat = models.FloatField(null=True)
@@ -224,17 +248,28 @@ class Phat(models.Model):
     def __str__(self):
         return str(self.g2code) + "phat"
     @property
-    def motahanghoa(self):
+    def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
-    def donvitinh(self):
+    def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
     def dongiaphat(self):
         if self.qtyphat > 0:
             return (self.tongphat or 0)/(self.qtyphat)
         else:
             return None
+    def gcode(self):
+        return  self.g2code.g1code.gcode.ma
+    def contract(self):
+        return self.g2code.contract.contractcode
+    def client(self):
+        return self.g2code.contract.client.clientcode
+    def nsx(self):
+        return POdetail.objects.get(g2code = self.g2code).nsxpo
+    def xuatxu(self):
+        return POdetail.objects.get(g2code = self.g2code).xuatxupo
+    
 class Danhgiacode(models.Model):
     danhgiacode=models.CharField(max_length=100)
     def __str__(self):
@@ -249,13 +284,13 @@ class DanhgiaNSX(models.Model):
     def __str__(self):
         return str(self.g2code) + "danh gia"   
     @property
-    def motahanghoa(self):
+    def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
-    def donvitinh(self):
+    def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
-    def soluong(self):
+    def qty(self):
         return POdetail.objects.get(g2code = self.g2code).qtypo
     def xuatxu(self):
         return POdetail.objects.get(g2code = self.g2code).xuatxupo
@@ -265,6 +300,12 @@ class DanhgiaNSX(models.Model):
         return POdetail.objects.get(g2code = self.g2code).dongiamuapo
     def thanhtienmua(self):
         return POdetail.objects.get(g2code = self.g2code).thanhtienmuapo
+    def gcode(self):
+        return (self.g2code.g1code.gcode.ma)
+    def pono(self):
+        return (self.g2code.pono)
+    def nsx(self):
+        return POdetail.objects.get(g2code = self.g2code).nsxpo
 
 class Tienve(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_tienveg2code')
@@ -275,3 +316,21 @@ class Tienve(models.Model):
     @property
     def tongtienve(self):
         return (self.qtytienve or 0)*(self.dongiatienve or 0)
+    def mota(self):
+        return POdetail.objects.get(g2code = self.g2code).motapo
+    def kymahieu(self):
+        return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    def unit(self):
+        return POdetail.objects.get(g2code = self.g2code).unitpo
+    def soluong(self):
+        return POdetail.objects.get(g2code = self.g2code).qtypo
+    def xuatxu(self):
+        return POdetail.objects.get(g2code = self.g2code).xuatxupo
+    def gcode(self):
+        return self.g2code.g1code.gcode.ma
+    def contract(self):
+        return self.g2code.contract.contractcode
+    def client(self):
+        return self.g2code.contract.client.clientcode
+    def nsx(self):
+        return POdetail.objects.get(g2code = self.g2code).nsxpo

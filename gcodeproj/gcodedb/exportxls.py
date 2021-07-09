@@ -2,7 +2,7 @@ from datetime import date
 import csv
 import xlwt
 from tablib import Dataset
-from .models import Contract, DanhgiaNSX, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat,Supplier,Lydoout, Tienve
+from .models import Contract, DanhgiaNSX, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat, Sales,Supplier,Lydoout, Tienve
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -172,6 +172,22 @@ def exportxls_lydoout(request):
     wb.save(response)
     return response
 
+def exportxls_danhgiacode(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Danh gia code.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Đánh giá code')
+    row_num = 0 
+    columns = ['ID','Đánh giá code']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for danhgia in Danhgiacode.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, danhgia.id, style_data_row)
+        ws.write(row_num, 1, danhgia.danhgiacode, style_data_row)
+    wb.save(response)
+    return response
+
 def exportxls_kho(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Kho.xls"'
@@ -227,11 +243,11 @@ def exportxls_offer(request):
         else:
             ws.write(row_num, 16, offer.resultinq, style_red_row)
         strlydowin =""
-        for lydowin in offer.lydowin:
+        for lydowin in offer.lydowin.all():
             strlydowin = lydowin.lydowincode + "," + strlydowin
         ws.write(row_num, 17, strlydowin, style_data_row)
         strlydoout =""
-        for lydoout in offer.lydoout:
+        for lydoout in offer.lydoout.all():
             strlydoout = lydoout.lydooutcode + "," + strlydoout
         ws.write(row_num, 18, strlydoout, style_data_row)
         ws.write(row_num, 19, offer.ghichu, style_data_row)
@@ -252,15 +268,15 @@ def exportxls_hdb(request):
     for g2code_ in G2code.objects.all():
         row_num += 1
         ws.write(row_num, 0, g2code_.id, style_data_row)
-        ws.write(row_num, 1, g2code_.g2code, style_data_row)
-        ws.write(row_num, 2, g2code_.contract.contractcode, style_data_row)
+        ws.write(row_num, 1, "", style_data_row)
+        ws.write(row_num, 2, "", style_data_row)
         ws.write(row_num, 3, g2code_.dongiachaohdb, style_number_row)
-        ws.write(row_num, 4, g2code_.pono, style_data_row)
-        ws.write(row_num, 5, g2code_.status, style_data_row)
+        ws.write(row_num, 4, "", style_data_row)
+        ws.write(row_num, 5, "Chưa đặt", style_data_row)
         ws.write(row_num, 6, g2code_.g1code.g1code, style_data_row)
-        ws.write(row_num, 7, g2code_.ghichu, style_data_row)
-        ws.write(row_num, 8, g2code_.gdvhdb.gdvcode, style_data_row)
-        ws.write(row_num, 9, g2code_.dateupdate, style_date_row)
+        ws.write(row_num, 7, "", style_data_row)
+        ws.write(row_num, 8, "", style_data_row)
+        ws.write(row_num, 9, date.today(), style_date_row)
     wb.save(response)
     return response
 
@@ -306,14 +322,14 @@ def exportxls_giaohang(request):
         ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
         ws.write(row_num, 2, g2code_.qtygiaohang, style_number_row)
         ws.write(row_num, 3, g2code_.ngaygiaohang, style_date_row)
-        ws.write(row_num, 4, g2code_.gdvpo.gdvcode, style_data_row)
+        ws.write(row_num, 4, g2code_.gdvgiaohang.gdvcode, style_data_row)
         ws.write(row_num, 5, g2code_.dateupdate, style_date_row)
     wb.save(response)
     return response
 
 def exportxls_phat(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Phạt.xls"'
+    response['Content-Disposition'] = 'attachment; filename="Phat.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Phạt')
     row_num = 0  
@@ -325,16 +341,16 @@ def exportxls_phat(request):
         ws.write(row_num, 0, g2code_.id, style_data_row)
         ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
         ws.write(row_num, 2, g2code_.qtyphat, style_number_row)
-        ws.write(row_num, 2, g2code_.tongphat, style_number_row)
-        ws.write(row_num, 3, g2code_.lydophat, style_data_row)
-        ws.write(row_num, 4, g2code_.gdvpo.gdvcode, style_data_row)
-        ws.write(row_num, 5, g2code_.dateupdate, style_date_row)
+        ws.write(row_num, 3, g2code_.tongphat, style_number_row)
+        ws.write(row_num, 4, g2code_.lydophat, style_data_row)
+        ws.write(row_num, 5, g2code_.gdvphat.gdvcode, style_data_row)
+        ws.write(row_num, 6, g2code_.dateupdate, style_date_row)
     wb.save(response)
     return response
 
 def exportxls_danhgiansx(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Đánh giá NSX.xls"'
+    response['Content-Disposition'] = 'attachment; filename="Danh gia NSX.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Đánh giá NSX')
     row_num = 0  
@@ -346,18 +362,18 @@ def exportxls_danhgiansx(request):
         ws.write(row_num, 0, g2code_.id, style_data_row)
         ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
         strdanhgiacode =""
-        for danhgia in g2code_.danhgiacode:
+        for danhgia in g2code_.danhgiacode.all():
             strdanhgiacode = danhgia.danhgiacode + ","+ strdanhgiacode
         ws.write(row_num, 2, strdanhgiacode, style_data_row)
         ws.write(row_num, 3, g2code_.comment, style_data_row)
-        ws.write(row_num, 4, g2code_.gdvpo.gdvcode, style_data_row)
+        ws.write(row_num, 4, g2code_.gdvdanhgia.gdvcode, style_data_row)
         ws.write(row_num, 5, g2code_.dateupdate, style_date_row)
     wb.save(response)
     return response
 
 def exportxls_tienve(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Tiền về.xls"'
+    response['Content-Disposition'] = 'attachment; filename="Tien ve.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Tiền về')
     row_num = 0  
@@ -370,5 +386,22 @@ def exportxls_tienve(request):
         ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
         ws.write(row_num, 2, g2code_.qtytienve, style_number_row)
         ws.write(row_num, 3, g2code_.dongiatienve, style_number_row)
+    wb.save(response)
+    return response
+
+def exportxls_sales(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Sales.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Sales')
+    row_num = 0  
+    columns = ['ID','Tên viết tắt', 'Tên đầy đủ']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], style_head_row)
+    for sales in Sales.objects.all():
+        row_num += 1
+        ws.write(row_num, 0, sales.id, style_data_row)
+        ws.write(row_num, 1, sales.salescode, style_data_row)
+        ws.write(row_num, 2, sales.fullname, style_data_row)
     wb.save(response)
     return response

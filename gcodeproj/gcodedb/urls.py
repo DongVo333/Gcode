@@ -11,6 +11,62 @@ urlpatterns = [
     path('offer/import/xls', importxls.importxls_offer, name='importxls_offer'),
     path('offer/export/xls', exportxls.exportxls_offer, name='exportxls_offer'),
 
+    path('hdb/insert/', views.hdb_form,name='hdb_insert'),
+    path('hdb/', views.hdb_list,name='hdb_list'),
+    path('hdb/update/<int:id>/', views.hdb_form,name='hdb_update'), 
+    path('hdb/delete/<int:id>/',views.hdb_delete,name='hdb_delete'),
+    path('hdb/import/xls', importxls.importxls_hdb, name='importxls_hdb'),
+    path('hdb/export/xls', exportxls.exportxls_hdb, name='exportxls_hdb'),
+
+    path('po/insert/', views.po_form,name='po_insert'),
+    path('po/', views.po_list,name='po_list'),
+    path('po/update/<int:id>/', views.po_form,name='po_update'), 
+    path('po/delete/<int:id>/',views.po_delete,name='po_delete'),
+    path('po/import/xls', importxls.importxls_po, name='importxls_po'),
+    path('po/export/xls', exportxls.exportxls_po, name='exportxls_po'),
+
+    path('giaohang/insert/', views.giaohang_form,name='giaohang_insert'),
+    path('giaohang/', views.giaohang_list,name='giaohang_list'),
+    path('giaohang/update/<int:id>/', views.giaohang_form,name='giaohang_update'), 
+    path('giaohang/delete/<int:id>/',views.giaohang_delete,name='giaohang_delete'),
+    path('giaohang/import/xls', importxls.importxls_giaohang, name='importxls_giaohang'),
+    path('giaohang/export/xls', exportxls.exportxls_giaohang, name='exportxls_giaohang'),
+
+    path('phat/insert/', views.phat_form,name='phat_insert'),
+    path('phat/', views.phat_list,name='phat_list'),
+    path('phat/update/<int:id>/', views.phat_form,name='phat_update'), 
+    path('phat/delete/<int:id>/',views.phat_delete,name='phat_delete'),
+    path('phat/import/xls', importxls.importxls_phat, name='importxls_phat'),
+    path('phat/export/xls', exportxls.exportxls_phat, name='exportxls_phat'),
+
+
+    path('tienve/insert/', views.tienve_form,name='tienve_insert'),
+    path('tienve/', views.tienve_list,name='tienve_list'),
+    path('tienve/update/<int:id>/', views.tienve_form,name='tienve_update'), 
+    path('tienve/delete/<int:id>/',views.tienve_delete,name='tienve_delete'),
+    path('tienve/import/xls', importxls.importxls_tienve, name='importxls_tienve'),
+    path('tienve/export/xls', exportxls.exportxls_tienve, name='exportxls_tienve'),
+
+    path('danhgiansx/insert/', views.danhgiansx_form,name='danhgiansx_insert'),
+    path('danhgiansx/', views.danhgiansx_list,name='danhgiansx_list'),
+    path('danhgiansx/update/<int:id>/', views.danhgiansx_form,name='danhgiansx_update'), 
+    path('danhgiansx/delete/<int:id>/',views.danhgiansx_delete,name='danhgiansx_delete'),
+    path('danhgiansx/import/xls', importxls.importxls_danhgiansx, name='importxls_danhgiansx'),
+    path('danhgiansx/export/xls', exportxls.exportxls_danhgiansx, name='exportxls_danhgiansx'),
+
+    path('sales/insert/', views.sales_form,name='sales_insert'),
+    path('sales/', views.sales_list,name='offer_list'),
+    path('sales/update/<int:id>/', views.sales_form,name='sales_update'), 
+    path('sales/delete/<int:id>/',views.sales_delete,name='sales_delete'),
+    path('sales/import/xls', importxls.importxls_sales, name='importxls_sales'),
+    path('sales/export/xls', exportxls.exportxls_sales, name='exportxls_sales'),
+
+    path('danhgiacode/insert/', views.danhgiacode_form,name='danhgiacode_insert'),
+    path('danhgiacode/', views.danhgiacode_list,name='offer_list'),
+    path('danhgiacode/update/<int:id>/', views.danhgiacode_form,name='danhgiacode_update'), 
+    path('danhgiacode/delete/<int:id>/',views.danhgiacode_delete,name='danhgiacode_delete'),
+    path('danhgiacode/import/xls', importxls.importxls_danhgiacode, name='importxls_danhgiacode'),
+    path('danhgiacode/export/xls', exportxls.exportxls_danhgiacode, name='exportxls_danhgiacode'),
 
     path('searchclient/',views.NestedSearch, name='searchclient'),
     path('create/', views.create, name="create"),
@@ -80,8 +136,6 @@ urlpatterns = [
     path('kho/delete/<int:id>/',views.kho_delete,name='kho_delete'),
     path('kho/import/xls', importxls.importxls_kho, name='importxls_kho'),
     path('kho/export/xls', exportxls.exportxls_kho, name='exportxls_kho'),
-
-    path('hdb/',views.SearchHDB,name='searchhdb'),
-    path('display/', views.displaydata,name='display'),
+    
     path('savedata/', views.savedata, name ='savedata'),
 ]

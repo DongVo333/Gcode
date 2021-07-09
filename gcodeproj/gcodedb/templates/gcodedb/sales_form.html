@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<form action="" method="post" autocomplete="off">
+    {% csrf_token %}
+    {{form.salescode|as_crispy_field}}
+    {{form.fullname|as_crispy_field}}
+    <div class="row">
+        <div class="col-md-8">
+            <button type="submit" class="btn btn-success btn-block btn-lg"><i class="fas fa-database"></i>
+                Submit</button>
+        </div>
+        <div class="col-md-4">
+            <a href="/sales/" class="btn btn-secondary btn-block btn-lg">
+                <i class="fas fa-stream"></i> Back to list
+            </a>
+        </div>
+    </div>
+
+</form>
+{% endblock content %}

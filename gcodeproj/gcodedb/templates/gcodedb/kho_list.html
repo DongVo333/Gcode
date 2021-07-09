@@ -12,14 +12,15 @@
     <thead class="border-bottom font-weight-bold">
         <tr>
             <td>G2code</td>
+            <td>Gcode</td>
+            <td>Mô tả</td>
+            <td>Ký mã hiệu</td>
+            <td>Đơn vị tính</td>
             <td>Số lượng nhập kho</td>
             <td>Đơn giá freight</td>
             <td>Ngày nhập kho</td>
             <td>Giao dịch viên</td>
             <td>Tổng giá Freight</td>
-            <td>Mô tả</td>
-            <td>Ký mã hiệu</td>
-            <td>Đơn vị tính</td>
             <td>
                 <a href="/kho/insert" class="btn btn-outline-success">
                     <i class="fas fa-plus"></i> Add New
@@ -31,14 +32,15 @@
         {% for kho in kho_list %}
             <tr>
                 <td>{{kho.g2code}}</td>
-                <td>{{kho.qtykho}}</td>
-                <td>{{kho.dongiafreight}}</td>
-                <td>{{kho.ngaynhapkho}}</td>
-                <td>{{kho.gdvkho}}</td>
-                <td>{{kho.thanhtienfreight}}</td>
+                <td>{{kho.gcode}}</td>
                 <td>{{kho.motahanghoa}}</td>
                 <td>{{kho.kymahieu}}</td>
                 <td>{{kho.donvitinh}}</td>
+                <td>{{kho.qtykho}}</td>
+                <td>{{kho.dongiafreight}}</td>
+                <td>{{kho.ngaynhapkho|date:"d-m-Y"}}</td>
+                <td>{{kho.gdvkho}}</td>
+                <td>{{kho.thanhtienfreight}}</td>
                 <td>
                     <a href="/kho/update/{{kho.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>
