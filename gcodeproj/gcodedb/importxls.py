@@ -1,11 +1,15 @@
 from datetime import date, datetime
 from re import split
+from pandas.core.frame import DataFrame
 import xlrd
+from xlrd.formula import dump_formula
 from .models import Contract, DanhgiaNSX, Danhgiacode, G1code, G2code, GDV,Gcode,Inquiry,Client,Kho,POdetail,Phat,Supplier,Lydowin,Lydoout,Giaohang,Sales, Tienve
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
 from django.utils.dateparse import parse_date
+import pandas as pd
+import json
 
 def readdate(inputdate,workbook):
     if inputdate == "":
@@ -264,7 +268,7 @@ def importxls_kho(request):
         return redirect('/kho/')     
     return render(request, 'gcodedb/kho_list.html')
 
-def importxls_offer(request):
+def importxls_offer_(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
         workbook = xlrd.open_workbook(file_contents=new_persons.read())
@@ -344,6 +348,112 @@ def importxls_offer(request):
                         g1code.lydoout.add(lydoout_)
         return redirect('/offer/')     
     return render(request, 'gcodedb/offer_list.html')
+
+def importxls_offer_1(request):
+    if request.method == 'POST':
+        new_persons = request.FILES['myfile']
+        df = pd.read_excel(new_persons, sheet_name='Offer')
+        print(list(df.columns))
+        norow = df.shape[0] 
+        for r in range(0, norow):
+            counter = G1code.objects.filter(g1code=df.loc[r,'Gcode-Inquiry']).count()
+            g1code = G1code()
+            if counter>0:
+                g1code = G1code.objects.get(g1code=df.loc[r,'Gcode-Inquiry'])
+                g1code.gcode = Gcode.objects.get(ma=df.loc[r,'Gcode'])
+                g1code.inquiry = Inquiry.objects.get(inquirycode=df.loc[r,'Inquiry'])
+                g1code.kymahieuinq = df.loc[r,'Ký mã hiệu']
+                g1code.unitinq = df.loc[r,'Đơn vị']
+                g1code.qtyinq = df.loc[r,'Số lượng']
+                g1code.supplier = Supplier.objects.get(suppliercode=df.loc[r,'Supplier'])
+                g1code.xuatxuinq = df.loc[r,'Xuất xứ']
+                g1code.nsxinq = df.loc[r,'NSX']
+                g1code.sttitb = df.loc[r,'STT in ITB']
+                g1code.groupitb = df.loc[r,'Group in ITB']
+                g1code.sales = Sales.objects.get(salescode=df.loc[r,'Sale'])
+                g1code.dongiamuainq = df.loc[r,'Đơn giá mua']
+                g1code.dongiachaoinq = df.loc[r,'Đơn giá chào']
+                g1code.markupinq = float('{:.2f}'.format(df.loc[r,'Markup']))
+                g1code.resultinq = df.loc[r,'Result']
+                if df.loc[r,'Uy tín'] == 'Yes':
+                        lydowin_ = Lydowin.objects.get(lydowincode='Uy tín')
+                        g1code.lydowin.add(lydowin_)
+                if df.loc[r,'Giá tốt'] == 'Yes':
+                        lydowin_ = Lydowin.objects.get(lydowincode='Giá tốt')
+                        g1code.lydowin.add(lydowin_)
+                if df.loc[r,'Giá chào cao'] == 'Yes':
+                        lydoout_ = Lydoout.objects.get(lydooutcode='Giá chào cao')
+                        g1code.lydoout.add(lydoout_)
+                if df.loc[r,'Không tìm được NCC'] == 'Yes':
+                        lydoout_ = Lydoout.objects.get(lydooutcode='Không tìm được NCC')
+                        g1code.lydoout.add(lydoout_)
+                g1code.ghichu = df.loc[r,'Ghi Chú']
+                g1code.gdvinq = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên'])
+                g1code.dateupdate = date.today()
+
+                g1code.save()
+            else:
+                g1code = G1code(
+                    g1code=df.loc[r,'Gcode-Inquiry'],
+                    gcode = Gcode.objects.get(ma=df.loc[r,'Gcode']),
+                    inquiry = Inquiry.objects.get(inquirycode=df.loc[r,'Inquiry']),
+                    kymahieuinq = df.loc[r,'Ký mã hiệu'],
+                    unitinq = df.loc[r,'Đơn vị'],
+                    qtyinq = df.loc[r,'Số lượng'],
+                    supplier = Supplier.objects.get(suppliercode=df.loc[r,'Supplier']),
+                    xuatxuinq = df.loc[r,'Xuất xứ'],
+                    nsxinq = df.loc[r,'NSX'],
+                    sttitb = df.loc[r,'STT in ITB'],
+                    groupitb = df.loc[r,'Group in ITB'],
+                    sales = Sales.objects.get(salescode=df.loc[r,'Sale']),
+                    dongiamuainq = df.loc[r,'Đơn giá mua'],
+                    dongiachaoinq = df.loc[r,'Đơn giá chào'],
+                    markupinq = float('{:.2f}'.format(df.loc[r,'Markup'])),
+                    resultinq = df.loc[r,'Result'],
+                    ghichu = df.loc[r,'Ghi Chú'],
+                    gdvinq = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên']),
+                    dateupdate = date.today(),
+        		    )
+                g1code.save()  
+                if df.loc[r,'Uy tín'] == 'Yes':
+                        lydowin_ = Lydowin.objects.get(lydowincode='Uy tín')
+                        g1code.lydowin.add(lydowin_)
+                if df.loc[r,'Giá tốt'] == 'Yes':
+                        lydowin_ = Lydowin.objects.get(lydowincode='Giá tốt')
+                        g1code.lydowin.add(lydowin_)
+                if df.loc[r,'Giá chào cao'] == 'Yes':
+                        lydoout_ = Lydoout.objects.get(lydooutcode='Giá chào cao')
+                        g1code.lydoout.add(lydoout_)
+                if df.loc[r,'Không tìm được NCC'] == 'Yes':
+                        lydoout_ = Lydoout.objects.get(lydooutcode='Không tìm được NCC')
+                        g1code.lydoout.add(lydoout_)
+        return redirect('/offer/')     
+    return render(request, 'gcodedb/offer_list.html')
+
+def importxls_offer(request):
+    df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer')
+    df.round({'Số lượng':2,'Đơn giá mua':2,'Đơn giá chào':2,'Markup':2})
+    df.rename(
+    columns={
+        "Gcode-Inquiry": "g1code",
+        "Ký mã hiệu": "kymahieuinq",
+        "Số lượng":"qty",
+        "Xuất xứ":"xuatxu",
+        "STT in ITB":"sttinitb",
+        "Group in ITB":"groupinitb",
+        "Đơn giá mua":"dongiamua",
+        "Đơn giá chào":"dongiachao",
+        "Ghi chú":"ghichu",
+        "Giao dịch viên":"gdv",
+        "Đơn vị":"unit"
+    },
+    inplace=True
+    )
+    json_records = df.reset_index().to_json(orient ='records')
+    data = []
+    data = json.loads(json_records)
+    context = {'offer_list': data}
+    return render(request, 'gcodedb/offer_list.html', context)
 
 def importxls_hdb(request):
     if request.method == 'POST':

@@ -44,37 +44,27 @@
         {% for offer in offer_list %}
             <tr>
                 <td>{{offer.g1code}}</td>
-                <td>{{offer.gcode}}</td>
-                <td>{{offer.inquiry}}</td>
+                <td>{{offer.Gcode}}</td>
+                <td>{{offer.Inquiry}}</td>
                 <td>{{offer.kymahieuinq}}</td>
-                <td>{{offer.unitinq}}</td>
-                <td>{{offer.qtyinq}}</td>
-                <td>{{offer.supplier}}</td>
-                <td>{{offer.xuatxuinq}}</td>
-                <td>{{offer.nsxinq}}</td>
-                <td>{{offer.sttitb}}</td>
-                <td>{{offer.groupitb}}</td>
-                <td>{{offer.sales}}</td>
-                <td>{{offer.dongiamuainq}}</td>
-                <td>{{offer.thanhtienmua}}</td>
-                <td>{{offer.dongiachaoinq}}</td>
-                <td>{{offer.thanhtienchao}}</td>
-                <td class="markup">{{offer.markupinq}}</td>
-                <td>{{offer.resultinq}}</td>
-                <td>
-                    {% for lydowin in offer.lydowin.all %}
-                        {{lydowin.lydowincode}},
-                        <br>
-                    {% endfor %}
-                </td>
-                <td>
-                    {% for lydoout in offer.lydoout.all %}
-                        {{lydoout.lydooutcode}},
-                        <br>
-                    {% endfor %}
-                </td>
+                <td>{{offer.unit}}</td>
+                <td>{{offer.qty}}</td>
+                <td>{{offer.Supplier}}</td>
+                <td>{{offer.xuatxu}}</td>
+                <td>{{offer.NSX}}</td>
+                <td>{{offer.sttinitb}}</td>
+                <td>{{offer.groupinitb}}</td>
+                <td>{{offer.Sale}}</td>
+                <td>{{offer.dongiamua}}</td>
+                <td></td>
+                <td>{{offer.dongiachao}}</td>
+                <td></td>
+                <td class="markup">{{offer.Markup}}</td>
+                <td>{{offer.Result}}</td>
+                <td></td>
+                <td></td>
                 <td>{{offer.ghichu}}</td>
-                <td>{{offer.gdvinq}}</td>
+                <td>{{offer.gdv}}</td>
                 <td>
                     <a href="/offer/update/{{offer.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>

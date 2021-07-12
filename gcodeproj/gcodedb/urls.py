@@ -5,10 +5,9 @@ app_name = "gcodedb"
 
 urlpatterns = [
     path('offer/insert/', views.offer_form,name='offer_insert'),
-    path('offer/', views.offer_list,name='offer_list'),
+    path('offer/', importxls.importxls_offer,name='importxls_offer'),
     path('offer/update/<int:id>/', views.offer_form,name='offer_update'), 
     path('offer/delete/<int:id>/',views.offer_delete,name='offer_delete'),
-    path('offer/import/xls', importxls.importxls_offer, name='importxls_offer'),
     path('offer/export/xls', exportxls.exportxls_offer, name='exportxls_offer'),
 
     path('hdb/insert/', views.hdb_form,name='hdb_insert'),
