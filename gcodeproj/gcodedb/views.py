@@ -6,7 +6,7 @@ from django.forms import ModelForm, formsets, inlineformset_factory,modelformset
 from django.views.generic import CreateView, ListView, UpdateView
 from .models import Contract, DanhgiaNSX, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, POdetail, Phat, Sales,Supplier,Lydowin,Lydoout, Tienve
 from django.db import transaction,IntegrityError
-from .forms import DanhgiaNSXForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm,OfferResultForm, TienveForm
+from .forms import DanhgiaNSXForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
 from django.contrib import messages
 from django.urls import reverse_lazy
 from tablib import Dataset

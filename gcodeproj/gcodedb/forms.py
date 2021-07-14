@@ -167,28 +167,6 @@ class LydooutForm(forms.ModelForm):
 			'detail': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
-class OfferResultForm(forms.ModelForm):
-    class Meta:
-        model = G1code
-        fields = [
-            'gcode',
-            'inquiry',
-            'resultinq',
-            'lydowin',
-            'lydoout',
-        ]
-        labels = {
-            'gcode':'Gcode',
-            'inquiry':'Inquiry',
-            'resultinq':'Result',
-            'lydowin':'Lý do win',
-            'lydoout':'Lý do out',
-        }
-        widgets = {
-            'lydowin': forms.CheckboxSelectMultiple,
-            'lydoout': forms.CheckboxSelectMultiple,
-        }
-
 class KhoForm(forms.ModelForm):
     class Meta:
         model = Kho
@@ -196,6 +174,7 @@ class KhoForm(forms.ModelForm):
         ]
         widgets = {
             'ngaynhapkho':InputDate(),
+            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
 class SalesForm(forms.ModelForm):
@@ -214,7 +193,9 @@ class HDBForm(forms.ModelForm):
             'dateupdate',
             'g2code',
         ]
-
+        widgets = {
+            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+        }
 class POForm(forms.ModelForm):
     class Meta:
         model = POdetail
@@ -234,12 +215,16 @@ class GiaohangForm(forms.ModelForm):
         ]
         widgets = {
             'ngaygiaohang':InputDate,
+            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
 class TienveForm(forms.ModelForm):
     class Meta:
         model = Tienve
         fields ='__all__'
+        widgets = {
+            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+        }
 
 class DanhgiaNSXForm(forms.ModelForm):
     class Meta:
@@ -271,4 +256,5 @@ class PhatForm(forms.ModelForm):
         ]
         widgets = {
             'lydophat':Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }

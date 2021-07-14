@@ -125,7 +125,6 @@ class G1code(models.Model):
     sales = models.ForeignKey(Sales,on_delete=PROTECT, related_name= "fk_g1codesales")
     dongiamuainq = models.FloatField()
     dongiachaoinq = models.FloatField()
-    markupinq = models.FloatField()
     resultinq = models.CharField(max_length=10, choices= RESULTS_CHOICES,default="Win", null= True, blank= True)
     lydowin = models.ManyToManyField(Lydowin, related_name='fk_g1codelydowin',null= True, blank= True)
     lydoout = models.ManyToManyField(Lydoout, related_name='fk_g1codelydoout',null= True, blank= True)
@@ -143,6 +142,11 @@ class G1code(models.Model):
         return (self.qtyinq or 0)*(self.dongiachaoinq or 0)
     def mota(self):
         return self.gcode.mota
+    def markupinq(self):
+        if self.dongiamuainq > 0:
+            return (self.dongiachaoinq or 0)/(self.dongiamuainq)
+        else:
+            return None
 class G2code(models.Model):
     g2code = models.CharField(max_length=40)
     contract = models.ForeignKey(Contract,on_delete=PROTECT, related_name='fk_g2codecontract',null=True)
@@ -203,6 +207,7 @@ class Kho(models.Model):
     qtykho = models.FloatField(null=True)
     dongiafreight = models.FloatField(null=True)
     ngaynhapkho = models.DateField(null=True)
+    ghichu = models.TextField(null=True,blank= True)
     gdvkho = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_khogdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
@@ -223,6 +228,7 @@ class Giaohang(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_giaohangg2code')
     qtygiaohang = models.FloatField(null=True)
     ngaygiaohang = models.DateField(null=True)
+    ghichu = models.TextField(null=True,blank= True)
     gdvgiaohang = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_giaohanggdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
@@ -243,6 +249,7 @@ class Phat(models.Model):
     qtyphat = models.FloatField(null=True)
     tongphat = models.FloatField(null=True)
     lydophat = models.TextField(null=True)
+    ghichu = models.TextField(null=True,blank= True)
     gdvphat = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_phatgdv',null=True)
     dateupdate  = models.DateField()
     def __str__(self):
@@ -311,6 +318,7 @@ class Tienve(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_tienveg2code')
     qtytienve = models.FloatField(null=True)
     dongiatienve = models.FloatField(null=True)
+    ghichu = models.TextField(null=True,blank= True)
     def __str__(self):
         return str(self.g2code) + "tien ve"   
     @property

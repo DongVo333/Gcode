@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from re import split
+from numpy import NaN, empty
 from pandas.core.frame import DataFrame
 import xlrd
 from xlrd.formula import dump_formula
@@ -9,7 +10,12 @@ from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
 from django.utils.dateparse import parse_date
 import pandas as pd
+import numpy as np
 import json
+from django.contrib import messages
+from django.utils.html import format_html
+
+pd.options.display.float_format = '{:,.2f}'.format
 
 def readdate(inputdate,workbook):
     if inputdate == "":
@@ -431,28 +437,46 @@ def importxls_offer_1(request):
     return render(request, 'gcodedb/offer_list.html')
 
 def importxls_offer(request):
-    df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer')
-    df.round({'Số lượng':2,'Đơn giá mua':2,'Đơn giá chào':2,'Markup':2})
-    df.rename(
-    columns={
-        "Gcode-Inquiry": "g1code",
-        "Ký mã hiệu": "kymahieuinq",
-        "Số lượng":"qty",
-        "Xuất xứ":"xuatxu",
-        "STT in ITB":"sttinitb",
-        "Group in ITB":"groupinitb",
-        "Đơn giá mua":"dongiamua",
-        "Đơn giá chào":"dongiachao",
-        "Ghi chú":"ghichu",
-        "Giao dịch viên":"gdv",
-        "Đơn vị":"unit"
-    },
-    inplace=True
-    )
-    json_records = df.reset_index().to_json(orient ='records')
-    data = []
-    data = json.loads(json_records)
-    context = {'offer_list': data}
+    messages=  []
+    df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer1')
+    list_column = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
+       'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
+       'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Ghi Chú', 'Result', 'Uy tín', 'Giá tốt',
+       'Giá chào cao', 'Không tìm được NCC']
+    list_column_required = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
+       'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
+       'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Result']
+
+    if df.empty:
+        messages.append("Data Import is empty! Please re-check again")
+    elif not all([item in df.columns for item in list_column]): 
+        for item in list_column:
+            if not item in df.columns:
+                message = format_html("Data Import doesn't has columns <b>{}</b>",item)
+                messages.append(message)
+    elif df[list_column_required].isna().sum().sum()>0:
+        for i,j in zip(*np.where(pd.isnull(df[list_column_required]))):
+            message = format_html("Data Import is empty at <b>index STT {}: column {}</b>",df.loc[i,'STT'],list_column_required[j])
+            messages.append(message)
+    else:
+        df_obj = df.select_dtypes(['object'])
+        df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+        #df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']] = df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']].round(decimals=2)
+        """ df=df1.style.format({'value':'{:.2f}'}) """
+        df['Thành tiền mua'] = df['Số lượng']*df['Đơn giá mua']
+        df['Thành tiền chào'] = df['Số lượng']*df['Đơn giá chào']
+        df['Markup'] = df['Đơn giá chào']/df['Đơn giá mua']
+        for i in range(0,df.shape[0]):
+            df.loc[i,'Gcode-Inquiry'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Inquiry']
+        #Check dữ liệu trống
+        #Check dữ liệu định dạng chưa đúng 
+        #Check bổ sung dữ liệu
+        #Check markup vượt quá định mức
+        
+    #message = format_html("<b>{}</b>",
+    #                  "Test Message")
+    html = df.to_html(index=False,justify='center')
+    context = {'offer_list': html,'messages':messages}
     return render(request, 'gcodedb/offer_list.html', context)
 
 def importxls_hdb(request):
