@@ -12,7 +12,6 @@ from django.utils.dateparse import parse_date
 import pandas as pd
 import numpy as np
 import json
-from django.contrib import messages
 from django.utils.html import format_html
 
 pd.options.display.float_format = '{:,.2f}'.format
@@ -22,6 +21,35 @@ def readdate(inputdate,workbook):
         return None
     else:
         return xlrd.xldate.xldate_as_datetime(inputdate,workbook.datemode).strftime("%Y-%m-%d")
+def msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date):
+    messages=[]
+    if df.empty:
+        messages.append("Data Import is empty! Please re-check again")
+    elif not all([item in df.columns for item in list_column]): 
+        for item in list_column:
+            if not item in df.columns:
+                message = format_html("Data Import doesn't has columns <b>{}</b>",item)
+                messages.append(message)
+    elif df[list_column_required].isna().sum().sum()>0:
+        for i,j in zip(*np.where(pd.isnull(df[list_column_required]))):
+            message = format_html("Data Import is empty at <b>index STT {}: column {}</b>",df.loc[i,'STT'],list_column_required[j])
+            messages.append(message)
+    elif len(list_column_float):
+        if any(df[item].dtype == "object" for item in list_column_float):
+            for item in list_column_float:
+                for i1,i2 in zip(df['STT'],df[item].map(type)):
+                    if i2==str:
+                        message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
+                        messages.append(message) 
+    elif len(list_column_date):
+        if any(df[item].dtype == "object" for item in list_column_date):
+            for item in list_column_date:
+                for i1,i2 in zip(df['STT'],df[item].map(type)):
+                    if i2==date:
+                        message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
+                        messages.append(message)
+    return messages
+
 def importxls_client(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -446,19 +474,32 @@ def importxls_offer(request):
     list_column_required = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
        'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
        'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Result']
-
-    if df.empty:
-        messages.append("Data Import is empty! Please re-check again")
-    elif not all([item in df.columns for item in list_column]): 
-        for item in list_column:
-            if not item in df.columns:
-                message = format_html("Data Import doesn't has columns <b>{}</b>",item)
-                messages.append(message)
-    elif df[list_column_required].isna().sum().sum()>0:
-        for i,j in zip(*np.where(pd.isnull(df[list_column_required]))):
-            message = format_html("Data Import is empty at <b>index STT {}: column {}</b>",df.loc[i,'STT'],list_column_required[j])
+    list_column_float = ["Đơn giá chào","Đơn giá mua","Số lượng"]
+    list_column_date = []
+    messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+    if len(messages) <=0:
+        duplicateRowsDF = df[df.duplicated(subset=['Gcode','Inquiry'],keep=False)]
+        if duplicateRowsDF.shape[0]:
+            message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
             messages.append(message)
-    else:
+        else:
+            for index,row in df.iterrows():
+                if G1code.objects.filter(gcode__ma__icontains=row['Gcode'],inquiry__inquirycode__icontains=row['Inquiry']).count()>0:
+                    message = format_html("Gcode-Inquiry '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['Inquiry'],row['STT'])
+                    messages.append(message)
+                if Gcode.objects.filter(ma=row['Gcode']).count()<=0:
+                    Url_gcode = "gcodedb:gcode_list"
+                    Href_gcode = "\{% url '{0}' %\}".format(Url_gcode)
+                    message = format_html("Gcode '{}' doesn't exist at <b>index STT {}</b>, you shall be import Gcode before importing again at link: <a href='{href_gcode}'>Create Gcode</a>".format(href_gcode=Href_gcode),row['Gcode'],row['STT'])
+                    messages.append(message)
+                if Inquiry.objects.filter(inquirycode=row['Inquiry']).count()<=0:
+                    message = format_html("Inquiry '{}' doesn't exist at <b>index STT {}</b>, you should be import Inquiry before importing again at link: <a href=''>Create Inquiry</a>",row['Inquiry'],row['STT'])
+                    messages.append(message)
+                if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                    message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you should be import Seller before importing again at link: <a href=''>Create Seller</a>",row['Giao dịch viên'],row['STT'])
+                    messages.append(message)
+    if len(messages) <=0:
+        df[list_column_float]= df[list_column_float].astype('float64')
         df_obj = df.select_dtypes(['object'])
         df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
         #df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']] = df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']].round(decimals=2)
@@ -472,9 +513,6 @@ def importxls_offer(request):
         #Check dữ liệu định dạng chưa đúng 
         #Check bổ sung dữ liệu
         #Check markup vượt quá định mức
-        
-    #message = format_html("<b>{}</b>",
-    #                  "Test Message")
     html = df.to_html(index=False,justify='center')
     context = {'offer_list': html,'messages':messages}
     return render(request, 'gcodedb/offer_list.html', context)
