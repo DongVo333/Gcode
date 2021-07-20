@@ -11,8 +11,10 @@ from django.http import HttpResponse
 from django.utils.dateparse import parse_date
 import pandas as pd
 import numpy as np
+from django.urls import reverse
 import json
 from django.utils.html import format_html
+from fuzzywuzzy import fuzz,process
 
 pd.options.display.float_format = '{:,.2f}'.format
 
@@ -49,6 +51,13 @@ def msgcheckimport(df,list_column,list_column_required,list_column_float,list_co
                         message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
                         messages.append(message)
     return messages
+
+def list_lydo(queryset_):
+    listitem  = []
+    list_lydo = list(queryset_)
+    for item in list_lydo:
+        listitem.append(item[0])
+    return listitem
 
 def importxls_client(request):
     if request.method == 'POST':
@@ -387,7 +396,6 @@ def importxls_offer_1(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
         df = pd.read_excel(new_persons, sheet_name='Offer')
-        print(list(df.columns))
         norow = df.shape[0] 
         for r in range(0, norow):
             counter = G1code.objects.filter(g1code=df.loc[r,'Gcode-Inquiry']).count()
@@ -466,55 +474,95 @@ def importxls_offer_1(request):
 
 def importxls_offer(request):
     messages=  []
-    df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer1')
-    list_column = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
-       'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
-       'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Ghi Chú', 'Result', 'Uy tín', 'Giá tốt',
-       'Giá chào cao', 'Không tìm được NCC']
-    list_column_required = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
-       'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
-       'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Result']
-    list_column_float = ["Đơn giá chào","Đơn giá mua","Số lượng"]
-    list_column_date = []
-    messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
-    if len(messages) <=0:
-        duplicateRowsDF = df[df.duplicated(subset=['Gcode','Inquiry'],keep=False)]
-        if duplicateRowsDF.shape[0]:
-            message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+    if request.method == 'POST':
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='Offer')
+        except Exception as e: 
+            message = format_html("Import File Error: {}",e)
             messages.append(message)
         else:
-            for index,row in df.iterrows():
-                if G1code.objects.filter(gcode__ma__icontains=row['Gcode'],inquiry__inquirycode__icontains=row['Inquiry']).count()>0:
-                    message = format_html("Gcode-Inquiry '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['Inquiry'],row['STT'])
+            #df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer1')
+            list_column = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
+            'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
+            'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Ghi Chú', 'Result', 'Uy tín', 'Giá tốt',
+            'Giá chào cao', 'Không tìm được NCC']
+            list_column_required = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
+            'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
+            'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Result']
+            list_column_float = ["Đơn giá chào","Đơn giá mua","Số lượng"]
+            list_column_date = []
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Gcode','Inquiry'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
                     messages.append(message)
-                if Gcode.objects.filter(ma=row['Gcode']).count()<=0:
-                    Url_gcode = "gcodedb:gcode_list"
-                    Href_gcode = "\{% url '{0}' %\}".format(Url_gcode)
-                    message = format_html("Gcode '{}' doesn't exist at <b>index STT {}</b>, you shall be import Gcode before importing again at link: <a href='{href_gcode}'>Create Gcode</a>".format(href_gcode=Href_gcode),row['Gcode'],row['STT'])
-                    messages.append(message)
-                if Inquiry.objects.filter(inquirycode=row['Inquiry']).count()<=0:
-                    message = format_html("Inquiry '{}' doesn't exist at <b>index STT {}</b>, you should be import Inquiry before importing again at link: <a href=''>Create Inquiry</a>",row['Inquiry'],row['STT'])
-                    messages.append(message)
-                if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
-                    message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you should be import Seller before importing again at link: <a href=''>Create Seller</a>",row['Giao dịch viên'],row['STT'])
-                    messages.append(message)
-    if len(messages) <=0:
-        df[list_column_float]= df[list_column_float].astype('float64')
-        df_obj = df.select_dtypes(['object'])
-        df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
-        #df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']] = df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']].round(decimals=2)
-        """ df=df1.style.format({'value':'{:.2f}'}) """
-        df['Thành tiền mua'] = df['Số lượng']*df['Đơn giá mua']
-        df['Thành tiền chào'] = df['Số lượng']*df['Đơn giá chào']
-        df['Markup'] = df['Đơn giá chào']/df['Đơn giá mua']
-        for i in range(0,df.shape[0]):
-            df.loc[i,'Gcode-Inquiry'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Inquiry']
-        #Check dữ liệu trống
-        #Check dữ liệu định dạng chưa đúng 
-        #Check bổ sung dữ liệu
-        #Check markup vượt quá định mức
-    html = df.to_html(index=False,justify='center')
-    context = {'offer_list': html,'messages':messages}
+                else:
+                    for index,row in df.iterrows():
+                        if G1code.objects.filter(gcode__ma__icontains=row['Gcode'],inquiry__inquirycode__icontains=row['Inquiry']).count()>0:
+                            message = format_html("Gcode-Inquiry '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['Inquiry'],row['STT'])
+                            messages.append(message)
+                        if Gcode.objects.filter(ma=row['Gcode']).count()<=0:
+                            message = format_html("Gcode '{}' doesn\'t exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode</a>",row['Gcode'],row['STT'],reverse('gcodedb:gcode_list'))
+                            messages.append(message)
+                        if Inquiry.objects.filter(inquirycode=row['Inquiry']).count()<=0:
+                            message = format_html("Inquiry '{}' doesn't exist at <b>index STT {}</b>, you shall import Inquiry before importing again"
+                            " at link: <a href='{}'>Create Inquiry</a>",row['Inquiry'],row['STT'],reverse('gcodedb:inquiry_list'))
+                            messages.append(message)
+                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                            message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
+                            " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
+                            messages.append(message)
+                    columnreason = df.columns.get_loc('Result') + 1
+                    for item in df.iloc[:,columnreason:]:
+                        if len(item)>0:
+                            item = 'Yes'
+                    df[columnreason:] = df[columnreason:].apply(lambda x: 1 if not pd.isnull(x) else np.nan)
+                    print(df.iloc[:,columnreason:]) 
+                    if not all(df['Result'].isin(['Win','Out'])):
+                        message = format_html("The Result of Gcode-Inquiry is only 'Win' or 'Out'")
+                        messages.append(message) 
+                    else:
+                        df_reason = df.loc[:,'Result':].replace('Yes',1)
+                        df_gr = df_reason.groupby(by=["Result"], dropna=False).sum()
+                        set_lydowin = set(df_gr.loc[:,df_gr.loc['Win']>0].columns)
+                        set_lydoout = set(df_gr.loc[:,df_gr.loc['Out']>0].columns)
+                        reason_duplicate = set_lydowin & set_lydoout
+                        if len(reason_duplicate)>0:
+                            message = format_html("Reason {} can\'t be use in case Result 'Win' and 'Out'",reason_duplicate)
+                            messages.append(message)
+                        else:
+                            list_lydoout = list_lydo(Lydoout.objects.values_list('lydooutcode'))
+                            list_lydowin = list_lydo(Lydowin.objects.values_list('lydowincode'))
+                            for setitem in set_lydowin:                                
+                                highest = process.extractOne(setitem,list_lydowin)
+                                if highest[1] < 90:
+                                    message = format_html("Reason Win '{}' doesn't exist, you shall import it before importing again"
+                                    " at link: <a href='{}'>Create Reason Win</a>",setitem,reverse('gcodedb:lydowin_list'))
+                                    messages.append(message)
+                            for setitem in set_lydoout:
+                                highest = process.extractOne(setitem,list_lydoout)
+                                if highest[1] < 90:
+                                    message = format_html("Reason Out '{}' doesn't exist, you shall import it before importing again"
+                                    " at link: <a href='{}'>Create Reason Out</a>",setitem,reverse('gcodedb:lydoout_list'))
+                                    messages.append(message)
+            if len(messages) <=0:
+                df[list_column_float]= df[list_column_float].astype('float64')
+                #df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']] = df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']].round(decimals=2)
+                """ df=df1.style.format({'value':'{:.2f}'}) """
+                df['Thành tiền mua'] = df['Số lượng']*df['Đơn giá mua']
+                df['Thành tiền chào'] = df['Số lượng']*df['Đơn giá chào']
+                df['Markup'] = df['Đơn giá chào']/df['Đơn giá mua']
+                for i in range(0,df.shape[0]):
+                    df.loc[i,'Gcode-Inquiry'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Inquiry']
+            html = df.to_html(index=False,justify='center')
+            context = {'offer_list': html,'messages':messages}
+            return render(request, 'gcodedb/offer_list.html', context)
+    context = {'messages':messages}
     return render(request, 'gcodedb/offer_list.html', context)
 
 def importxls_hdb(request):
