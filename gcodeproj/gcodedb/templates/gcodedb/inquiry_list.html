@@ -4,7 +4,7 @@
 <table class="table table-borderless">
     <form method="POST" action="{% url 'gcodedb:importxls_inquiry' %}" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="file" name="myfile" accept=".xls">
+        <input type="file" name="myfile" accept=".xls,.xlsx">
         <button type="submit">Import Excel</button>
     </form>
     <br>
