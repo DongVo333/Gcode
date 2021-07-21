@@ -2,10 +2,13 @@ from datetime import date
 import csv
 import xlwt
 from tablib import Dataset
+from xlwt.Workbook import Workbook
 from .models import Contract, DanhgiaNSX, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat, Sales,Supplier,Lydoout, Tienve
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
+import pandas as pd
+import xlsxwriter
 
 style_head_row = xlwt.easyxf(" align:wrap off,vert center,horiz center;borders:left THIN,right THIN,top THIN,bottom THIN;font:name Arial,colour_index white,bold on,height 0xA0;pattern:pattern solid,fore-colour ocean_blue;") 
 style_number_row = xlwt.easyxf(" align: wrap on,vert center,horiz left; font: name Arial,bold off,height 0XA0;borders:left THIN,right THIN,top THIN,bottom THIN;")
@@ -209,7 +212,7 @@ def exportxls_kho(request):
     wb.save(response)
     return response
 
-def exportxls_offer(request):
+def exportxls_offer_all(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Offer.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
@@ -256,6 +259,47 @@ def exportxls_offer(request):
     wb.save(response)
     return response
 
+def exportxls_offer(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Offer.xlsx"'
+    list_null = []
+    df = pd.DataFrame({'STT':list_null,'Gcode':list_null,'Inquiry':list_null,'Ký mã hiệu':list_null,'Đơn vị':list_null,'Số lượng':list_null,
+    'Supplier':list_null,'Xuất xứ':list_null,'NSX':list_null,'STT in ITB':list_null,'Group in ITB':list_null,'Sale':list_null,
+    'Đơn giá mua':list_null,'Đơn giá chào':list_null,'Giao dịch viên':list_null,'Ghi Chú':list_null,'Result':list_null})
+    for lydowin in Lydowin.objects.all():
+        df[lydowin.lydowincode]=list_null
+    for lydoout in Lydoout.objects.all():
+        df[lydoout.lydooutcode]=list_null    
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Offer', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Offer']
+    #Format header 
+    header_format = workbook.add_format({
+    'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center','fg_color': '#4788F9','font_color': 'white','border': 1})
+    lydo_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center','fg_color': '#F9B747','font_color': 'black','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': '#,##0.00'})
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
+
+    for col_num, value in enumerate(df.columns.values):
+        if col_num <= df.columns.get_loc('Result'):
+            worksheet.write(0, col_num, value, header_format)
+        else:
+            worksheet.write(0, col_num, value, lydo_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Số lượng','Đơn giá mua','Đơn giá chào']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    #worksheet.set_column('F:F', None, fm_float)
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    writer.save()
+    return response
 def exportxls_hdb(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Gcode-Contract.xls"'

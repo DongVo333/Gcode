@@ -138,10 +138,13 @@ class G1code(models.Model):
     @property
     def thanhtienmua(self):
         return (self.qtyinq or 0)*(self.dongiamuainq or 0)
+    @property
     def thanhtienchao(self):
         return (self.qtyinq or 0)*(self.dongiachaoinq or 0)
+    @property
     def mota(self):
         return self.gcode.mota
+    @property
     def markupinq(self):
         if self.dongiamuainq > 0:
             return (self.dongiachaoinq or 0)/(self.dongiamuainq)
@@ -162,22 +165,31 @@ class G2code(models.Model):
     @property
     def thanhtienchaohdb(self):
         return (self.g1code.qtyinq or 0)*(self.dongiachaohdb or 0)
+    @property
     def mota(self):
         return (self.g1code.gcode.mota)
+    @property
     def unit(self):
         return self.g1code.unitinq 
+    @property
     def qty(self):
         return self.g1code.qtyinq
+    @property
     def inquiry(self):
         return self.g1code.inquiry.inquirycode
+    @property
     def supplier(self):
         return self.g1code.supplier.suppliercode
+    @property
     def kymahieu(self):
         return self.g1code.kymahieuinq
+    @property
     def nsx(self):
         return self.g1code.nsxinq
+    @property
     def xuatxu(self):
         return self.g1code.xuatxuinq
+    @property
     def gcode(self):
         return self.g1code.gcode.ma
 class POdetail(models.Model):
@@ -198,8 +210,10 @@ class POdetail(models.Model):
     @property
     def thanhtienmuapo(self):
         return (self.qtypo or 0)*(self.dongiamuapo or 0)
+    @property
     def gcode(self):
         return (self.g2code.g1code.gcode.ma)
+    @property
     def pono(self):
         return (self.g2code.pono)
 class Kho(models.Model):
@@ -215,12 +229,16 @@ class Kho(models.Model):
     @property
     def thanhtienfreight(self):
         return (self.qtykho or 0)*(self.dongiafreight or 0)
+    @property
     def motahanghoa(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
+    @property
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    @property
     def donvitinh(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    @property
     def gcode(self):
         return self.g2code.g1code.gcode.ma
 
@@ -236,12 +254,16 @@ class Giaohang(models.Model):
     @property
     def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
+    @property
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    @property
     def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    @property
     def gcode(self):
         return self.g2code.g1code.gcode.ma
+    @property
     def contract(self):
         return self.g2code.contract.contractcode
 class Phat(models.Model):
@@ -257,23 +279,31 @@ class Phat(models.Model):
     @property
     def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
+    @property
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    @property
     def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    @property
     def dongiaphat(self):
         if self.qtyphat > 0:
             return (self.tongphat or 0)/(self.qtyphat)
         else:
             return None
+    @property
     def gcode(self):
         return  self.g2code.g1code.gcode.ma
+    @property
     def contract(self):
         return self.g2code.contract.contractcode
+    @property
     def client(self):
         return self.g2code.contract.client.clientcode
+    @property
     def nsx(self):
         return POdetail.objects.get(g2code = self.g2code).nsxpo
+    @property
     def xuatxu(self):
         return POdetail.objects.get(g2code = self.g2code).xuatxupo
     
@@ -293,24 +323,34 @@ class DanhgiaNSX(models.Model):
     @property
     def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
+    @property
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    @property
     def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    @property
     def qty(self):
         return POdetail.objects.get(g2code = self.g2code).qtypo
+    @property
     def xuatxu(self):
         return POdetail.objects.get(g2code = self.g2code).xuatxupo
+    @property
     def supplier(self):
         return POdetail.objects.get(g2code = self.g2code).supplier
+    @property
     def dongiamua(self):
         return POdetail.objects.get(g2code = self.g2code).dongiamuapo
+    @property
     def thanhtienmua(self):
         return POdetail.objects.get(g2code = self.g2code).thanhtienmuapo
+    @property
     def gcode(self):
         return (self.g2code.g1code.gcode.ma)
+    @property
     def pono(self):
         return (self.g2code.pono)
+    @property
     def nsx(self):
         return POdetail.objects.get(g2code = self.g2code).nsxpo
 
@@ -324,21 +364,30 @@ class Tienve(models.Model):
     @property
     def tongtienve(self):
         return (self.qtytienve or 0)*(self.dongiatienve or 0)
+    @property
     def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
+    @property
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
+    @property
     def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
+    @property
     def soluong(self):
         return POdetail.objects.get(g2code = self.g2code).qtypo
+    @property
     def xuatxu(self):
         return POdetail.objects.get(g2code = self.g2code).xuatxupo
+    @property
     def gcode(self):
         return self.g2code.g1code.gcode.ma
+    @property
     def contract(self):
         return self.g2code.contract.contractcode
+    @property
     def client(self):
         return self.g2code.contract.client.clientcode
+    @property
     def nsx(self):
         return POdetail.objects.get(g2code = self.g2code).nsxpo

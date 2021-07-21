@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from logging import warning
 from re import split
 from numpy import NaN, empty
 from pandas.core.frame import DataFrame
@@ -40,14 +41,14 @@ def msgcheckimport(df,list_column,list_column_required,list_column_float,list_co
         if any(df[item].dtype == "object" for item in list_column_float):
             for item in list_column_float:
                 for i1,i2 in zip(df['STT'],df[item].map(type)):
-                    if i2==str:
+                    if i2!=int and i2!=float:
                         message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
                         messages.append(message) 
     elif len(list_column_date):
         if any(df[item].dtype == "object" for item in list_column_date):
             for item in list_column_date:
                 for i1,i2 in zip(df['STT'],df[item].map(type)):
-                    if i2==date:
+                    if i2!=date:
                         message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
                         messages.append(message)
     return messages
@@ -474,6 +475,7 @@ def importxls_offer_1(request):
 
 def importxls_offer(request):
     messages=  []
+    warnings = []
     if request.method == 'POST':
         try:
             new_persons = request.FILES['myfile']
@@ -485,8 +487,7 @@ def importxls_offer(request):
             #df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer1')
             list_column = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
             'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
-            'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Ghi Chú', 'Result', 'Uy tín', 'Giá tốt',
-            'Giá chào cao', 'Không tìm được NCC']
+            'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Ghi Chú', 'Result']
             list_column_required = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
             'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
             'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Result']
@@ -518,38 +519,56 @@ def importxls_offer(request):
                             " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
                             messages.append(message)
                     columnreason = df.columns.get_loc('Result') + 1
-                    for item in df.iloc[:,columnreason:]:
-                        if len(item)>0:
-                            item = 'Yes'
-                    df[columnreason:] = df[columnreason:].apply(lambda x: 1 if not pd.isnull(x) else np.nan)
-                    print(df.iloc[:,columnreason:]) 
                     if not all(df['Result'].isin(['Win','Out'])):
                         message = format_html("The Result of Gcode-Inquiry is only 'Win' or 'Out'")
                         messages.append(message) 
+                    elif not df.iloc[:,columnreason:].isin(['Yes',NaN]).all(axis=None):
+                        message = format_html("The Reason is only 'Yes' or None")
+                        messages.append(message)
                     else:
                         df_reason = df.loc[:,'Result':].replace('Yes',1)
                         df_gr = df_reason.groupby(by=["Result"], dropna=False).sum()
-                        set_lydowin = set(df_gr.loc[:,df_gr.loc['Win']>0].columns)
-                        set_lydoout = set(df_gr.loc[:,df_gr.loc['Out']>0].columns)
-                        reason_duplicate = set_lydowin & set_lydoout
+                        print (df_gr.iloc[0,0])
+                        set_lydowin = {}
+                        set_lydoout = {}
+                        reason_duplicate = {}
+                        if df_gr.shape[0]==1:
+                            if df_gr.index[0] == "Win":
+                                set_lydowin = set(df_gr.loc[:,df_gr.loc['Win']>0].columns)
+                            else:
+                                set_lydoout = set(df_gr.loc[:,df_gr.loc['Out']>0].columns)
+                        else:
+                            set_lydowin = set(df_gr.loc[:,df_gr.loc['Win']>0].columns)
+                            set_lydoout = set(df_gr.loc[:,df_gr.loc['Out']>0].columns)
+                            reason_duplicate = set_lydowin & set_lydoout
                         if len(reason_duplicate)>0:
-                            message = format_html("Reason {} can\'t be use in case Result 'Win' and 'Out'",reason_duplicate)
+                            message = format_html("Reason {} can\'t be use in both cases Result 'Win' and 'Out'",reason_duplicate)
                             messages.append(message)
                         else:
                             list_lydoout = list_lydo(Lydoout.objects.values_list('lydooutcode'))
                             list_lydowin = list_lydo(Lydowin.objects.values_list('lydowincode'))
-                            for setitem in set_lydowin:                                
-                                highest = process.extractOne(setitem,list_lydowin)
-                                if highest[1] < 90:
-                                    message = format_html("Reason Win '{}' doesn't exist, you shall import it before importing again"
-                                    " at link: <a href='{}'>Create Reason Win</a>",setitem,reverse('gcodedb:lydowin_list'))
-                                    messages.append(message)
-                            for setitem in set_lydoout:
-                                highest = process.extractOne(setitem,list_lydoout)
-                                if highest[1] < 90:
-                                    message = format_html("Reason Out '{}' doesn't exist, you shall import it before importing again"
-                                    " at link: <a href='{}'>Create Reason Out</a>",setitem,reverse('gcodedb:lydoout_list'))
-                                    messages.append(message)
+                            if len(set_lydowin)>0:
+                                for setitem in set_lydowin:                                
+                                    highest = process.extractOne(setitem,list_lydowin)
+                                    if highest[1] < 90:
+                                        message = format_html("Reason Win '{}' doesn't exist, you shall import it before importing again"
+                                        " at link: <a href='{}'>Create Reason Win</a>",setitem,reverse('gcodedb:lydowin_list'))
+                                        messages.append(message)
+                                    elif setitem != highest[0]:
+                                        df.rename(columns={setitem: highest[0]}, inplace=True)
+                                        warn = format_html("Reason Win '{}' is merged with '{}' in Database",setitem,highest[0])
+                                        warnings.append(warn)
+                            if len(set_lydoout)>0:
+                                for setitem in set_lydoout:
+                                    highest = process.extractOne(setitem,list_lydoout)
+                                    if highest[1] < 90:
+                                        message = format_html("Reason Out '{}' doesn't exist, you shall import it before importing again"
+                                        " at link: <a href='{}'>Create Reason Out</a>",setitem,reverse('gcodedb:lydoout_list'))
+                                        messages.append(message)
+                                    elif setitem != highest[0]:
+                                        df.rename(columns={setitem: highest[0]}, inplace=True)
+                                        warn = format_html("Reason Win '{}' is merged with '{}' in Database",setitem,highest[0])
+                                        warnings.append(warn)
             if len(messages) <=0:
                 df[list_column_float]= df[list_column_float].astype('float64')
                 #df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']] = df[['Số lượng','Đơn giá mua','Đơn giá chào','Markup']].round(decimals=2)
@@ -558,9 +577,41 @@ def importxls_offer(request):
                 df['Thành tiền chào'] = df['Số lượng']*df['Đơn giá chào']
                 df['Markup'] = df['Đơn giá chào']/df['Đơn giá mua']
                 for i in range(0,df.shape[0]):
-                    df.loc[i,'Gcode-Inquiry'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Inquiry']
+                    df.loc[i,'Gcode-Inquiry'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Inquiry'] 
+                for r in range(0, df.shape[0]):
+                    g1code = G1code(
+                        g1code=df.loc[r,'Gcode-Inquiry'],
+                        gcode = Gcode.objects.get(ma=df.loc[r,'Gcode']),
+                        inquiry = Inquiry.objects.get(inquirycode=df.loc[r,'Inquiry']),
+                        kymahieuinq = df.loc[r,'Ký mã hiệu'],
+                        unitinq = df.loc[r,'Đơn vị'],
+                        qtyinq = df.loc[r,'Số lượng'],
+                        supplier = Supplier.objects.get(suppliercode=df.loc[r,'Supplier']),
+                        xuatxuinq = df.loc[r,'Xuất xứ'],
+                        nsxinq = df.loc[r,'NSX'],
+                        sttitb = df.loc[r,'STT in ITB'],
+                        groupitb = df.loc[r,'Group in ITB'],
+                        sales = Sales.objects.get(salescode=df.loc[r,'Sale']),
+                        dongiamuainq = df.loc[r,'Đơn giá mua'],
+                        dongiachaoinq = df.loc[r,'Đơn giá chào'],
+                        resultinq = df.loc[r,'Result'],
+                        ghichu = df.loc[r,'Ghi Chú'],
+                        gdvinq = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên']),
+                        dateupdate = date.today(),
+                        )
+                    g1code.save()  
+                    for i in range(df.columns.get_loc('Result') + 1, len(df.columns)-1):
+                        if df.loc[r,'Result']=='Win' and df.iloc[r,i]=="Yes":
+                            lydo_ = Lydowin.objects.get(lydowincode=df.columns[i])
+                            g1code.lydowin.add(lydo_)
+                    for i in range(df.columns.get_loc('Result') + 1, len(df.columns)-1):
+                        if df.loc[r,'Result']=='Out' and df.iloc[r,i]=="Yes":
+                            lydo_ = Lydoout.objects.get(lydooutcode=df.columns[i])
+                            g1code.lydoout.add(lydo_)
+                message = format_html("Data Offer has been successfully import")
+                messages.append(message)
             html = df.to_html(index=False,justify='center')
-            context = {'offer_list': html,'messages':messages}
+            context = {'offer_list': html,'messages':messages,'warnings':warnings}
             return render(request, 'gcodedb/offer_list.html', context)
     context = {'messages':messages}
     return render(request, 'gcodedb/offer_list.html', context)
