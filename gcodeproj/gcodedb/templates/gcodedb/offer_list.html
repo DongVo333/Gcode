@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+<a href="{% url 'gcodedb:exportxls_offer' %}">Export to Excel</a>
+<br>
 <form method="POST" action="{% url 'gcodedb:importxls_offer' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="file" name="myfile" accept=".xls,.xlsx">
     <button type="submit">Import Excel</button>
 </form>
-<br>
-<a href="{% url 'gcodedb:exportxls_offer' %}">Export to Excel</a>
 <br>
 <br>
 {{ offer_list|safe }}

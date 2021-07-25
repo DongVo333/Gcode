@@ -1,76 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
-
-<table class="table table-borderless">
-    <form method="POST" action="{% url 'gcodedb:hdb_list'%}">
-        {% csrf_token %}
-        <label for="inquirysearch">Nhập Inquiry No.:</label>
-        <input type="text" id="inquirysearch" name="inquirysearch"><br>
-        <button type="submit">Search Inquiry</button>
-    </form>
-    <br>
-    <br>
-    <form method="POST" action="{% url 'gcodedb:importxls_hdb' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="myfile" accept=".xls">
-        <button type="submit">Import Excel</button>
-    </form>
-    <br>
-    <a href="{% url 'gcodedb:exportxls_hdb' %}">Export to Excel</a>
-    <thead class="border-bottom font-weight-bold">
-        <tr>
-            <td>Gcode-Contract</td>
-            <td>Gcode</td>
-            <td>Inquiry</td>
-            <td>Contract No.</td>
-            <td>Mô tả</td>
-            <td>Ký mã hiệu</td>
-            <td>Đơn vị</td>
-            <td>Số lượng</td>
-            <td>Đơn giá chào</td>
-            <td>Thành tiền chào</td>
-            <td>PO No.</td>
-            <td>Supplier</td>
-            <td>Xuất xứ</td>
-            <td>NSX</td>
-            <td>Ghi Chú</td>
-            <td>Giao dịch viên</td>
-            <td>
-                <a href="/hdb/insert" class="btn btn-outline-success">
-                    <i class="fas fa-plus"></i> Add New
-                </a>
-            </td>
-        </tr>
-    </thead>
-    <tbody>
-        {% for hdb in hdb_list %}
-            <tr>
-                <td>{{hdb.g2code}}</td>
-                <td>{{hdb.gcode}}</td>
-                <td>{{hdb.inquiry}}</td>
-                <td>{{hdb.contract}}</td>
-                <td>{{hdb.mota}}</td>
-                <td>{{hdb.kymahieu}}</td>
-                <td>{{hdb.unit}}</td>
-                <td>{{hdb.qty}}</td>
-                <td>{{hdb.dongiachaohdb}}</td>
-                <td>{{hdb.thanhtienchaohdb}}</td>
-                <td>{{hdb.pono}}</td>
-                <td>{{hdb.supplier}}</td>
-                <td>{{hdb.xuatxu}}</td>
-                <td>{{hdb.nsx}}</td>
-                <td>{{hdb.ghichu}}</td>
-                <td>{{hdb.gdvhdb}}</td>
-                <td>
-                    <a href="/hdb/update/{{hdb.id}}" class="btn text-secondary px-0">
-                        <i class="far fa-edit fa-lg"></i>
-                    </a>
-                    <a href="/hdb/delete/{{hdb.id}}" class="btn text-secondary px-0">
-                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
-                    </a>
-                </td>
-            </tr>
+<form method="POST" action="{% url 'gcodedb:hdb_list'%}">
+    {% csrf_token %}
+    <label for="inquirysearch">Nhập Inquiry No.:</label>
+    <input type="text" id="inquirysearch" name="inquirysearch"><br>
+    <button type="submit">Search Inquiry</button>
+</form>
+<br>
+{{msgresult}}
+{% if msg %}
+    <ul class="messagelist">
+        {% for message in msg %}
+            <li>{{ message }}</li>
         {% endfor %}
-    </tbody>
-</table>
+    </ul>
+{% endif %}
+<br>
+<br>
+<form method="POST" action="{% url 'gcodedb:importxls_hdb' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile" accept=".xls,.xlsx">
+    <button type="submit">Import Excel</button>
+</form>
+<br>
+<br>
+{{ hdb_list|safe }}
+<br>
+{% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if warnings %}
+<br>
+<p>Some warnings:</p>
+    <ul class="messagelist">
+        {% for warn in warnings %}
+            <li>{{ warn }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 {% endblock content %}

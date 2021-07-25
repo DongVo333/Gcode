@@ -109,7 +109,7 @@ def importxls_gcode(request):
         return redirect('/gcode/')     
     return render(request, 'gcodedb/gcode_list.html')
 
-def importxls_contract(request):
+def importxls_contractdetail(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
         workbook = xlrd.open_workbook(file_contents=new_persons.read())
@@ -312,167 +312,6 @@ def importxls_kho(request):
         return redirect('/kho/')     
     return render(request, 'gcodedb/kho_list.html')
 
-def importxls_offer_(request):
-    if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Offer")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            counter = G1code.objects.filter(g1code=sheet.cell(r,1).value).count()
-            g1code = G1code()
-            if counter>0:
-                g1code = G1code.objects.get(g1code=sheet.cell(r,1).value)
-                g1code.gcode = Gcode.objects.get(ma=str(sheet.cell(r,2).value))
-                g1code.inquiry = Inquiry.objects.get(inquirycode=sheet.cell(r,3).value)
-                g1code.kymahieuinq = sheet.cell(r,4).value
-                g1code.unitinq = sheet.cell(r,5).value
-                g1code.qtyinq = sheet.cell(r,6).value
-                g1code.supplier = Supplier.objects.get(suppliercode=sheet.cell(r,7).value)
-                g1code.xuatxuinq = sheet.cell(r,8).value
-                g1code.nsxinq = sheet.cell(r,9).value
-                g1code.sttitb = sheet.cell(r,10).value
-                g1code.groupitb = sheet.cell(r,11).value
-                g1code.sales = Sales.objects.get(salescode=sheet.cell(r,12).value)
-                g1code.dongiamuainq = sheet.cell(r,13).value
-                g1code.dongiachaoinq = sheet.cell(r,14).value
-                g1code.markupinq = float('{:.2f}'.format(sheet.cell(r,15).value))
-                g1code.resultinq = sheet.cell(r,16).value
-                strlydowin = sheet.cell(r,17).value.split(",")
-                for item in strlydowin:
-                    itemstrip = item.strip()
-                    if Lydowin.objects.filter(lydowincode=itemstrip).count() > 0:
-                        lydowin_ = Lydowin.objects.get(lydowincode=itemstrip)
-                        g1code.lydowin.add(lydowin_)
-                strlydoout = sheet.cell(r,18).value.split(",")
-                for item in strlydoout:
-                    itemstrip = item.strip()
-                    if Lydoout.objects.filter(lydooutcode=itemstrip).count() > 0:
-                        lydoout_ = Lydoout.objects.get(lydooutcode=itemstrip)
-                        g1code.lydoout.add(lydoout_)
-                g1code.ghichu = sheet.cell(r,19).value
-                g1code.gdvinq = GDV.objects.get(gdvcode = sheet.cell(r,20).value)
-                g1code.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,21).value,workbook.datemode).strftime("%Y-%m-%d")
-
-                g1code.save()
-            else:
-                g1code = G1code(
-                    g1code=sheet.cell(r,1).value,
-                    gcode = Gcode.objects.get(ma=str(sheet.cell(r,2).value)),
-                    inquiry = Inquiry.objects.get(inquirycode=sheet.cell(r,3).value),
-                    kymahieuinq = sheet.cell(r,4).value,
-                    unitinq = sheet.cell(r,5).value,
-                    qtyinq = sheet.cell(r,6).value,
-                    supplier = Supplier.objects.get(suppliercode=sheet.cell(r,7).value),
-                    xuatxuinq = sheet.cell(r,8).value,
-                    nsxinq = sheet.cell(r,9).value,
-                    sttitb = sheet.cell(r,10).value,
-                    groupitb = sheet.cell(r,11).value,
-                    sales = Sales.objects.get(salescode=sheet.cell(r,12).value),
-                    dongiamuainq = sheet.cell(r,13).value,
-                    dongiachaoinq = sheet.cell(r,14).value,
-                    markupinq = float('{:.2f}'.format(sheet.cell(r,15).value)),
-                    resultinq = sheet.cell(r,16).value,
-                    ghichu = sheet.cell(r,19).value,
-                    gdvinq = GDV.objects.get(gdvcode = sheet.cell(r,20).value),
-                    dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,21).value,workbook.datemode).strftime("%Y-%m-%d"),
-        		    )
-                g1code.save()  
-                strlydowin = sheet.cell(r,17).value.split(",")
-                for item in strlydowin:
-                    itemstrip = item.strip()
-                    if Lydowin.objects.filter(lydowincode=itemstrip).count()>0:
-                        lydowin_ = Lydowin.objects.get(lydowincode=itemstrip)
-                        g1code.lydowin.add(lydowin_)
-                strlydoout = sheet.cell(r,18).value.split(",")
-                for item in strlydoout:
-                    itemstrip = item.strip()
-                    if Lydoout.objects.filter(lydooutcode=itemstrip).count()>0:
-                        lydoout_ = Lydoout.objects.get(lydooutcode=itemstrip)
-                        g1code.lydoout.add(lydoout_)
-        return redirect('/offer/')     
-    return render(request, 'gcodedb/offer_list.html')
-
-def importxls_offer_1(request):
-    if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        df = pd.read_excel(new_persons, sheet_name='Offer')
-        norow = df.shape[0] 
-        for r in range(0, norow):
-            counter = G1code.objects.filter(g1code=df.loc[r,'Gcode-Inquiry']).count()
-            g1code = G1code()
-            if counter>0:
-                g1code = G1code.objects.get(g1code=df.loc[r,'Gcode-Inquiry'])
-                g1code.gcode = Gcode.objects.get(ma=df.loc[r,'Gcode'])
-                g1code.inquiry = Inquiry.objects.get(inquirycode=df.loc[r,'Inquiry'])
-                g1code.kymahieuinq = df.loc[r,'Ký mã hiệu']
-                g1code.unitinq = df.loc[r,'Đơn vị']
-                g1code.qtyinq = df.loc[r,'Số lượng']
-                g1code.supplier = Supplier.objects.get(suppliercode=df.loc[r,'Supplier'])
-                g1code.xuatxuinq = df.loc[r,'Xuất xứ']
-                g1code.nsxinq = df.loc[r,'NSX']
-                g1code.sttitb = df.loc[r,'STT in ITB']
-                g1code.groupitb = df.loc[r,'Group in ITB']
-                g1code.sales = Sales.objects.get(salescode=df.loc[r,'Sale'])
-                g1code.dongiamuainq = df.loc[r,'Đơn giá mua']
-                g1code.dongiachaoinq = df.loc[r,'Đơn giá chào']
-                g1code.markupinq = float('{:.2f}'.format(df.loc[r,'Markup']))
-                g1code.resultinq = df.loc[r,'Result']
-                if df.loc[r,'Uy tín'] == 'Yes':
-                        lydowin_ = Lydowin.objects.get(lydowincode='Uy tín')
-                        g1code.lydowin.add(lydowin_)
-                if df.loc[r,'Giá tốt'] == 'Yes':
-                        lydowin_ = Lydowin.objects.get(lydowincode='Giá tốt')
-                        g1code.lydowin.add(lydowin_)
-                if df.loc[r,'Giá chào cao'] == 'Yes':
-                        lydoout_ = Lydoout.objects.get(lydooutcode='Giá chào cao')
-                        g1code.lydoout.add(lydoout_)
-                if df.loc[r,'Không tìm được NCC'] == 'Yes':
-                        lydoout_ = Lydoout.objects.get(lydooutcode='Không tìm được NCC')
-                        g1code.lydoout.add(lydoout_)
-                g1code.ghichu = df.loc[r,'Ghi Chú']
-                g1code.gdvinq = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên'])
-                g1code.dateupdate = date.today()
-
-                g1code.save()
-            else:
-                g1code = G1code(
-                    g1code=df.loc[r,'Gcode-Inquiry'],
-                    gcode = Gcode.objects.get(ma=df.loc[r,'Gcode']),
-                    inquiry = Inquiry.objects.get(inquirycode=df.loc[r,'Inquiry']),
-                    kymahieuinq = df.loc[r,'Ký mã hiệu'],
-                    unitinq = df.loc[r,'Đơn vị'],
-                    qtyinq = df.loc[r,'Số lượng'],
-                    supplier = Supplier.objects.get(suppliercode=df.loc[r,'Supplier']),
-                    xuatxuinq = df.loc[r,'Xuất xứ'],
-                    nsxinq = df.loc[r,'NSX'],
-                    sttitb = df.loc[r,'STT in ITB'],
-                    groupitb = df.loc[r,'Group in ITB'],
-                    sales = Sales.objects.get(salescode=df.loc[r,'Sale']),
-                    dongiamuainq = df.loc[r,'Đơn giá mua'],
-                    dongiachaoinq = df.loc[r,'Đơn giá chào'],
-                    markupinq = float('{:.2f}'.format(df.loc[r,'Markup'])),
-                    resultinq = df.loc[r,'Result'],
-                    ghichu = df.loc[r,'Ghi Chú'],
-                    gdvinq = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên']),
-                    dateupdate = date.today(),
-        		    )
-                g1code.save()  
-                if df.loc[r,'Uy tín'] == 'Yes':
-                        lydowin_ = Lydowin.objects.get(lydowincode='Uy tín')
-                        g1code.lydowin.add(lydowin_)
-                if df.loc[r,'Giá tốt'] == 'Yes':
-                        lydowin_ = Lydowin.objects.get(lydowincode='Giá tốt')
-                        g1code.lydowin.add(lydowin_)
-                if df.loc[r,'Giá chào cao'] == 'Yes':
-                        lydoout_ = Lydoout.objects.get(lydooutcode='Giá chào cao')
-                        g1code.lydoout.add(lydoout_)
-                if df.loc[r,'Không tìm được NCC'] == 'Yes':
-                        lydoout_ = Lydoout.objects.get(lydooutcode='Không tìm được NCC')
-                        g1code.lydoout.add(lydoout_)
-        return redirect('/offer/')     
-    return render(request, 'gcodedb/offer_list.html')
-
 def importxls_offer(request):
     messages=  []
     warnings = []
@@ -485,10 +324,10 @@ def importxls_offer(request):
             messages.append(message)
         else:
             #df = pd.read_excel(r'C:\Users\IDMD\Desktop\Tổng hợp_1.xls', sheet_name='Offer1')
-            list_column = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
+            list_column = ['STT','Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
             'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
             'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Ghi Chú', 'Result']
-            list_column_required = ['Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
+            list_column_required = ['STT','Gcode', 'Inquiry', 'Ký mã hiệu', 'Đơn vị',
             'Số lượng', 'Supplier', 'Xuất xứ', 'NSX', 'STT in ITB', 'Group in ITB',
             'Sale', 'Đơn giá mua', 'Đơn giá chào', 'Giao dịch viên', 'Result']
             list_column_float = ["Đơn giá chào","Đơn giá mua","Số lượng"]
@@ -617,40 +456,72 @@ def importxls_offer(request):
     return render(request, 'gcodedb/offer_list.html', context)
 
 def importxls_hdb(request):
+    messages=  []
+    warnings = []
     if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Gcode-Contract")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            counter = G2code.objects.filter(g2code=sheet.cell(r,1).value).count()
-            g2code = G2code()
-            if counter>0:
-                g2code = G2code.objects.get(g2code=sheet.cell(r,1).value)
-                g2code.contract = Contract.objects.get(contractcode=sheet.cell(r,2).value)
-                g2code.dongiachaohdb = sheet.cell(r,3).value
-                g2code.pono = sheet.cell(r,4).value
-                g2code.status = sheet.cell(r,5).value
-                g2code.g1code = G1code.objects.get(g1code=sheet.cell(r,6).value)
-                g2code.ghichu = sheet.cell(r,7).value
-                g2code.gdvhdb = GDV.objects.get(gdvcode=sheet.cell(r,8).value)
-                g2code.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,9).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2code.save()
-            else:
-                g2codekho = G2code(
-        		    g2code = sheet.cell(r,1).value,
-                    contract = Contract.objects.get(contractcode=sheet.cell(r,2).value),
-                    dongiachaohdb = sheet.cell(r,3).value,
-                    pono = sheet.cell(r,4).value,
-                    status = sheet.cell(r,5).value,
-                    g1code = G1code.objects.get(g1code=sheet.cell(r,6).value),
-                    ghichu = sheet.cell(r,7).value,
-                    gdvhdb = GDV.objects.get(gdvcode=sheet.cell(r,8).value),
-                    dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,9).value,workbook.datemode).strftime("%Y-%m-%d"),
-        		    )
-                g2codekho.save()  
-        return redirect('/hdb/')     
-    return render(request, 'gcodedb/hdb_list.html')
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='Contract')
+        except Exception as e: 
+            message = format_html("Import File Error: {}",e)
+            messages.append(message)
+        else:
+            list_column = ['STT','Inquiry','Gcode','Contract No.','Số lượng','Đơn giá chào',
+            'PO No.','Ghi Chú','Giao dịch viên']
+            list_column_required = ['STT','Inquiry','Gcode','Contract No.','Số lượng','Đơn giá chào',
+            'PO No.','Giao dịch viên']
+            list_column_float = ['Số lượng','Đơn giá chào']
+            list_column_date = []
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Gcode','Contract No.'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    messages.append(message)
+                else:
+                    for index,row in df.iterrows():
+                        if G2code.objects.filter(g1code__gcode__ma__icontains=row['Gcode'],contract__contractcode__icontains=row['Contract No.']).count()>0:
+                            message = format_html("Gcode-Contract '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['Contract No.'],row['STT'])
+                            messages.append(message)
+                        if Contract.objects.filter(contractcode=row['Contract No.']).count()<=0:
+                            message = format_html("Contract '{}' doesn't exist at <b>index STT {}</b>, you shall import Contract before importing again"
+                            " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['STT'],reverse('gcodedb:contractdetail_list'))
+                            messages.append(message)
+                        if G1code.objects.filter(gcode__ma=row['Gcode'],inquiry__inquirycode=row['Inquiry']).count()<=0:
+                            message = format_html("Offer '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Contract before importing again"
+                            " at link: <a href='{}'>Create Offer</a>",row['Gcode'],row['Inquiry'],row['STT'],reverse('gcodedb:offer_list'))
+                            messages.append(message)
+                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                            message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
+                            " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
+                            messages.append(message)
+            if len(messages) <=0:
+                df[list_column_float]= df[list_column_float].astype('float64')
+                df['Thành tiền chào'] = df['Số lượng']*df['Đơn giá chào']
+                for i in range(0,df.shape[0]):
+                    df.loc[i,'Gcode-Contract'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Contract No.'] 
+                for r in range(0, df.shape[0]):
+                    g2code = G2code(
+                        g2code=df.loc[r,'Gcode-Contract'],
+                        contract = Contract.objects.get(contractcode = df.loc[r,'Contract No.']),
+                        dongiachaohdb = df.loc[r,'Đơn giá chào'],
+                        pono  = df.loc[r,'PO No.'],
+                        status = "Contract",
+                        g1code = G1code.objects.get(gcode__ma=df.loc[r,'Gcode'],inquiry__inquirycode=df.loc[r,'Inquiry']),
+                        ghichu = df.loc[r,'Ghi Chú'],
+                        gdvhdb = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên']),
+                        dateupdate = date.today(),
+                        )
+                    g2code.save()  
+                message = format_html("Data Contract has been successfully import")
+                messages.append(message)
+            html = df.to_html(index=False,justify='center')
+            context = {'hdb_list': html,'messages':messages,'warnings':warnings}
+            return render(request, 'gcodedb/hdb_list.html', context)
+    context = {'messages':messages}
+    return render(request, 'gcodedb/hdb_list.html', context)
 
 def importxls_po(request):
     if request.method == 'POST':

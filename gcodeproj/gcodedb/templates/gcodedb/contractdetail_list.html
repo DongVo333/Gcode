@@ -2,13 +2,13 @@
 {% block content %}
 
 <table class="table table-borderless">
-    <form method="POST" action="{% url 'gcodedb:importxls_contract' %}" enctype="multipart/form-data">
+    <form method="POST" action="{% url 'gcodedb:importxls_contractdetail' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="myfile" accept=".xls">
         <button type="submit">Import Excel</button>
     </form>
     <br>
-    <a href="{% url 'gcodedb:exportxls_contract' %}">Export to Excel</a>
+    <a href="{% url 'gcodedb:exportxls_contractdetail' %}">Export to Excel</a>
     <thead class="border-bottom font-weight-bold">
         <tr>
             <td>Contract</td>
@@ -21,29 +21,29 @@
             <td>Status</td>
             <td>Date Delivery Latest</td>
             <td>
-                <a href="/contract/insert" class="btn btn-outline-success">
+                <a href="/contractdetail/insert" class="btn btn-outline-success">
                     <i class="fas fa-plus"></i> Add New
                 </a>
             </td>
         </tr>
     </thead>
     <tbody>
-        {% for contract in contract_list %}
+        {% for contractdetail in contractdetail_list %}
             <tr>
-                <td>{{contract.contractcode}}</td>
-                <td>{{contract.contractnoclient}}</td>
-                <td>{{contract.datesign|date:"d-m-Y"}}</td>
-                <td>{{contract.client}}</td>
-                <td>{{contract.dealine1|date:"d-m-Y"}}</td>
-                <td>{{contract.dealine2|date:"d-m-Y"}}</td>
-                <td>{{contract.sellcost}}</td>
-                <td>{{contract.status}}</td>
-                <td>{{contract.datedeliverylatest|date:"d-m-Y"}}</td>
+                <td>{{contractdetail.contractcode}}</td>
+                <td>{{contractdetail.contractnoclient}}</td>
+                <td>{{contractdetail.datesign|date:"d-m-Y"}}</td>
+                <td>{{contractdetail.client}}</td>
+                <td>{{contractdetail.dealine1|date:"d-m-Y"}}</td>
+                <td>{{contractdetail.dealine2|date:"d-m-Y"}}</td>
+                <td>{{contractdetail.sellcost}}</td>
+                <td>{{contractdetail.status}}</td>
+                <td>{{contractdetail.datedeliverylatest|date:"d-m-Y"}}</td>
                 <td>
-                    <a href="/contract/update/{{contract.id}}" class="btn text-secondary px-0">
+                    <a href="/contractdetail/update/{{contractdetail.id}}" class="btn text-secondary px-0">
                         <i class="far fa-edit fa-lg"></i>
                     </a>
-                    <a href="/contract/delete/{{contract.id}}" class="btn text-secondary px-0">
+                    <a href="/contractdetail/delete/{{contractdetail.id}}" class="btn text-secondary px-0">
                         <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
                     </a>
                 </td>

@@ -15,7 +15,7 @@ urlpatterns = [
     path('hdb/update/<int:id>/', views.hdb_form,name='hdb_update'), 
     path('hdb/delete/<int:id>/',views.hdb_delete,name='hdb_delete'),
     path('hdb/import/xls', importxls.importxls_hdb, name='importxls_hdb'),
-    path('hdb/export/xls', exportxls.exportxls_hdb, name='exportxls_hdb'),
+    path('hdb/export/xls/<int:id>', exportxls.exportxls_hdb, name='exportxls_hdb'),
 
     path('po/insert/', views.po_form,name='po_insert'),
     path('po/', views.po_list,name='po_list'),
@@ -108,12 +108,12 @@ urlpatterns = [
     path('supplier/export/xls', exportxls.exportxls_supplier, name='exportxls_supplier'),
 
    
-    path('contract/insert/', views.contract_form,name='contract_insert'),
-    path('contract/', views.contract_list,name='contract_list'),
-    path('contract/update/<int:id>/', views.contract_form,name='contract_update'), 
-    path('contract/delete/<int:id>/',views.contract_delete,name='contract_delete'),
-    path('contract/import/xls', importxls.importxls_contract, name='importxls_contract'),
-    path('contract/export/xls', exportxls.exportxls_contract, name='exportxls_contract'),
+    path('contractdetail/insert/', views.contractdetail_form,name='contractdetail_insert'),
+    path('contractdetail/', views.contractdetail_list,name='contractdetail_list'),
+    path('contractdetail/update/<int:id>/', views.contractdetail_form,name='contractdetail_update'), 
+    path('contractdetail/delete/<int:id>/',views.contractdetail_delete,name='contractdetail_delete'),
+    path('contractdetail/import/xls', importxls.importxls_contractdetail, name='importxls_contractdetail'),
+    path('contractdetail/export/xls', exportxls.exportxls_contractdetail, name='exportxls_contractdetail'),
     
     path('lydowin/insert/', views.lydowin_form,name='lydowin_insert'),
     path('lydowin/', views.lydowin_list,name='lydowin_list'),

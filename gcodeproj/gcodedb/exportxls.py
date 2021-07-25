@@ -9,6 +9,7 @@ from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
 import pandas as pd
 import xlsxwriter
+from django.utils.html import format_html
 
 style_head_row = xlwt.easyxf(" align:wrap off,vert center,horiz center;borders:left THIN,right THIN,top THIN,bottom THIN;font:name Arial,colour_index white,bold on,height 0xA0;pattern:pattern solid,fore-colour ocean_blue;") 
 style_number_row = xlwt.easyxf(" align: wrap on,vert center,horiz left; font: name Arial,bold off,height 0XA0;borders:left THIN,right THIN,top THIN,bottom THIN;")
@@ -61,7 +62,7 @@ def exportxls_gcode(request):
     wb.save(response)
     return response
     
-def exportxls_contract(request):
+def exportxls_contractdetail(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Contract.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
@@ -300,7 +301,57 @@ def exportxls_offer(request):
             worksheet.set_column(col,col, None, text_format)
     writer.save()
     return response
-def exportxls_hdb(request):
+
+def exportxls_hdb(request,id):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Contract.xlsx"'
+    df = pd.DataFrame(columns=['STT','Inquiry','Gcode','Contract No.','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','Đơn giá chào',
+            'PO No.','Supplier','STT in ITB','Group in ITB','Xuất xứ','NSX','Ghi Chú','Giao dịch viên'])  
+    g1code_list = G1code.objects.filter(inquiry__pk=id,resultinq = "Win")
+    stt = 1
+    for item in g1code_list:
+        df = df.append(pd.DataFrame({'STT':[stt],'Inquiry':[item.inquiry.inquirycode],'Gcode':[item.gcode.ma],'Mô tả':[item.gcode.mota],'Ký mã hiệu':[item.kymahieuinq],
+        'Đơn vị':[item.unitinq],'Số lượng':[item.qtyinq],'Đơn giá chào':[item.dongiachaoinq],'Supplier':[item.supplier.suppliercode],
+        'STT in ITB':[item.sttitb],'Group in ITB':[item.groupitb],'Xuất xứ':[item.xuatxuinq],'NSX':[item.nsxinq]}))
+        stt +=1
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Contract', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Contract']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    noedit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#FC7575','font_color': 'white','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    #date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
+    list_header_noedit = ['Inquiry','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
+            'Supplier','Xuất xứ','NSX']
+    list_index_fm_noedit = []
+    for item in list_header_noedit:
+        list_index_fm_noedit.append(df.columns.get_loc(item))
+    for col_num, value in enumerate(df.columns.values):
+        if col_num in list_index_fm_noedit:
+            worksheet.write(0, col_num, value, noedit_format)
+        else:
+            worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Số lượng','Đơn giá chào']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    #worksheet.set_column('F:F', None, fm_float)
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    writer.save()
+    return response
+
+def exportxls_hdb_all(request,id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Gcode-Contract.xls"'
     wb = xlwt.Workbook(encoding='utf-8')

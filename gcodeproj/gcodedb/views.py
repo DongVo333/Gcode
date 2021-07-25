@@ -8,17 +8,16 @@ from .models import Contract, DanhgiaNSX, Danhgiacode, G1code, G2code, GDV, Gcod
 from django.db import transaction,IntegrityError
 from .forms import DanhgiaNSXForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
 from django.contrib import messages
-from django.urls import reverse_lazy
 from tablib import Dataset
 from .filters import ClientFilter,G1codeFilter
 from django.db.models import Q
 from datetime import date
 import csv
 import xlwt
+from django.utils.html import format_html
+import pandas as pd
+from django.urls import reverse
 
-""" def list(request):
-   Data = {'Gcodes': Gcode.objects.all().order_by('-id')}
-   return render(request, 'gcodedb/show.html', Data) """
 class PostListView(ListView):
    queryset = Gcode.objects.all().order_by('-ma')
    template_name = 'gcodedb/show.html'
@@ -283,18 +282,18 @@ def supplier_delete(request,id):
     supplier.delete()
     return redirect('/supplier/')
 
-def contract_list(request):
-	contract_list = Contract.objects.all()
-	return render(request, 'gcodedb/contract_list.html', {'contract_list':contract_list})
+def contractdetail_list(request):
+	contractdetail_list = Contract.objects.all()
+	return render(request, 'gcodedb/contractdetail_list.html', {'contractdetail_list':contractdetail_list})
 
-def contract_form(request, id=None):
+def contractdetail_form(request, id=None):
     if request.method == "GET":
         if id == None:
             form = ContractForm()
         else:
             contract = Contract.objects.get(pk=id)
             form = ContractForm(instance=contract)
-        return render(request, "gcodedb/contract_form.html", {'form': form})
+        return render(request, "gcodedb/contractdetail_form.html", {'form': form})
     else:
         if id == None:
             form = ContractForm(request.POST)
@@ -303,13 +302,13 @@ def contract_form(request, id=None):
             form = ContractForm(request.POST,instance= contract)
         if form.is_valid():
             form.save()
-        return redirect('/contract/')
+        return redirect('/contractdetail/')
 
 
-def contract_delete(request,id):
+def contractdetail_delete(request,id):
     contract = Contract.objects.get(pk=id)
     contract.delete()
-    return redirect('/contract/')
+    return redirect('/contractdetail/')
 
 def lydowin_list(request):
 	lydowin_list = Lydowin.objects.all()
@@ -469,18 +468,23 @@ def sales_delete(request,id):
     varsales = Sales.objects.get(pk=id)
     varsales.delete()
     return redirect('/sales/')
-
+        
 def hdb_list(request):
+    msg = []
+    msgresult = ""
     hdb_list = G2code.objects.none
     if request.method == "POST":
-        g1code_list = G1code.objects.filter(resultinq='Win',inquiry__inquirycode__icontains=request.POST.get("inquirysearch"))
-        if g1code_list.count() > 0: 
-            for item in g1code_list:
-                g1code_ = G1code.objects.get(pk = item.id)
-                if G2code.objects.filter(g1code=g1code_).count()<=0:
-                    G2code.objects.create(g1code=g1code_,dongiachaohdb = g1code_.dongiachaoinq, dateupdate = date.today())
-            return render(request, 'gcodedb/hdb_list.html', {'hdb_list': hdb_list})
-    return render(request, 'gcodedb/hdb_list.html', {'hdb_list': hdb_list})
+        inquiry_list = Inquiry.objects.filter(inquirycode__icontains=request.POST.get("inquirysearch"))
+        if inquiry_list.count() > 0: 
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",inquiry_list.count())
+            for item in inquiry_list:
+                g1code_list = G1code.objects.filter(inquiry=item, resultinq ="Win")
+                message = format_html("Inquiry <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
+                item.inquirycode,g1code_list.count(),reverse('gcodedb:exportxls_hdb', args=[item.id]))
+                msg.append(message)
+        else: 
+            msgresult = format_html("No results could be found for your search query")
+    return render(request, 'gcodedb/hdb_list.html', {'hdb_list': hdb_list, 'msg':msg,'msgresult':msgresult})
 
 def hdb_form(request, id=None):
     if request.method == "GET":
