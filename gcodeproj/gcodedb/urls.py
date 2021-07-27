@@ -22,7 +22,7 @@ urlpatterns = [
     path('po/update/<int:id>/', views.po_form,name='po_update'), 
     path('po/delete/<int:id>/',views.po_delete,name='po_delete'),
     path('po/import/xls', importxls.importxls_po, name='importxls_po'),
-    path('po/export/xls', exportxls.exportxls_po, name='exportxls_po'),
+    path('po/export/xls/<str:po>', exportxls.exportxls_po, name='exportxls_po'),
 
     path('giaohang/insert/', views.giaohang_form,name='giaohang_insert'),
     path('giaohang/', views.giaohang_list,name='giaohang_list'),
@@ -134,7 +134,7 @@ urlpatterns = [
     path('kho/update/<int:id>/', views.kho_form,name='kho_update'), 
     path('kho/delete/<int:id>/',views.kho_delete,name='kho_delete'),
     path('kho/import/xls', importxls.importxls_kho, name='importxls_kho'),
-    path('kho/export/xls', exportxls.exportxls_kho, name='exportxls_kho'),
+    path('kho/export/xls/<str:po>', exportxls.exportxls_kho, name='exportxls_kho'),
     
     path('savedata/', views.savedata, name ='savedata'),
 ]

@@ -365,8 +365,23 @@ def lydoout_delete(request,id):
     return redirect('/lydoout/')
 
 def kho_list(request):
-	kho_list = Kho.objects.all()
-	return render(request, 'gcodedb/kho_list.html', {'kho_list':kho_list})
+    msg = []
+    msgresult = ""
+    if request.method == "POST":
+        po_set = set()
+        podetail_list = POdetail.objects.filter(g2code__pono__icontains=request.POST.get("ponosearch")).values_list('g2code', flat=True)
+        for g2code in podetail_list:
+            po_set.add(G2code.objects.get(pk=g2code).pono)
+        if len(po_set)> 0: 
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(po_set))
+            for item in po_set:
+                g2code_list = POdetail.objects.filter(g2code__pono=item)
+                message = format_html("PO No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
+                item,g2code_list.count(),reverse('gcodedb:exportxls_kho', args=[item]))
+                msg.append(message)
+        else: 
+            msgresult = format_html("No results could be found for your search query")
+    return render(request, 'gcodedb/kho_list.html', {'msg':msg,'msgresult':msgresult})
 
 def kho_form(request, id=None):
     if request.method == "GET":
@@ -392,16 +407,6 @@ def kho_delete(request,id):
     kho = Kho.objects.get(pk=id)
     kho.delete()
     return redirect('/kho/')
-
-def SearchHDB(request):
-    g1code_list = G1code.objects.filter(resultinq='Win')
-    g1code_filter = G1codeFilter(request.GET, queryset=g1code_list)
-    for item in g1code_filter.qs:
-        g1code_ = G1code.objects.get(pk = item.id)
-        if G2code.objects.filter(g1code=g1code_).count()<=0:
-            G2code.objects.create(g1code=g1code_,dongiachaohdb = g1code_.dongiachaoinq, dateupdate = date.today())
-    g2code_list = G2code.objects.all()
-    return render(request, 'gcodedb/hdb.html', {'g2code_list': g2code_list, 'filter':g1code_filter})
 
 def offer_list(request):
 	offer_list = G1code.objects.all()
@@ -472,7 +477,6 @@ def sales_delete(request,id):
 def hdb_list(request):
     msg = []
     msgresult = ""
-    hdb_list = G2code.objects.none
     if request.method == "POST":
         inquiry_list = Inquiry.objects.filter(inquirycode__icontains=request.POST.get("inquirysearch"))
         if inquiry_list.count() > 0: 
@@ -484,7 +488,7 @@ def hdb_list(request):
                 msg.append(message)
         else: 
             msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/hdb_list.html', {'hdb_list': hdb_list, 'msg':msg,'msgresult':msgresult})
+    return render(request, 'gcodedb/hdb_list.html', {'msg':msg,'msgresult':msgresult})
 
 def hdb_form(request, id=None):
     if request.method == "GET":
@@ -515,8 +519,21 @@ def hdb_delete(request,id):
     return redirect('/hdb/')
 
 def po_list(request):
-	po_list = POdetail.objects.all()
-	return render(request, 'gcodedb/po_list.html', {'po_list':po_list})
+    msg = []
+    msgresult = ""
+    if request.method == "POST":
+        g2code_list = G2code.objects.filter(pono__icontains=request.POST.get("ponosearch")).values_list('pono', flat=True)
+        po_set =set(g2code_list)
+        if len(po_set)> 0: 
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(po_set))
+            for item in po_set:
+                g2code_list = G2code.objects.filter(pono=item)
+                message = format_html("PO No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
+                item,g2code_list.count(),reverse('gcodedb:exportxls_po',args=[item,]))
+                msg.append(message)
+        else: 
+            msgresult = format_html("No results could be found for your search query")
+    return render(request, 'gcodedb/po_list.html', {'msg':msg,'msgresult':msgresult})
 
 def po_form(request, id=None):
     if request.method == "GET":

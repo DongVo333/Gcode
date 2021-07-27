@@ -53,13 +53,6 @@ def msgcheckimport(df,list_column,list_column_required,list_column_float,list_co
                         messages.append(message)
     return messages
 
-def list_lydo(queryset_):
-    listitem  = []
-    list_lydo = list(queryset_)
-    for item in list_lydo:
-        listitem.append(item[0])
-    return listitem
-
 def importxls_client(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -281,7 +274,7 @@ def importxls_danhgiacode(request):
         return redirect('/danhgiacode/')     
     return render(request, 'gcodedb/danhgiacode_list.html')
 
-def importxls_kho(request):
+def importxls_khoall(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
         workbook = xlrd.open_workbook(file_contents=new_persons.read())
@@ -384,8 +377,8 @@ def importxls_offer(request):
                             message = format_html("Reason {} can\'t be use in both cases Result 'Win' and 'Out'",reason_duplicate)
                             messages.append(message)
                         else:
-                            list_lydoout = list_lydo(Lydoout.objects.values_list('lydooutcode'))
-                            list_lydowin = list_lydo(Lydowin.objects.values_list('lydowincode'))
+                            list_lydoout = Lydoout.objects.values_list('lydooutcode',flat=True)
+                            list_lydowin = Lydowin.objects.values_list('lydowincode',flat=True)
                             if len(set_lydowin)>0:
                                 for setitem in set_lydowin:                                
                                     highest = process.extractOne(setitem,list_lydowin)
@@ -490,7 +483,7 @@ def importxls_hdb(request):
                             " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['STT'],reverse('gcodedb:contractdetail_list'))
                             messages.append(message)
                         if G1code.objects.filter(gcode__ma=row['Gcode'],inquiry__inquirycode=row['Inquiry']).count()<=0:
-                            message = format_html("Offer '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Contract before importing again"
+                            message = format_html("Offer '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
                             " at link: <a href='{}'>Create Offer</a>",row['Gcode'],row['Inquiry'],row['STT'],reverse('gcodedb:offer_list'))
                             messages.append(message)
                         if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
@@ -524,47 +517,139 @@ def importxls_hdb(request):
     return render(request, 'gcodedb/hdb_list.html', context)
 
 def importxls_po(request):
+    messages=  []
+    warnings = []
     if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Purchase Order")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            g2code_ = G2code.objects.get(g2code=sheet.cell(r,1).value)
-            counter = POdetail.objects.filter(g2code=g2code_).count()
-            g2codepo = POdetail()
-            if counter>0:
-                g2codepo = POdetail.objects.get(g2code=g2code_)
-                g2codepo.motapo = sheet.cell(r,2).value
-                g2codepo.kymahieupo = sheet.cell(r,3).value
-                g2codepo.unitpo = sheet.cell(r,4).value
-                g2codepo.qtypo = sheet.cell(r,5).value
-                g2codepo.supplier = Supplier.objects.get(suppliercode=sheet.cell(r,6).value) 
-                g2codepo.xuatxupo = sheet.cell(r,7).value
-                g2codepo.nsxpo = sheet.cell(r,8).value
-                g2codepo.dongiamuapo = sheet.cell(r,9).value
-                g2codepo.ghichu = sheet.cell(r,10).value
-                g2codepo.gdvpo = GDV.objects.get(gdvcode=sheet.cell(r,11).value)
-                g2codepo.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,12).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2codepo.save()
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='POdetail')
+        except Exception as e: 
+            if e == 'myfile':
+                message = format_html("No File chosen")
             else:
-                g2codepo = POdetail(
-        		    g2code = g2code_,
-        		    motapo = sheet.cell(r,2).value,
-                    kymahieupo = sheet.cell(r,3).value,
-                    unitpo = sheet.cell(r,4).value,
-                    qtypo = sheet.cell(r,5).value,
-                    supplier = Supplier.objects.get(suppliercode=sheet.cell(r,6).value), 
-                    xuatxupo = sheet.cell(r,7).value,
-                    nsxpo = sheet.cell(r,8).value,
-                    dongiamuapo = sheet.cell(r,9).value,
-                    ghichu = sheet.cell(r,10).value,
-                    gdvpo = GDV.objects.get(gdvcode=sheet.cell(r,11).value),
-                    dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,12).value,workbook.datemode).strftime("%Y-%m-%d"),
-        		    )
-                g2codepo.save()  
-        return redirect('/po/')     
-    return render(request, 'gcodedb/po_list.html')
+                message = format_html("Import File Error: {}",e)
+            messages.append(message)
+        else:
+            list_column = ['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','NSX','Xuất xứ',
+    'Supplier','Đơn giá mua','Ghi Chú','Giao dịch viên']
+            list_column_required = ['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','NSX','Xuất xứ',
+    'Supplier','Đơn giá mua','Giao dịch viên']
+            list_column_float = ['Số lượng','Đơn giá mua']
+            list_column_date = []
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Gcode','PO No.'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    messages.append(message)
+                else:
+                    for index,row in df.iterrows():
+                        if POdetail.objects.filter(g2code__g1code__gcode__ma__icontains=row['Gcode'],g2code__pono__icontains=row['PO No.']).count()>0:
+                            message = format_html("Gcode-PO No. '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['PO No.'],row['STT'])
+                            messages.append(message)
+                        if G2code.objects.filter(g1code__gcode__ma=row['Gcode'],contract__contractcode=row['Contract No.']).count()<=0:
+                            message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:hdb_list'))
+                            messages.append(message)
+                        if Supplier.objects.filter(suppliercode=row['Supplier']).count()<=0:
+                            message = format_html("Supplier '{}' doesn't exist at <b>index STT {}</b>, you shall import Supplier before importing again"
+                            " at link: <a href='{}'>Create Supplier</a>",row['Supplier'],row['STT'],reverse('gcodedb:supplier_list'))
+                            messages.append(message)
+                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                            message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
+                            " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
+                            messages.append(message)
+            if len(messages) <=0:
+                df[list_column_float]= df[list_column_float].astype('float64')
+                df['Thành tiền mua'] = df['Số lượng']*df['Đơn giá mua']
+                for r in range(0, df.shape[0]):
+                    podetail = POdetail(
+                        g2code = G2code.objects.get(g1code__gcode__ma = df.loc[r,'Gcode'],contract__contractcode= df.loc[r,'Contract No.']),
+                        motapo = df.loc[r,'Mô tả'],
+                        kymahieupo = df.loc[r,'Ký mã hiệu'],
+                        unitpo =df.loc[r,'Đơn vị'],
+                        qtypo = df.loc[r,'Số lượng'],
+                        supplier =Supplier.objects.get(suppliercode = df.loc[r,'Supplier']),
+                        xuatxupo = df.loc[r,'Xuất xứ'],
+                        nsxpo = df.loc[r,'NSX'],
+                        dongiamuapo = df.loc[r,'Đơn giá mua'],
+                        ghichu = df.loc[r,'Ghi Chú'],
+                        gdvpo = GDV.objects.get(gdvcode=df.loc[r,'Giao dịch viên']),
+                        dateupdate = date.today(),
+                        )
+                    podetail.save()  
+                message = format_html("Data PO has been successfully import")
+                messages.append(message)
+            html = df.to_html(index=False,justify='center')
+            context = {'po_list': html,'messages':messages,'warnings':warnings}
+            return render(request, 'gcodedb/po_list.html', context)
+    context = {'messages':messages}
+    return render(request, 'gcodedb/po_list.html', context)
+
+def importxls_kho(request):
+    messages=  []
+    warnings = []
+    if request.method == 'POST':
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='Nhập kho')
+        except Exception as e: 
+            if e == 'myfile':
+                message = format_html("No File chosen")
+            else:
+                message = format_html("Import File Error: {}",e)
+            messages.append(message)
+        else:
+            list_column = ['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
+            'Đơn giá freight','Ngày hàng về kho','Ghi Chú','Giao dịch viên']
+            list_column_required = ['STT','PO No.','Contract No.','Gcode','Số lượng',
+            'Đơn giá freight','Ngày hàng về kho','Giao dịch viên']
+            list_column_float = ['Số lượng','Đơn giá freight']
+            list_column_date = []
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Gcode','PO No.'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    messages.append(message)
+                else:
+                    for index,row in df.iterrows():
+                        if Kho.objects.filter(g2code__g1code__gcode__ma__icontains=row['Gcode'],g2code__pono__icontains=row['PO No.']).count()>0:
+                            message = format_html("Gcode-PO No. '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['PO No.'],row['STT'])
+                            messages.append(message)
+                        if G2code.objects.filter(g1code__gcode__ma=row['Gcode'],contract__contractcode=row['Contract No.']).count()<=0:
+                            message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:hdb_list'))
+                            messages.append(message)
+                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                            message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
+                            " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
+                            messages.append(message)
+            if len(messages) <=0:
+                df[list_column_float]= df[list_column_float].astype('float64')
+                df['Thành tiền freight'] = df['Số lượng']*df['Đơn giá freight']
+                for r in range(0, df.shape[0]):
+                    kho = Kho(
+                        g2code = G2code.objects.get(g1code__gcode__ma = df.loc[r,'Gcode'],contract__contractcode= df.loc[r,'Contract No.']),
+                        qtykho = df.loc[r,'Số lượng'],
+                        dongiafreight = df.loc[r,'Đơn giá freight'],
+                        ngaynhapkho = df.loc[r,'Ngày hàng về kho'],
+                        ghichu = df.loc[r,'Ngày hàng về kho'],
+                        gdvkho = GDV.objects.get(gdvcode=df.loc[r,'Giao dịch viên']),
+                        dateupdate = date.today(),
+                        )
+                    kho.save()  
+                message = format_html("Data Goods receipt has been successfully import")
+                messages.append(message)
+            html = df.to_html(index=False,justify='center')
+            context = {'kho_list': html,'messages':messages,'warnings':warnings}
+            return render(request, 'gcodedb/kho_list.html', context)
+    context = {'messages':messages}
+    return render(request, 'gcodedb/kho_list.html', context)
 
 def importxls_giaohang(request):
     if request.method == 'POST':

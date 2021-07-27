@@ -192,27 +192,6 @@ def exportxls_danhgiacode(request):
     wb.save(response)
     return response
 
-def exportxls_kho(request):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Kho.xls"'
-    wb = xlwt.Workbook(encoding='utf-8')
-    ws = wb.add_sheet('Kho')
-    row_num = 0  
-    columns = ['ID','Gcode-HDB', 'Số lượng về kho','Đơn giá Freight','Ngày nhập kho','Giao Dịch Viên','Ngày cập nhật']
-    for col_num in range(len(columns)):
-        ws.write(row_num, col_num, columns[col_num], style_head_row)
-    for kho in Kho.objects.all():
-        row_num += 1
-        ws.write(row_num, 0, kho.id, style_data_row)
-        ws.write(row_num, 1, kho.g2code.g2code, style_data_row)
-        ws.write(row_num, 2, kho.qtykho, style_number_row)
-        ws.write(row_num, 3, kho.dongiafreight, style_number_row)
-        ws.write(row_num, 4, kho.ngaynhapkho, style_date_row)
-        ws.write(row_num, 5, kho.gdvkho.gdvcode, style_data_row)
-        ws.write(row_num, 6, kho.dateupdate, style_date_row)
-    wb.save(response)
-    return response
-
 def exportxls_offer_all(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Offer.xls"'
@@ -327,8 +306,7 @@ def exportxls_hdb(request,id):
     float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
     'num_format': '#,##0.00'})
     #date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
-    list_header_noedit = ['Inquiry','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
-            'Supplier','Xuất xứ','NSX']
+    list_header_noedit = ['Inquiry','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','Supplier','Xuất xứ','NSX']
     list_index_fm_noedit = []
     for item in list_header_noedit:
         list_index_fm_noedit.append(df.columns.get_loc(item))
@@ -375,7 +353,7 @@ def exportxls_hdb_all(request,id):
     wb.save(response)
     return response
 
-def exportxls_po(request):
+def exportxls_poall(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Po.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
@@ -400,6 +378,107 @@ def exportxls_po(request):
         ws.write(row_num, 11, g2code_.gdvpo.gdvcode, style_data_row)
         ws.write(row_num, 12, g2code_.dateupdate, style_date_row)
     wb.save(response)
+    return response
+
+def exportxls_po(request,po):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="POdetail.xlsx"'
+    df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','NSX','Xuất xứ',
+    'Supplier','Đơn giá mua','Ghi Chú','Giao dịch viên'])
+    g2code_list = G2code.objects.filter(pono=po)
+    stt = 1
+    for item in g2code_list:
+        df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.contract.contractcode],'Gcode':[item.gcode],
+        'Mô tả':[item.mota],'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'Số lượng':[item.qty],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],
+        'Supplier':[item.supplier],'Đơn giá mua':[item.g1code.dongiamuainq]}))
+        stt +=1
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='POdetail', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['POdetail']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    noedit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#FC7575','font_color': 'white','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    #date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
+    list_header_noedit = ['PO No.','Contract No.','Gcode']
+    list_index_fm_noedit = []
+    for item in list_header_noedit:
+        list_index_fm_noedit.append(df.columns.get_loc(item))
+    for col_num, value in enumerate(df.columns.values):
+        if col_num in list_index_fm_noedit:
+            worksheet.write(0, col_num, value, noedit_format)
+        else:
+            worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Số lượng','Đơn giá mua']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    #worksheet.set_column('F:F', None, fm_float)
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    writer.save()
+    return response
+
+def exportxls_kho(request,po):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Nhapkho.xlsx"'
+    df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
+    'Đơn giá freight','Ngày hàng về kho','Ghi Chú','Giao dịch viên'])
+    podetail_list = POdetail.objects.filter(g2code__pono=po)
+    stt = 1
+    for item in podetail_list:
+        df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.g2code.contract.contractcode],'Gcode':[item.gcode],
+        'Mô tả':[item.motapo],'Ký mã hiệu':[item.kymahieupo],'Đơn vị':[item.unitpo],'Số lượng':[item.qtypo]}))
+        stt +=1
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Nhập kho', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Nhập kho']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    noedit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#FC7575','font_color': 'white','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': 'dd/mm/yyyy'})
+    list_header_noedit = ['PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị']
+    list_index_fm_noedit = []
+    for item in list_header_noedit:
+        list_index_fm_noedit.append(df.columns.get_loc(item))
+    for col_num, value in enumerate(df.columns.values):
+        if col_num in list_index_fm_noedit:
+            worksheet.write(0, col_num, value, noedit_format)
+        else:
+            worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Số lượng','Đơn giá freight']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    list_column_fm_date = ['Ngày hàng về kho']
+    list_index_fm_date = []
+    for item in list_column_fm_date:
+        list_index_fm_date.append(df.columns.get_loc(item))
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        elif col in list_index_fm_date:
+            worksheet.set_column(col,col, None, date_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    writer.save()
     return response
 
 def exportxls_giaohang(request):
