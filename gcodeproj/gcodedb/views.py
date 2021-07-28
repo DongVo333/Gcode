@@ -563,8 +563,23 @@ def po_delete(request,id):
     return redirect('/po/')
 
 def giaohang_list(request):
-	giaohang_list = Giaohang.objects.all()
-	return render(request, 'gcodedb/giaohang_list.html', {'giaohang_list':giaohang_list})
+    msg = []
+    msgresult = ""
+    if request.method == "POST":
+        contract_set = set()
+        contract_list = Kho.objects.filter(g2code__contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
+        for g2code in contract_list:
+            contract_set.add(G2code.objects.get(pk=g2code).contract.contractcode)
+        if len(contract_set)> 0: 
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
+            for item in contract_set:
+                g2code_list = Kho.objects.filter(g2code__contract__contractcode=item)
+                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
+                item,g2code_list.count(),reverse('gcodedb:exportxls_giaohang', args=[item]))
+                msg.append(message)
+        else: 
+            msgresult = format_html("No results could be found for your search query")
+    return render(request, 'gcodedb/giaohang_list.html', {'msg':msg,'msgresult':msgresult})
 
 def giaohang_form(request, id=None):
     if request.method == "GET":

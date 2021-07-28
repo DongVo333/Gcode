@@ -1,54 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
-{% load static %}
-<table class="table table-borderless">
-    <form method="POST" action="{% url 'gcodedb:importxls_giaohang' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="myfile" accept=".xls">
-        <button type="submit">Import Excel</button>
-    </form>
-    <br>
-    <a href="{% url 'gcodedb:exportxls_giaohang' %}">Export to Excel</a>
-    <thead class="border-bottom font-weight-bold">
-        <tr>
-            <td>G2code</td>
-            <td>Contract No.</td>
-            <td>Gcode</td>
-            <td>Mô tả</td>
-            <td>Ký mã hiệu</td>
-            <td>Đơn vị tính</td>
-            <td>Số lượng</td>
-            <td>Ngày giao hàng</td>
-            <td>Giao dịch viên</td>
-            <td>
-                <a href="/giaohang/insert" class="btn btn-outline-success">
-                    <i class="fas fa-plus"></i> Add New
-                </a>
-            </td>
-        </tr>
-    </thead>
-    <tbody>
-        {% for giaohang in giaohang_list %}
-            <tr>
-                <td>{{giaohang.g2code}}</td>
-                <td>{{giaohang.contract}}</td>
-                <td>{{giaohang.gcode}}</td>
-                <td>{{giaohang.mota}}</td>
-                <td>{{giaohang.kymahieu}}</td>
-                <td>{{giaohang.unit}}</td>
-                <td>{{giaohang.qtygiaohang}}</td>
-                <td>{{giaohang.ngaygiaohang|date:"d-m-Y"}}</td>
-                <td>{{giaohang.gdvgiaohang}}</td>
-                <td>
-                    <a href="/giaohang/update/{{giaohang.id}}" class="btn text-secondary px-0">
-                        <i class="far fa-edit fa-lg"></i>
-                    </a>
-                    <a href="/giaohang/delete/{{giaohang.id}}" class="btn text-secondary px-0">
-                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
-                    </a>
-                </td>
-            </tr>
+<form method="POST" action="{% url 'gcodedb:giaohang_list'%}">
+    {% csrf_token %}
+    <label for="contractsearch">Nhập Contract No.:</label>
+    <input type="text" id="contractsearch" name="contractsearch"><br>
+    <button type="submit">Search Contract</button>
+</form>
+<br>
+{{msgresult}}
+{% if msg %}
+    <ul class="messagelist">
+        {% for message in msg %}
+            <li>{{ message }}</li>
         {% endfor %}
-    </tbody>
-</table>
+    </ul>
+{% endif %}
+<br>
+<br>
+<form method="POST" action="{% url 'gcodedb:importxls_giaohang' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile" accept=".xls,.xlsx">
+    <button type="submit">Import Excel</button>
+</form>
+<br>
+<br>
+{{ giaohang_list|safe }}
+<br>
+{% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if warnings %}
+<br>
+<p>Some warnings:</p>
+    <ul class="messagelist">
+        {% for warn in warnings %}
+            <li>{{ warn }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 {% endblock content %}

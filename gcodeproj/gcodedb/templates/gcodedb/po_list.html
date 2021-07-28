@@ -2,7 +2,7 @@
 {% block content %}
 <form method="POST" action="{% url 'gcodedb:po_list'%}">
     {% csrf_token %}
-    <label for="inquirysearch">Nhập PO No.:</label>
+    <label for="ponosearch">Nhập PO No.:</label>
     <input type="text" id="ponosearch" name="ponosearch"><br>
     <button type="submit">Search PO</button>
 </form>

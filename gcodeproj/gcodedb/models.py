@@ -192,6 +192,30 @@ class G2code(models.Model):
     @property
     def gcode(self):
         return self.g1code.gcode.ma
+    @property
+    def qtychuadat(self):
+        if POdetail.objects.filter(g2code=self).count()>0:
+            return self.qty-POdetail.objects.get(g2code=self).qtypo
+        else:
+            return self.qty
+    @property
+    def qtychuanhapkho(self):
+        if POdetail.objects.filter(g2code=self).count()>0:
+            if Kho.objects.filter(g2code=self).count()>0:
+                return POdetail.objects.get(g2code=self).qtypo-Kho.objects.get(g2code=self).qtykho
+            else:
+                return POdetail.objects.get(g2code=self).qtypo
+        else:
+            return 0
+    @property
+    def qtychuagiao(self):
+        if Kho.objects.filter(g2code=self).count()>0:
+            if Giaohang.objects.filter(g2code=self).count()>0:
+                return Kho.objects.get(g2code=self).qtykho - Giaohang.objects.get(g2code=self).qtygiaohang
+            else:
+                return Kho.objects.get(g2code=self).qtykho
+        else:
+            return 0
 class POdetail(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_pog2code')
     motapo = models.TextField(null=True)
@@ -230,13 +254,13 @@ class Kho(models.Model):
     def thanhtienfreight(self):
         return (self.qtykho or 0)*(self.dongiafreight or 0)
     @property
-    def motahanghoa(self):
+    def mota(self):
         return POdetail.objects.get(g2code = self.g2code).motapo
     @property
     def kymahieu(self):
         return POdetail.objects.get(g2code = self.g2code).kymahieupo
     @property
-    def donvitinh(self):
+    def unit(self):
         return POdetail.objects.get(g2code = self.g2code).unitpo
     @property
     def gcode(self):

@@ -29,7 +29,7 @@ urlpatterns = [
     path('giaohang/update/<int:id>/', views.giaohang_form,name='giaohang_update'), 
     path('giaohang/delete/<int:id>/',views.giaohang_delete,name='giaohang_delete'),
     path('giaohang/import/xls', importxls.importxls_giaohang, name='importxls_giaohang'),
-    path('giaohang/export/xls', exportxls.exportxls_giaohang, name='exportxls_giaohang'),
+    path('giaohang/export/xls/<str:contract>', exportxls.exportxls_giaohang, name='exportxls_giaohang'),
 
     path('phat/insert/', views.phat_form,name='phat_insert'),
     path('phat/', views.phat_list,name='phat_list'),
