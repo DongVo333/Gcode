@@ -437,7 +437,7 @@ def exportxls_kho(request,po):
     stt = 1
     for item in podetail_list:
         df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.g2code.contract.contractcode],'Gcode':[item.gcode],
-        'Mô tả':[item.motapo],'Ký mã hiệu':[item.kymahieupo],'Đơn vị':[item.unitpo],'Số lượng':[item.qtypo]}))
+        'Mô tả':[item.motapo],'Ký mã hiệu':[item.kymahieupo],'Đơn vị':[item.unitpo],'Số lượng':[item.g2code.qtychuanhapkho]}))
         stt +=1
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
     df.to_excel(writer, sheet_name='Nhập kho', startrow=1, header=False,index=False)

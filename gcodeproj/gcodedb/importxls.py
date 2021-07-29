@@ -37,19 +37,20 @@ def msgcheckimport(df,list_column,list_column_required,list_column_float,list_co
         for i,j in zip(*np.where(pd.isnull(df[list_column_required]))):
             message = format_html("Data Import is empty at <b>index STT {}: column {}</b>",df.loc[i,'STT'],list_column_required[j])
             messages.append(message)
-    elif len(list_column_float):
-        if any(df[item].dtype == "object" for item in list_column_float):
-            for item in list_column_float:
-                for i1,i2 in zip(df['STT'],df[item].map(type)):
-                    if i2!=int and i2!=float:
-                        message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
-                        messages.append(message) 
-    elif len(list_column_date):
-        if any(df[item].dtype == "object" for item in list_column_date):
+    else:
+        if len(list_column_float):
+            if any(df[item].dtype == "object" for item in list_column_float):
+                for item in list_column_float:
+                    for i1,i2 in zip(df['STT'],df[item].map(type)):
+                        if i2!=int and i2!=float:
+                            message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
+                            messages.append(message) 
+        if len(list_column_date):
             for item in list_column_date:
-                for i1,i2 in zip(df['STT'],df[item].map(type)):
-                    if i2!=date:
-                        message = format_html("Data Import is formated wrong at <b>index STT {}: column {}</b>",i1,item)
+                df[item] = pd.to_datetime(df[item], format='%Y-%m-%d', errors='coerce')
+                for i in range(0,df.shape[0]):
+                    if df[item][i] is pd.NaT:
+                        message = format_html("Datapd Import is formated wrong at <b>index STT {}: column {}</b>",df['STT'][i],item)
                         messages.append(message)
     return messages
 
@@ -602,12 +603,12 @@ def importxls_kho(request):
                 message = format_html("Import File Error: {}",e)
             messages.append(message)
         else:
-            list_column = ['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
+            list_column = ['STT','PO No.','Contract No.','Gcode','Số lượng',
             'Đơn giá freight','Ngày hàng về kho','Ghi Chú','Giao dịch viên']
             list_column_required = ['STT','PO No.','Contract No.','Gcode','Số lượng',
             'Đơn giá freight','Ngày hàng về kho','Giao dịch viên']
             list_column_float = ['Số lượng','Đơn giá freight']
-            list_column_date = []
+            list_column_date = ['Ngày hàng về kho']
             messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
             if len(messages) <=0:
                 df_obj = df.select_dtypes(['object'])
@@ -638,12 +639,12 @@ def importxls_kho(request):
                         qtykho = df.loc[r,'Số lượng'],
                         dongiafreight = df.loc[r,'Đơn giá freight'],
                         ngaynhapkho = df.loc[r,'Ngày hàng về kho'],
-                        ghichu = df.loc[r,'Ngày hàng về kho'],
+                        ghichu = df.loc[r,'Ghi Chú'],
                         gdvkho = GDV.objects.get(gdvcode=df.loc[r,'Giao dịch viên']),
                         dateupdate = date.today(),
                         )
                     kho.save()  
-                message = format_html("Data Goods receipt has been successfully import")
+                message = format_html("Data WAREHOUSE receipt has been successfully import")
                 messages.append(message)
             html = df.to_html(index=False,justify='center')
             context = {'kho_list': html,'messages':messages,'warnings':warnings}
@@ -652,33 +653,72 @@ def importxls_kho(request):
     return render(request, 'gcodedb/kho_list.html', context)
 
 def importxls_giaohang(request):
+    messages=  []
+    warnings = []
     if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Giao hàng")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            g2code_ = G2code.objects.get(g2code=sheet.cell(r,1).value)
-            counter = Giaohang.objects.filter(g2code=g2code_).count()
-            g2codegh = Giaohang()
-            if counter>0:
-                g2codegh = Giaohang.objects.get(g2code=g2code_)
-                g2codegh.qtygiaohang = sheet.cell(r,2).value
-                g2codegh.ngaygiaohang = xlrd.xldate.xldate_as_datetime(sheet.cell(r,3).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2codegh.gdvgiaohang = GDV.objects.get(gdvcode=sheet.cell(r,4).value)
-                g2codegh.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2codegh.save()
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='Delivery')
+        except Exception as e: 
+            if str(e) == 'myfile':
+                message = format_html("No File chosen")
             else:
-                g2codegh = Giaohang(
-        		    g2code = g2code_,
-                    qtygiaohang = sheet.cell(r,2).value,
-                    ngaygiaohang = xlrd.xldate.xldate_as_datetime(sheet.cell(r,3).value,workbook.datemode).strftime("%Y-%m-%d"),
-                    gdvgiaohang = GDV.objects.get(gdvcode=sheet.cell(r,4).value),
-                    dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,workbook.datemode).strftime("%Y-%m-%d"),
-        		    )
-                g2codegh.save()  
-        return redirect('/giaohang/')     
-    return render(request, 'gcodedb/giaohang_list.html')
+                message = format_html("Import File Error: {}",e)
+            messages.append(message)
+        else:
+            list_column = ['STT','Contract No.','Gcode','Số lượng',
+            'Ngày giao hàng','Ghi Chú','Giao dịch viên']
+            list_column_required = ['STT','Contract No.','Gcode','Số lượng',
+            'Ngày giao hàng','Giao dịch viên']
+            list_column_float = ['Số lượng']
+            list_column_date = ['Ngày giao hàng']
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Gcode','Contract No.'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    messages.append(message)
+                else:
+                    for index,row in df.iterrows():
+                        if G2code.objects.filter(g1code__gcode__ma=row['Gcode'],contract__contractcode=row['Contract No.']).count()<=0:
+                            message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:hdb_list'))
+                            messages.append(message)
+                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                            message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
+                            " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
+                            messages.append(message)
+            if len(messages) <=0:
+                df[list_column_float]= df[list_column_float].astype('float64')
+                for r in range(0, df.shape[0]):
+                    if Giaohang.objects.filter(g2code__g1code__gcode__ma = df.loc[r,'Gcode'],g2code__contract__contractcode = df.loc[r,'Contract No.']).count()>0:
+                        gh = Giaohang.objects.get(g2code__g1code__gcode__ma = df.loc[r,'Gcode'],g2code__contract__contractcode = df.loc[r,'Contract No.'])
+                        gh.qtygiaohang = gh.qtygiaohang + df.loc[r,'Số lượng'],
+                        gh.ngaygiaohang = df.loc[r,'Ngày giao hàng'],
+                        if gh.ghichu != "":
+                            gh.ghichu = gh.ghichu + '\n' + df.loc[r,'Ghi Chú'],
+                        gh.gdvgiaohang = GDV.objects.get(gdvcode=df.loc[r,'Giao dịch viên']),
+                        gh.dateupdate = date.today(),
+                        gh.save()
+                    else:  
+                        gh = Giaohang(
+                            g2code = G2code.objects.get(g1code__gcode__ma = df.loc[r,'Gcode'],contract__contractcode= df.loc[r,'Contract No.']),
+                            qtygiaohang = df.loc[r,'Số lượng'],
+                            ngaygiaohang = df.loc[r,'Ngày giao hàng'],
+                            ghichu = df.loc[r,'Ghi Chú'],
+                            gdvgiaohang = GDV.objects.get(gdvcode=df.loc[r,'Giao dịch viên']),
+                            dateupdate = date.today(),
+                            )
+                        gh.save()
+                message = format_html("Data Delivery receipt has been successfully import")
+                messages.append(message)
+            html = df.to_html(index=False,justify='center')
+            context = {'giaohang_list': html,'messages':messages,'warnings':warnings}
+            return render(request, 'gcodedb/giaohang_list.html', context)
+    context = {'messages':messages}
+    return render(request, 'gcodedb/giaohang_list.html', context)
 
 def importxls_phat(request):
     if request.method == 'POST':
