@@ -336,7 +336,7 @@ class Danhgiacode(models.Model):
     def __str__(self):
         return self.danhgiacode 
 
-class DanhgiaNSX(models.Model):
+class DanhgiaNCC(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_danhgiag2code')
     danhgiacode = models.ManyToManyField(Danhgiacode,related_name='fk_danhgiacode',null=True)
     comment = models.TextField(null=True,blank=True)
@@ -415,3 +415,6 @@ class Tienve(models.Model):
     @property
     def nsx(self):
         return POdetail.objects.get(g2code = self.g2code).nsxpo
+    @property
+    def supplier(self):
+        return POdetail.objects.get(g2code = self.g2code).supplier

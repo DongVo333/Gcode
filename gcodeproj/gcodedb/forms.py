@@ -2,7 +2,7 @@ from django import forms
 from django.db.models import fields
 from django.forms import widgets
 from django.forms.widgets import NumberInput, Textarea, Widget
-from .models import DanhgiaNSX, G1code, G2code, Gcode, Client, Giaohang, Inquiry,GDV, Kho, POdetail, Phat, Sales, Supplier,Contract,Lydowin,Lydoout, Tienve, Danhgiacode
+from .models import DanhgiaNCC, G1code, G2code, Gcode, Client, Giaohang, Inquiry,GDV, Kho, POdetail, Phat, Sales, Supplier,Contract,Lydowin,Lydoout, Tienve, Danhgiacode
 from django.conf import settings
 
 class InputDate(forms.DateInput):
@@ -226,9 +226,9 @@ class TienveForm(forms.ModelForm):
             'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
-class DanhgiaNSXForm(forms.ModelForm):
+class DanhgiaNCCForm(forms.ModelForm):
     class Meta:
-        model = DanhgiaNSX
+        model = DanhgiaNCC
         exclude = [
             'dateupdate',
         ]

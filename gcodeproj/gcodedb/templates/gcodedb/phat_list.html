@@ -1,62 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
-{% load static %}
-<table class="table table-borderless">
-    <form method="POST" action="{% url 'gcodedb:importxls_phat' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="myfile" accept=".xls">
-        <button type="submit">Import Excel</button>
-    </form>
-    <br>
-    <a href="{% url 'gcodedb:exportxls_phat' %}">Export to Excel</a>
-    <thead class="border-bottom font-weight-bold">
-        <tr>
-            <td>G2code</td>
-            <td>Gcode</td>
-            <td>Contract</td>
-            <td>Client</td>
-            <td>Mô tả</td>
-            <td>Ký mã hiệu</td>
-            <td>Đơn vị tính</td>
-            <td>Số lượng</td>
-            <td>Nhà sản xuất</td>
-            <td>Xuất xứ</td>
-            <td>Đơn giá phạt</td>
-            <td>Thành tiền phạt</td>
-            <td>Giao dịch viên</td>
-            <td>
-                <a href="/phat/insert" class="btn btn-outline-success">
-                    <i class="fas fa-plus"></i> Add New
-                </a>
-            </td>
-        </tr>
-    </thead>
-    <tbody>
-        {% for phat in phat_list %}
-            <tr>
-                <td>{{phat.g2code}}</td>
-                <td>{{phat.gcode}}</td>
-                <td>{{phat.contract}}</td>
-                <td>{{phat.client}}</td>
-                <td>{{phat.mota}}</td>
-                <td>{{phat.kymahieu}}</td>
-                <td>{{phat.unit}}</td>
-                <td>{{phat.qtyphat}}</td>
-                <td>{{phat.nsx}}</td>
-                <td>{{phat.xuatxu}}</td>
-                <td>{{phat.dongiaphat}}</td>
-                <td>{{phat.tongphat}}</td>
-                <td>{{phat.gdvphat}}</td>
-                <td>
-                    <a href="/phat/update/{{phat.id}}" class="btn text-secondary px-0">
-                        <i class="far fa-edit fa-lg"></i>
-                    </a>
-                    <a href="/phat/delete/{{phat.id}}" class="btn text-secondary px-0">
-                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
-                    </a>
-                </td>
-            </tr>
+<form method="POST" action="{% url 'gcodedb:phat_list'%}">
+    {% csrf_token %}
+    <label for="contractsearch">Nhập PO No.:</label>
+    <input type="text" id="contractsearch" name="contractsearch"><br>
+    <button type="submit">Search PO</button>
+</form>
+<br>
+{{msgresult}}
+{% if msg %}
+    <ul class="messagelist">
+        {% for message in msg %}
+            <li>{{ message }}</li>
         {% endfor %}
-    </tbody>
-</table>
+    </ul>
+{% endif %}
+<br>
+<br>
+<form method="POST" action="{% url 'gcodedb:importxls_phat' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile" accept=".xls,.xlsx">
+    <button type="submit">Import Excel</button>
+</form>
+<br>
+<br>
+{{ phat_list|safe }}
+<br>
+{% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if warnings %}
+<br>
+<p>Some warnings:</p>
+    <ul class="messagelist">
+        {% for warn in warnings %}
+            <li>{{ warn }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 {% endblock content %}

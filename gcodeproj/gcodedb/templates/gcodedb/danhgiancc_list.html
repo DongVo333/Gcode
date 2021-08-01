@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="POST" action="{% url 'gcodedb:tienve_list'%}">
+<form method="POST" action="{% url 'gcodedb:danhgiancc_list'%}">
     {% csrf_token %}
-    <label for="contractsearch">Nhập PO No.:</label>
+    <label for="contractsearch">Nhập Contract No.:</label>
     <input type="text" id="contractsearch" name="contractsearch"><br>
-    <button type="submit">Search PO</button>
+    <button type="submit">Search Contract</button>
 </form>
 <br>
 {{msgresult}}
@@ -17,14 +17,14 @@
 {% endif %}
 <br>
 <br>
-<form method="POST" action="{% url 'gcodedb:importxls_tienve' %}" enctype="multipart/form-data">
+<form method="POST" action="{% url 'gcodedb:importxls_danhgiancc' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="file" name="myfile" accept=".xls,.xlsx">
     <button type="submit">Import Excel</button>
 </form>
 <br>
 <br>
-{{ tienve_list|safe }}
+{{ danhgiancc_list|safe }}
 <br>
 {% if messages %}
     <ul class="messagelist">

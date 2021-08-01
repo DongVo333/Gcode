@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+<table class="table table-borderless">
+    <form method="POST" action="{% url 'gcodedb:importxls_tienve' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="myfile" accept=".xls">
+        <button type="submit">Import Excel</button>
+    </form>
+    <br>
+    <a href="{% url 'gcodedb:exportxls_tienve' %}">Export to Excel</a>
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>G2code</td>
+            <td>Gcode</td>
+            <td>Contract</td>
+            <td>Client</td>
+            <td>Nhà sản xuất</td>
+            <td>Xuất xứ</td>
+            <td>Mô tả</td>
+            <td>Ký mã hiệu</td>
+            <td>Đơn vị tính</td>
+            <td>Số lượng</td>
+            <td>Đơn giá</td>
+            <td>Tổng tiền về</td>
+            <td>
+                <a href="/tienve/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tienve in tienve_list %}
+            <tr>
+                <td>{{tienve.g2code}}</td>
+                <td>{{tienve.gcode}}</td>
+                <td>{{tienve.contract}}</td>
+                <td>{{tienve.client}}</td>
+                <td>{{tienve.nsx}}</td>
+                <td>{{tienve.xuatxu}}</td>
+                <td>{{tienve.mota}}</td>
+                <td>{{tienve.kymahieu}}</td>
+                <td>{{tienve.unit}}</td>
+                <td>{{tienve.qtytienve}}</td>
+                <td>{{tienve.dongiatienve}}</td>
+                <td>{{tienve.tongtienve}}</td>
+                <td>
+                    <a href="/tienve/update/{{tienve.id}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/tienve/delete/{{tienve.id}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}

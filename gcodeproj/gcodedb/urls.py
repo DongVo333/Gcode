@@ -36,7 +36,7 @@ urlpatterns = [
     path('phat/update/<int:id>/', views.phat_form,name='phat_update'), 
     path('phat/delete/<int:id>/',views.phat_delete,name='phat_delete'),
     path('phat/import/xls', importxls.importxls_phat, name='importxls_phat'),
-    path('phat/export/xls', exportxls.exportxls_phat, name='exportxls_phat'),
+    path('phat/export/xls/<str:contract>', exportxls.exportxls_phat, name='exportxls_phat'),
 
 
     path('tienve/insert/', views.tienve_form,name='tienve_insert'),
@@ -44,14 +44,14 @@ urlpatterns = [
     path('tienve/update/<int:id>/', views.tienve_form,name='tienve_update'), 
     path('tienve/delete/<int:id>/',views.tienve_delete,name='tienve_delete'),
     path('tienve/import/xls', importxls.importxls_tienve, name='importxls_tienve'),
-    path('tienve/export/xls', exportxls.exportxls_tienve, name='exportxls_tienve'),
+    path('tienve/export/xls/<str:contract>', exportxls.exportxls_tienve, name='exportxls_tienve'),
 
-    path('danhgiansx/insert/', views.danhgiansx_form,name='danhgiansx_insert'),
-    path('danhgiansx/', views.danhgiansx_list,name='danhgiansx_list'),
-    path('danhgiansx/update/<int:id>/', views.danhgiansx_form,name='danhgiansx_update'), 
-    path('danhgiansx/delete/<int:id>/',views.danhgiansx_delete,name='danhgiansx_delete'),
-    path('danhgiansx/import/xls', importxls.importxls_danhgiansx, name='importxls_danhgiansx'),
-    path('danhgiansx/export/xls', exportxls.exportxls_danhgiansx, name='exportxls_danhgiansx'),
+    path('danhgiancc/insert/', views.danhgiancc_form,name='danhgiancc_insert'),
+    path('danhgiancc/', views.danhgiancc_list,name='danhgiancc_list'),
+    path('danhgiancc/update/<int:id>/', views.danhgiancc_form,name='danhgiancc_update'), 
+    path('danhgiancc/delete/<int:id>/',views.danhgiancc_delete,name='danhgiancc_delete'),
+    path('danhgiancc/import/xls', importxls.importxls_danhgiancc, name='importxls_danhgiancc'),
+    path('danhgiancc/export/xls/<str:contract>', exportxls.exportxls_danhgiancc, name='exportxls_danhgiancc'),
 
     path('sales/insert/', views.sales_form,name='sales_insert'),
     path('sales/', views.sales_list,name='offer_list'),
