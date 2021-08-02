@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="POST" action="{% url 'gcodedb:profit_list'%}">
+    {% csrf_token %}
+    <label for="contractsearch">Nhập Contract No.:</label>
+    <input type="text" id="contractsearch" name="contractsearch"><br>
+    <button type="submit">Search Contract</button>
+</form>
+<br>
+{{msgresult}}
+{% if msg %}
+    <ul class="messagelist">
+        {% for message in msg %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<br>
+<br>
+{{ profit_list|safe }}
+<br>
+<br>
+{% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+            {{ message }}
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock content %}

@@ -447,6 +447,12 @@ def importxls_offer(request):
                         if df.loc[r,'Result']=='Out' and df.iloc[r,i]=="Yes":
                             lydo_ = Lydoout.objects.get(lydooutcode=df.columns[i])
                             g1code.lydoout.add(lydo_)
+                    gcode = Gcode.objects.get(ma = df.loc[r,'Gcode'])
+                    if str(df.loc[r,'Result'])=='Win':
+                        gcode.ngaywin =  date.today()
+                    else: 
+                        gcode.ngayout = date.today()
+                    gcode.save()
                 message = format_html("Data Offer has been successfully import")
                 messages.append(message)
             html = df.to_html(index=False,justify='center')
@@ -1042,3 +1048,35 @@ def importxls_sales(request):
                 sales.save()  
         return redirect('/sales/')     
     return render(request, 'gcodedb/sales_list.html')
+
+def profit_show(request,contract):
+    messages=  []
+    df = pd.DataFrame(columns=['STT','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','NSX','Xuất xứ','Supplier','Số lượng bán',
+    'Số lượng mua','Số lượng nhập kho','Số lượng giao','Số lượng phạt','Đơn giá bán',
+    'Đơn giá mua offer','Đơn giá mua PO' ,'Đơn giá freight','Tổng phạt',
+    'Lợi nhuận chưa đặt hàng','Lợi nhuận chưa về kho','Lợi nhuận chưa giao hàng','Lợi nhuận thực tế',
+    'Lợi nhuận tổng','Tiền về thực tế','Tiền về dự kiến'])
+    g2code_list = G2code.objects.filter(contract__contractcode=contract)
+    stt = 1
+    for item in g2code_list:
+        lncdh = item.qtychuadat*(item.dongiachaohdb-item.dongiamuainq)
+        lncvk = item.qtychuanhapkho*(item.dongiachaohdb-item.dongiamuapo)
+        lncgh = item.qtychuagiao*(item.dongiachaohdb-item.dongiamuapo-item.dongiafreight)
+        lntt = item.qtygiaohang*(item.dongiachaohdb-item.dongiamuapo-item.dongiafreight)-item.tongphat
+        lntong = lncdh+lncgh+lncvk+lntt
+        tvdk = item.qty*item.dongiachaohdb-item.tongphat-item.tongtienve
+
+        df = df.append(pd.DataFrame({'STT':[stt],'Contract No.':[contract],'Gcode':[item.gcode],'Mô tả':[item.mota],
+        'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],'Supplier':[item.supplier],
+        'Số lượng bán':[item.qty],'Số lượng mua':[item.qtypo],'Số lượng nhập kho':[item.qtykho],
+        'Số lượng giao':[item.qtygiaohang],'Số lượng phạt':[item.qtyphat],'Đơn giá bán':[item.dongiachaohdb],
+        'Đơn giá mua offer':[item.dongiamuainq],'Đơn giá mua PO':[item.dongiamuapo] ,'Đơn giá freight':[item.dongiafreight],
+        'Tổng phạt':[item.tongphat],'Lợi nhuận chưa đặt hàng':[lncdh],'Lợi nhuận chưa về kho':[lncvk],
+        'Lợi nhuận chưa giao hàng':[lncgh],'Lợi nhuận thực tế':[lntt],
+        'Lợi nhuận tổng':[lntong],'Tiền về thực tế':[item.tongtienve],'Tiền về dự kiến':[tvdk]}))
+        stt +=1
+    message = format_html("<a href='{}'>Export report to Excel</a>",reverse('gcodedb:exportxls_profit', args=[contract]))
+    messages.append(message)
+    html = df.to_html(index=False,justify='center')
+    context = {'messages':messages,'profit_list':html}
+    return render(request, 'gcodedb/profit_list.html', context)

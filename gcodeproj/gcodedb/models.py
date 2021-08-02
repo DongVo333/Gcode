@@ -216,6 +216,64 @@ class G2code(models.Model):
                 return Kho.objects.get(g2code=self).qtykho
         else:
             return 0
+    @property
+    def qtypo(self):
+        if POdetail.objects.filter(g2code=self).count()>0:
+            return POdetail.objects.get(g2code=self).qtypo
+        else:
+            return 0
+    @property
+    def qtykho(self):
+        if Kho.objects.filter(g2code=self).count()>0:
+            return Kho.objects.get(g2code=self).qtykho
+        else:
+            return 0
+    @property
+    def qtygiaohang(self):
+        if Giaohang.objects.filter(g2code=self).count()>0:
+            return Giaohang.objects.get(g2code=self).qtygiaohang
+        else:
+            return 0
+    @property
+    def qtyphat(self):
+        if Phat.objects.filter(g2code=self).count()>0:
+            return Phat.objects.get(g2code=self).qtyphat
+        else:
+            return 0
+    @property
+    def qtytienve(self):
+        if Tienve.objects.filter(g2code=self).count()>0:
+            return Tienve.objects.get(g2code=self).qtytienve
+        else:
+            return 0
+    @property
+    def dongiamuapo(self):
+        if POdetail.objects.filter(g2code=self).count()>0:
+            return POdetail.objects.get(g2code=self).dongiamuapo
+        else:
+            return 0
+    @property
+    def dongiamuainq(self):
+        return self.g1code.dongiamuainq
+    @property
+    def dongiafreight(self):
+        if Kho.objects.filter(g2code=self).count()>0:
+            return Kho.objects.get(g2code=self).dongiafreight
+        else:
+            return 0
+    @property
+    def tongphat(self):
+        if Phat.objects.filter(g2code=self).count()>0:
+            return Phat.objects.get(g2code=self).tongphat
+        else:
+            return 0
+    @property
+    def tongtienve(self):
+        if Tienve.objects.filter(g2code=self).count()>0:
+            return Tienve.objects.get(g2code=self).dongiatienve * Tienve.objects.get(g2code=self).qtytienve
+        else:
+            return 0
+            
 class POdetail(models.Model):
     g2code = models.OneToOneField(G2code,on_delete=PROTECT,related_name='fk_pog2code')
     motapo = models.TextField(null=True)

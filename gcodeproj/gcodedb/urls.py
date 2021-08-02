@@ -136,5 +136,10 @@ urlpatterns = [
     path('kho/import/xls', importxls.importxls_kho, name='importxls_kho'),
     path('kho/export/xls/<str:po>', exportxls.exportxls_kho, name='exportxls_kho'),
     
-    path('savedata/', views.savedata, name ='savedata'),
+    path('profit/', views.profit_list,name='profit_list'),
+    path('profit/show/<str:contract>', importxls.profit_show,name='profit_show'),
+    path('profit/export/xls/<str:contract>', exportxls.exportxls_profit,name='exportxls_profit'),
+    path('reportseller/', views.reportseller_list,name='reportseller_list'),
+    path('reportseller/show/<str:contract>', importxls.reportseller_show,name='reportseller_show'),
+    path('reportseller/export/xls/<str:contract>', exportxls.exportxls_reportseller,name='exportxls_reportseller'),
 ]

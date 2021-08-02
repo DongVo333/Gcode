@@ -704,3 +704,69 @@ def exportxls_sales(request):
         ws.write(row_num, 2, sales.fullname, style_data_row)
     wb.save(response)
     return response
+
+def exportxls_profit(request,contract):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Profit.xlsx"'
+    df = pd.DataFrame(columns=['STT','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','NSX','Xuất xứ','Supplier','Số lượng bán',
+    'Số lượng mua','Số lượng nhập kho','Số lượng giao','Số lượng phạt','Đơn giá bán',
+    'Đơn giá mua offer','Đơn giá mua PO' ,'Đơn giá freight','Tổng phạt',
+    'Lợi nhuận chưa đặt hàng','Lợi nhuận chưa về kho','Lợi nhuận chưa giao hàng','Lợi nhuận thực tế',
+    'Lợi nhuận tổng','Tiền về thực tế','Tiền về dự kiến'])
+    g2code_list = G2code.objects.filter(contract__contractcode=contract)
+    stt = 1
+    for item in g2code_list:
+        lncdh = item.qtychuadat*(item.dongiachaohdb-item.dongiamuainq)
+        lncvk = item.qtychuanhapkho*(item.dongiachaohdb-item.dongiamuapo)
+        lncgh = item.qtychuagiao*(item.dongiachaohdb-item.dongiamuapo-item.dongiafreight)
+        lntt = item.qtygiaohang*(item.dongiachaohdb-item.dongiamuapo-item.dongiafreight)-item.tongphat
+        lntong = lncdh+lncgh+lncvk+lntt
+        tvdk = item.qty*item.dongiachaohdb-item.tongphat-item.tongtienve
+
+        df = df.append(pd.DataFrame({'STT':[stt],'Contract No.':[contract],'Gcode':[item.gcode],'Mô tả':[item.mota],
+        'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],'Supplier':[item.supplier],
+        'Số lượng bán':[item.qty],'Số lượng mua':[item.qtypo],'Số lượng nhập kho':[item.qtykho],
+        'Số lượng giao':[item.qtygiaohang],'Số lượng phạt':[item.qtyphat],'Đơn giá bán':[item.dongiachaohdb],
+        'Đơn giá mua offer':[item.dongiamuainq],'Đơn giá mua PO':[item.dongiamuapo] ,'Đơn giá freight':[item.dongiafreight],
+        'Tổng phạt':[item.tongphat],'Lợi nhuận chưa đặt hàng':[lncdh],'Lợi nhuận chưa về kho':[lncvk],
+        'Lợi nhuận chưa giao hàng':[lncgh],'Lợi nhuận thực tế':[lntt],
+        'Lợi nhuận tổng':[lntong],'Tiền về thực tế':[item.tongtienve],'Tiền về dự kiến':[tvdk]}))
+        stt +=1
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Profit', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Profit']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    profit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#7EF68B','font_color': 'black','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    list_header_profit = ['Lợi nhuận chưa đặt hàng','Lợi nhuận chưa về kho','Lợi nhuận chưa giao hàng','Lợi nhuận thực tế',
+    'Lợi nhuận tổng','Tiền về thực tế','Tiền về dự kiến']
+    list_index_fm_profit = []
+    for item in list_header_profit:
+        list_index_fm_profit.append(df.columns.get_loc(item))
+    for col_num, value in enumerate(df.columns.values):
+        if col_num in list_index_fm_profit:
+            worksheet.write(0, col_num, value, profit_format)
+        else:
+            worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Số lượng bán',
+    'Số lượng mua','Số lượng nhập kho','Số lượng giao','Số lượng phạt','Đơn giá bán',
+    'Đơn giá mua offer','Đơn giá mua PO' ,'Đơn giá freight','Tổng phạt',
+    'Lợi nhuận chưa đặt hàng','Lợi nhuận chưa về kho','Lợi nhuận chưa giao hàng','Lợi nhuận thực tế',
+    'Lợi nhuận tổng','Tiền về thực tế','Tiền về dự kiến']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    writer.save()
+    return response

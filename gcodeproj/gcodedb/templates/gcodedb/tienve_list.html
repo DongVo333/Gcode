@@ -2,7 +2,7 @@
 {% block content %}
 <form method="POST" action="{% url 'gcodedb:tienve_list'%}">
     {% csrf_token %}
-    <label for="contractsearch">Nhập PO No.:</label>
+    <label for="contractsearch">Nhập Contract No.:</label>
     <input type="text" id="contractsearch" name="contractsearch"><br>
     <button type="submit">Search PO</button>
 </form>
