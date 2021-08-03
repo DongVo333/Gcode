@@ -7,15 +7,13 @@ from django.views.generic import CreateView, ListView, UpdateView
 from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, POdetail, Phat, Sales,Supplier,Lydowin,Lydoout, Tienve
 from django.db import transaction,IntegrityError
 from .forms import DanhgiaNCCForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
-from django.contrib import messages
-from tablib import Dataset
-from .filters import ClientFilter,G1codeFilter
+from .filters import ClientFilter
 from django.db.models import Q
 from datetime import date
 import csv
-import xlwt
 from django.utils.html import format_html
 import pandas as pd
+import numpy as np
 from django.urls import reverse
 
 class PostListView(ListView):
@@ -796,20 +794,14 @@ def profit_list(request):
     return render(request, 'gcodedb/profit_list.html', {'msg':msg,'msgresult':msgresult})
 
 def reportseller_list(request):
-    msg = []
-    msgresult = ""
-    if request.method == "POST":
-        contract_set = set()
-        contract_list = G2code.objects.filter(contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('contract', flat=True)
-        for contract in contract_list:
-            contract_set.add(Contract.objects.get(pk=contract).contractcode)
-        if len(contract_set)> 0: 
-            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
-            for item in contract_set:
-                g2code_list = G2code.objects.filter(contract__contractcode=item)
-                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item,g2code_list.count(),reverse('gcodedb:profit_show', args=[item]))
-                msg.append(message)
-        else: 
-            msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/profit_list.html', {'msg':msg,'msgresult':msgresult})
+    df = pd.DataFrame(columns=['Gcode-Inquiry','Result','Giao dịch viên'])
+    for item in G1code.objects.all():
+        df = df.append(pd.DataFrame({'Gcode-Inquiry':[item.g1code],'Result':[item.resultinq],
+        'Giao dịch viên':[item.gdvinq.gdvcode]}))
+    dfpivot = pd.pivot_table(df, values='Gcode-Inquiry', index='Giao dịch viên',columns='Result', aggfunc='count')
+    html = dfpivot.to_html(justify='center')
+    context = {'reportseller_list':html}
+    return render(request, 'gcodedb/reportseller_list.html', context)
+
+def scanorder_list(request):
+    return render(request, 'gcodedb/scanorder_list.html')

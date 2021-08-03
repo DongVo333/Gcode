@@ -1,9 +1,10 @@
 from datetime import date
 import csv
+from numpy import NaN
 import xlwt
 from tablib import Dataset
 from xlwt.Workbook import Workbook
-from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat, Sales,Supplier,Lydoout, Tienve
+from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -732,6 +733,9 @@ def exportxls_profit(request,contract):
         'Lợi nhuận chưa giao hàng':[lncgh],'Lợi nhuận thực tế':[lntt],
         'Lợi nhuận tổng':[lntong],'Tiền về thực tế':[item.tongtienve],'Tiền về dự kiến':[tvdk]}))
         stt +=1
+    df.loc['Total']= df.sum(numeric_only=True, axis=0)
+    df.loc['Total','STT']='Total'
+    df = df.replace({NaN: ''})
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
     df.to_excel(writer, sheet_name='Profit', startrow=1, header=False,index=False)
     workbook  = writer.book
@@ -743,6 +747,8 @@ def exportxls_profit(request,contract):
     'fg_color': '#7EF68B','font_color': 'black','border': 1})
     text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
     float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    total_format = workbook.add_format({'bold': True,'fg_color': '#FFFA5B','text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
     'num_format': '#,##0.00'})
     list_header_profit = ['Lợi nhuận chưa đặt hàng','Lợi nhuận chưa về kho','Lợi nhuận chưa giao hàng','Lợi nhuận thực tế',
     'Lợi nhuận tổng','Tiền về thực tế','Tiền về dự kiến']
@@ -764,9 +770,70 @@ def exportxls_profit(request,contract):
     for item in list_column_fm_float:
         list_index_fm_float.append(df.columns.get_loc(item))
     for col in range(0,len(df.columns)):
-        if col in list_index_fm_float:
-            worksheet.set_column(col,col, None, float_format)
-        else:
-            worksheet.set_column(col,col, None, text_format)
+        for r in range(1,df.shape[0]+1):
+            if r == df.shape[0]:
+                worksheet.write(r,col, df.iloc[r-1,col], total_format) 
+            elif col in list_index_fm_float:
+                worksheet.write(r,col, df.iloc[r-1,col], float_format)
+            else:
+                worksheet.write(r,col, df.iloc[r-1,col], text_format)
+    writer.save()
+    return response
+
+def exportxls_scanorder(request,id):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Scan Order.xlsx"'
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    scanorder = ScanOrder.objects.get(pk=id)
+    df = pd.DataFrame(columns=['STT'])
+    index = 0
+    for gcode_ in scanorder.gcode.all():
+        g1code = G1code.objects.filter(gcode__ma=gcode_).order_by('-gcode__ngaywin','-gcode__ngayout')[0]
+        df.loc[index,'STT']=index+1
+        df.loc[index,'Gcode']=g1code.gcode.ma
+        df.loc[index,'Inquiry'] = g1code.inquiry.inquirycode
+        df.loc[index,'Khách hàng'] = g1code.inquiry.client.clientcode
+        df.loc[index,'Mô tả'] = g1code.gcode.mota
+        df.loc[index,'Ký mã hiệu'] = g1code.kymahieuinq
+        df.loc[index,'Đơn vị'] = g1code.unitinq
+        df.loc[index,'Số lượng'] = g1code.qtyinq
+        df.loc[index,'NSX'] = g1code.nsxinq
+        df.loc[index,'Xuất xứ'] = g1code.xuatxuinq
+        df.loc[index,'Supplier'] = g1code.supplier.suppliercode
+        df.loc[index,'Đơn giá mua'] = g1code.dongiamuainq
+        df.loc[index,'Thành tiền mua'] = g1code.dongiamuainq * g1code.qtyinq
+        df.loc[index,'Ngày submit thầu'] = g1code.inquiry.datesubmitbid
+        df.loc[index,'Đơn giá chào'] = g1code.dongiachaoinq
+        df.loc[index,'Thành tiền chào'] = g1code.dongiachaoinq * g1code.qtyinq
+        df.loc[index,'Hệ số mark up'] = g1code.markupinq
+        df.loc[index,'Result'] = g1code.resultinq
+        for item in g1code.lydowin.all():
+            df.loc[index,item.lydowincode] = 'Yes'
+        for item in g1code.lydoout.all():
+            df.loc[index,item.lydooutcode] = 'Yes'
+        index +=1
+    df = df.replace({NaN: ''})
+    df.to_excel(writer, sheet_name='Scan Order', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Scan Order']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    for col_num, value in enumerate(df.columns.values):
+        worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Số lượng','Đơn giá mua','Thành tiền mua','Đơn giá chào','Thành tiền chào','Hệ số mark up']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    for col in range(0,len(df.columns)):
+        for r in range(1,df.shape[0]+1):
+            if col in list_index_fm_float:
+                worksheet.write(r,col, df.iloc[r-1,col], float_format)
+            else:
+                worksheet.write(r,col, df.iloc[r-1,col], text_format)
     writer.save()
     return response

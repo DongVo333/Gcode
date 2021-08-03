@@ -476,3 +476,6 @@ class Tienve(models.Model):
     @property
     def supplier(self):
         return POdetail.objects.get(g2code = self.g2code).supplier
+
+class ScanOrder(models.Model):
+    gcode = models.ManyToManyField(Gcode,related_name='fk_scanordergcode',null=True)

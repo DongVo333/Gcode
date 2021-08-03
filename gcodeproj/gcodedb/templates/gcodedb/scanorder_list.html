@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<br>
+<form method="POST" action="{% url 'gcodedb:importxls_scanorder' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile" accept=".xls,.xlsx">
+    <button type="submit">Import Excel</button>
+</form>
+<br>
+<br>
+{{ scanorder_list|safe }}
+<br>
+{% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% if msg %}
+    {{ msg }}
+{% endif %}
+{% endblock content %}

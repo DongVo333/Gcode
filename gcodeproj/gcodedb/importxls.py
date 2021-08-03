@@ -5,7 +5,7 @@ from numpy import NaN, empty
 from pandas.core.frame import DataFrame
 import xlrd
 from xlrd.formula import dump_formula
-from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV,Gcode,Inquiry,Client,Kho,POdetail,Phat,Supplier,Lydowin,Lydoout,Giaohang,Sales, Tienve
+from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV,Gcode,Inquiry,Client,Kho,POdetail,Phat,Supplier,Lydowin,Lydoout,Giaohang,Sales, Tienve,ScanOrder
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -958,7 +958,7 @@ def importxls_danhgiancc(request):
             context = {'danhgiancc_list': html,'messages':messages,'warnings':warnings}
             return render(request, 'gcodedb/danhgiancc_list.html', context)
     context = {'messages':messages}
-    return render(request, 'gcodedb/phat_list.html', context)
+    return render(request, 'gcodedb/danhgiancc_list.html', context)
 
 def importxls_tienve(request):
     messages=  []
@@ -1025,7 +1025,7 @@ def importxls_tienve(request):
             context = {'tienve_list': html,'messages':messages,'warnings':warnings}
             return render(request, 'gcodedb/tienve_list.html', context)
     context = {'messages':messages}
-    return render(request, 'gcodedb/phat_list.html', context)
+    return render(request, 'gcodedb/tienve_list.html', context)
 
 def importxls_sales(request):
     if request.method == 'POST':
@@ -1075,8 +1075,79 @@ def profit_show(request,contract):
         'Lợi nhuận chưa giao hàng':[lncgh],'Lợi nhuận thực tế':[lntt],
         'Lợi nhuận tổng':[lntong],'Tiền về thực tế':[item.tongtienve],'Tiền về dự kiến':[tvdk]}))
         stt +=1
+    df.loc['Total']= df.sum(numeric_only=True, axis=0)
+    df.loc['Total','STT']='Total'
+    df = df.replace({np.nan: ''})
     message = format_html("<a href='{}'>Export report to Excel</a>",reverse('gcodedb:exportxls_profit', args=[contract]))
     messages.append(message)
     html = df.to_html(index=False,justify='center')
     context = {'messages':messages,'profit_list':html}
     return render(request, 'gcodedb/profit_list.html', context)
+
+def importxls_scanorder(request):
+    messages=  []
+    if request.method == 'POST':
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='Scan Order')
+            df_copy = df.copy()
+        except Exception as e: 
+            if str(e) == 'myfile':
+                message = format_html("No File chosen")
+            else:
+                message = format_html("Import File Error: {}",e)
+            messages.append(message)
+        else:
+            list_column = ['STT','Gcode']
+            list_column_required = ['STT','Gcode']
+            list_column_float = []
+            list_column_date = []
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Gcode',],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    messages.append(message)
+                else:
+                    scanorder = ScanOrder()
+                    scanorder.save()
+                    for index,row in df.iterrows():
+                        if Gcode.objects.filter(ma =row['Gcode']).count()<=0:
+                            message = format_html("Gcode '{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode</a>",row['Gcode'],row['STT'],reverse('gcodedb:gcode_list'))
+                            messages.append(message)
+                            df_copy.drop([index],inplace=True)
+                        else:
+                            g1code = G1code.objects.filter(gcode__ma=row['Gcode']).order_by('-gcode__ngaywin','-gcode__ngayout')[0]
+                            df_copy.loc[index,'Inquiry'] = g1code.inquiry.inquirycode
+                            df_copy.loc[index,'Khách hàng'] = g1code.inquiry.client.clientcode
+                            df_copy.loc[index,'Mô tả'] = g1code.gcode.mota
+                            df_copy.loc[index,'Ký mã hiệu'] = g1code.kymahieuinq
+                            df_copy.loc[index,'Đơn vị'] = g1code.unitinq
+                            df_copy.loc[index,'Số lượng'] = g1code.qtyinq
+                            df_copy.loc[index,'NSX'] = g1code.nsxinq
+                            df_copy.loc[index,'Xuất xứ'] = g1code.xuatxuinq
+                            df_copy.loc[index,'Supplier'] = g1code.supplier.suppliercode
+                            df_copy.loc[index,'Đơn giá mua'] = g1code.dongiamuainq
+                            df_copy.loc[index,'Thành tiền mua'] = g1code.dongiamuainq * g1code.qtyinq
+                            df_copy.loc[index,'Ngày submit thầu'] = g1code.inquiry.datesubmitbid
+                            df_copy.loc[index,'Đơn giá chào'] = g1code.dongiachaoinq
+                            df_copy.loc[index,'Thành tiền chào'] = g1code.dongiachaoinq * g1code.qtyinq
+                            df_copy.loc[index,'Hệ số mark up'] = g1code.markupinq
+                            df_copy.loc[index,'Result'] = g1code.resultinq
+                            for item in g1code.lydowin.all():
+                                df_copy.loc[index,item.lydowincode] = 'Yes'
+                            for item in g1code.lydoout.all():
+                                df_copy.loc[index,item.lydooutcode] = 'Yes'
+                            scanorder.gcode.add(Gcode.objects.get(ma=row['Gcode']))
+                    scanorder.save()
+                    df_copy = df_copy.replace({NaN: ''})
+                    html = df_copy.to_html(index=False,justify='center')
+                    msg = format_html("<a href='{}'>Click to Export Gcode Scan Results</a>",reverse('gcodedb:exportxls_scanorder', args=[scanorder.id]))
+                    #msg=format_html("<a href='/'>Click to Export Gcode Scan Results</a>")
+                    context = {'scanorder_list': html,'messages':messages,'msg':msg}
+                    return render(request, 'gcodedb/scanorder_list.html', context)
+    context = {'messages':messages}
+    return render(request, 'gcodedb/scanorder_list.html', context)
