@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<form method="POST" action="{% url 'gcodedb:importxls_gcode' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile" accept=".xls">
+    <button type="submit">Import Excel</button>
+</form>
+<br>
+<a href="{% url 'gcodedb:exportxls_gcode' %}">Export to Excel</a>
+
+<table class="table table-borderless">
+    <thead class="border-bottom font-weight-bold">
+        <tr>
+            <td>Gcode</td>
+            <td>Mô tả</td>
+            <td>Markup định mức</td>
+            <td>Ngày Win gần nhất</td>
+            <td>Ngày Out gần nhất</td>
+            <td>
+                <a href="/gcode/insert" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for gcode in gcode_list %}
+            <tr>
+                <td>{{gcode.ma}}</td>
+                <td><textarea id="autosize" cols="30" rows="1" disabled>{{gcode.mota}}</textarea></td>
+                <td> {{gcode.markupdinhmuc}}</td>
+                <td> {{gcode.ngaywin|date:"d-m-Y"}}</td>
+                <td> {{gcode.ngayout|date:"d-m-Y"}}</td>
+                <td>
+                    <a href="/gcode/update/{{gcode.id}}" class="btn text-secondary px-0">
+                        <i class="far fa-edit fa-lg"></i>
+                    </a>
+                    <a href="/gcode/delete/{{gcode.id}}" class="btn text-secondary px-0">
+                        <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+
+{% block extra_script %}
+<script src="{% static 'js/autosize.min.js' %}"></script>
+<script>autosize(document.querySelectorAll('#autosize'));</script>
+{% endblock%}

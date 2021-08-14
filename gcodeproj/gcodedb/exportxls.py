@@ -210,7 +210,7 @@ def exportxls_offer_all(request):
         ws.write(row_num, 1, offer.g1code, style_data_row)
         ws.write(row_num, 2, offer.gcode.ma, style_data_row)
         ws.write(row_num, 3, offer.inquiry.inquirycode, style_data_row)
-        ws.write(row_num, 4, offer.kymahieuinq, style_data_row)
+        ws.write(row_num, 4, offer.gcode.kymahieuinq, style_data_row)
         ws.write(row_num, 5, offer.unitinq, style_data_row)
         ws.write(row_num, 6, offer.qtyinq, style_number_row)
         ws.write(row_num, 7, offer.supplier.suppliercode, style_data_row)
@@ -290,7 +290,7 @@ def exportxls_hdb(request,id):
     g1code_list = G1code.objects.filter(inquiry__pk=id,resultinq = "Win")
     stt = 1
     for item in g1code_list:
-        df = df.append(pd.DataFrame({'STT':[stt],'Inquiry':[item.inquiry.inquirycode],'Gcode':[item.gcode.ma],'Mô tả':[item.gcode.mota],'Ký mã hiệu':[item.kymahieuinq],
+        df = df.append(pd.DataFrame({'STT':[stt],'Inquiry':[item.inquiry.inquirycode],'Gcode':[item.gcode.ma],'Mô tả':[item.gcode.mota],'Ký mã hiệu':[item.gcode.kymahieuinq],
         'Đơn vị':[item.unitinq],'Số lượng':[item.qtyinq],'Đơn giá chào':[item.dongiachaoinq],'Supplier':[item.supplier.suppliercode],
         'STT in ITB':[item.sttitb],'Group in ITB':[item.groupitb],'Xuất xứ':[item.xuatxuinq],'NSX':[item.nsxinq]}))
         stt +=1
@@ -390,7 +390,7 @@ def exportxls_po(request,po):
     stt = 1
     for item in g2code_list:
         df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.contract.contractcode],'Gcode':[item.gcode],
-        'Mô tả':[item.mota],'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'Số lượng':[item.qty],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],
+        'Mô tả':[item.mota],'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'Số lượng':[item.qtychuadat],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],
         'Supplier':[item.supplier],'Đơn giá mua':[item.g1code.dongiamuainq]}))
         stt +=1
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
@@ -794,7 +794,7 @@ def exportxls_scanorder(request,id):
         df.loc[index,'Inquiry'] = g1code.inquiry.inquirycode
         df.loc[index,'Khách hàng'] = g1code.inquiry.client.clientcode
         df.loc[index,'Mô tả'] = g1code.gcode.mota
-        df.loc[index,'Ký mã hiệu'] = g1code.kymahieuinq
+        df.loc[index,'Ký mã hiệu'] = g1code.gcode.kymahieuinq
         df.loc[index,'Đơn vị'] = g1code.unitinq
         df.loc[index,'Số lượng'] = g1code.qtyinq
         df.loc[index,'NSX'] = g1code.nsxinq
@@ -822,6 +822,8 @@ def exportxls_scanorder(request,id):
     text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
     float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
     'num_format': '#,##0.00'})
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': 'dd/mm/yyyy'})
     for col_num, value in enumerate(df.columns.values):
         worksheet.write(0, col_num, value, header_format)
     # Add some cell formats.
@@ -829,10 +831,17 @@ def exportxls_scanorder(request,id):
     list_index_fm_float = []
     for item in list_column_fm_float:
         list_index_fm_float.append(df.columns.get_loc(item))
+
+    list_column_fm_date = ['Ngày submit thầu']
+    list_index_fm_date = []
+    for item in list_column_fm_date:
+        list_index_fm_date.append(df.columns.get_loc(item))
     for col in range(0,len(df.columns)):
         for r in range(1,df.shape[0]+1):
             if col in list_index_fm_float:
                 worksheet.write(r,col, df.iloc[r-1,col], float_format)
+            elif col in list_index_fm_date:
+                worksheet.write(r,col, df.iloc[r-1,col], date_format)
             else:
                 worksheet.write(r,col, df.iloc[r-1,col], text_format)
     writer.save()

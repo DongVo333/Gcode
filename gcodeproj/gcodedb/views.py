@@ -15,6 +15,7 @@ from django.utils.html import format_html
 import pandas as pd
 import numpy as np
 from django.urls import reverse
+from fuzzywuzzy import fuzz,process
 
 class PostListView(ListView):
    queryset = Gcode.objects.all().order_by('-ma')
@@ -197,9 +198,41 @@ def client_delete(request,id):
     return redirect('/client/')
 
 def gcode_list(request):
-	gcode_list = Gcode.objects.all()
-	return render(request, 'gcodedb/gcode_list.html', {'gcode_list':gcode_list})
-
+    msg = []
+    msgresult = ""
+    if request.method == "POST":
+        gcode_set = set()
+        code_list = Gcode.objects.values_list('ma',flat=True)
+        kymahieu_list = Gcode.objects.values_list('kymahieuinq',flat=True)
+        description_list = Gcode.objects.values_list('mota',flat=True)
+        ratio_code = process.extract(request.POST.get("gcodesearch"),code_list)
+        ratio_kymahieu = process.extract(request.POST.get("gcodesearch"),kymahieu_list)
+        ratio_des = process.extract(request.POST.get("gcodesearch"),description_list)
+        for ratio in ratio_code:
+            if ratio[1] >= 90:
+                gcode_set.add(Gcode.objects.get(ma = ratio[0]).ma)
+        for ratio in ratio_kymahieu:
+            if ratio[1] >= 90:
+                gcode_set.add(Gcode.objects.get(kymahieuinq = ratio[0]).ma)
+        for ratio in ratio_des:
+            if ratio[1] >= 90:
+                gcode_set.add(Gcode.objects.get(mota = ratio[0]).ma)
+        df = pd.DataFrame(columns=['Gcode','Ký mã hiệu','Mô tả']) 
+        if len(gcode_set)>0:
+            for item in gcode_set:
+                gcode = Gcode.objects.get(ma=item)
+                df = df.append(pd.DataFrame({'Gcode':[gcode.ma],
+                                            'Ký mã hiệu':[gcode.kymahieuinq],
+                                            'Mô tả':[gcode.mota]}))
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(gcode_set))
+            html = df.to_html(index=False,justify='center')
+            context = {'gcode_list': html,'msgresult':msgresult}
+            return render(request, 'gcodedb/gcode_list.html', context)
+        else: 
+            msgresult = format_html("No results could be found for your search query")
+    return render(request, 'gcodedb/gcode_list.html', {'msgresult':msgresult})
+                                    #highest = process.extractOne(setitem,list_lydowin)
+                                    #if highest[1] < 90:
 def gcode_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -786,7 +819,7 @@ def profit_list(request):
             msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
             for item in contract_set:
                 g2code_list = G2code.objects.filter(contract__contractcode=item)
-                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
+                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to view detail</a>",
                 item,g2code_list.count(),reverse('gcodedb:profit_show', args=[item]))
                 msg.append(message)
         else: 

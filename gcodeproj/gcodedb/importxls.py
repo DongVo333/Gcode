@@ -1,7 +1,10 @@
 from datetime import date, datetime
-from logging import warning
+from logging import error, warning
+from os import replace
 from re import split
-from numpy import NaN, empty
+from numpy import NAN, NaN, empty, result_type
+from pandas._libs.tslibs import NaT
+from pandas.core.dtypes.missing import isnull, na_value_for_dtype
 from pandas.core.frame import DataFrame
 import xlrd
 from xlrd.formula import dump_formula
@@ -16,6 +19,7 @@ from django.urls import reverse
 import json
 from django.utils.html import format_html
 from fuzzywuzzy import fuzz,process
+import re
 
 pd.options.display.float_format = '{:,.2f}'.format
 
@@ -47,11 +51,12 @@ def msgcheckimport(df,list_column,list_column_required,list_column_float,list_co
                             messages.append(message) 
         if len(list_column_date):
             for item in list_column_date:
-                df[item] = pd.to_datetime(df[item], format='%Y-%m-%d', errors='coerce')
                 for i in range(0,df.shape[0]):
-                    if df[item][i] is pd.NaT:
-                        message = format_html("Datapd Import is formated wrong at <b>index STT {}: column {}</b>",df['STT'][i],item)
-                        messages.append(message)
+                    if pd.isnull(df[item][i]) == False:
+                        df[item][i] = pd.to_datetime(df[item][i], format='%Y-%m-%d', errors='coerce')
+                        if df[item][i] is pd.NaT:
+                            message = format_html("Datapd Import is formated wrong at <b>index STT {}: column {}</b>",df['STT'][i],item)
+                            messages.append(message)
     if len(messages)<=0:
         for item in list_column_float:
             for i in range(0,df.shape[0]):
@@ -82,32 +87,144 @@ def importxls_client(request):
     return render(request, 'gcodedb/client_list.html')
 
 def importxls_gcode(request):
+    messages=  []
+    warnings = []
     if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Gcode")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            counter = Gcode.objects.filter(ma=str(sheet.cell(r,1).value)).count()
-            gcode = Gcode()
-            if counter>0:
-                gcode = Gcode.objects.get(ma=str(sheet.cell(r,1).value))
-                gcode.mota = sheet.cell(r,2).value
-                gcode.markupdinhmuc = float(sheet.cell(r,3).value)
-                gcode.ngaywin = readdate(sheet.cell(r,4).value,workbook)
-                gcode.ngayout = readdate(sheet.cell(r,5).value,workbook)
-                gcode.save()
-            else:
-                gcode = Gcode(
-        		    ma=sheet.cell(r,1).value,
-        		    mota=sheet.cell(r,2).value,
-                    markupdinhmuc=float(sheet.cell(r,3).value),
-                    ngaywin = readdate(sheet.cell(r,4).value,workbook),
-                    ngayout = readdate(sheet.cell(r,5).value,workbook),
-        		    )
-                gcode.save()  
-        return redirect('/gcode/')     
-    return render(request, 'gcodedb/gcode_list.html')
+        try:
+            filename = request.FILES['myfile']
+            df = pd.read_excel(filename, sheet_name='Gcode')
+        except Exception as e: 
+            message = format_html("Import File Error: {}",e)
+            messages.append(message)
+        else:
+            list_column = ['STT','Gcode','Ký mã hiệu','Mô tả','Markup định mức','Ngày Win','Ngày Out']
+            list_column_required = ['STT','Mô tả']
+            list_column_float = ['Markup định mức']
+            list_column_date = ['Ngày Win','Ngày Out']
+            messages.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            df[['Gcode','Ký mã hiệu']] = (
+                df[['Gcode','Ký mã hiệu']].fillna(0)
+                .astype(int, errors = 'ignore')
+                .astype(object)
+                .where(df[['Gcode','Ký mã hiệu']].notnull())
+            )
+            print(df['Ký mã hiệu'])
+            if len(messages) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.astype(str).str.strip())
+                df1 = df.loc[lambda df: df['Ký mã hiệu']!='nan', :]
+                df2 = df.loc[lambda df: df['Ký mã hiệu']=='nan', :]
+                df2.reset_index(drop=True,inplace= True)
+                duplicateRowsDF = df1[df1.duplicated(subset=['Ký mã hiệu'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    messages.append(message)
+                else:
+                    if df2.shape[0]>1:
+                        for x in range(0,df2.shape[0]-1):
+                            for y in range(x+1,df2.shape[0]):
+                                str1 = df2.loc[x,'Mô tả']
+                                str2 = df2.loc[y,'Mô tả']
+                                specialChars = "!#$%^&*().@~?<>+-,~`'" 
+                                for specialChar in specialChars:
+                                    str1 = str1.replace(specialChar,' ')
+                                    str2 = str2.replace(specialChar,' ')
+                                resultcheck = fuzz.token_sort_ratio(str1,str2)
+                                if resultcheck == 100:
+                                    message = format_html("Description is duplicate at <b>index STT {} & {}</b><br>",df2.loc[x,'STT'],df2.loc[y,'STT'])
+                                    messages.append(message)         
+            if len(messages) <=0:
+                for i in range(0,df.shape[0]):
+                    if df.loc[i,'Gcode']!='nan':
+                        if Gcode.objects.filter(ma__contains=df.loc[i,'Gcode']).count()>0:
+                            result_list = Gcode.objects.filter(ma__contains=df.loc[i,'Gcode']).values_list('ma', flat=True)
+                            df_kmh = pd.DataFrame(columns=['Gcode','Ký mã hiệu','Mô tả'])
+                            for item in result_list:
+                                gcode_ = Gcode.objects.get(ma=item)
+                                df_kmh = df_kmh.append(pd.DataFrame({'Gcode':[gcode_.ma],'Ký mã hiệu':[gcode_.kymahieuinq],'Mô tả':[gcode_.mota]}))
+                            html_1 = df_kmh.to_html(index=False,justify='center')
+                            displaydf = "Gcode {} is existed at <b>index STT {}</b><br>" + html_1
+                            message = format_html(displaydf,df.loc[i,'Gcode'],df.loc[i,'STT'])
+                            messages.append(message)
+                    elif df.loc[i,'Ký mã hiệu']!='nan':
+                        if Gcode.objects.filter(kymahieuinq__contains=df.loc[i,'Ký mã hiệu']).count()>0:
+                            result_list = Gcode.objects.filter(kymahieuinq__contains=df.loc[i,'Ký mã hiệu']).values_list('ma', flat=True)
+                            df_kmh = pd.DataFrame(columns=['Gcode','Ký mã hiệu','Mô tả'])
+                            for item in result_list:
+                                gcode_ = Gcode.objects.get(ma=item)
+                                df_kmh = df_kmh.append(pd.DataFrame({'Gcode':[gcode_.ma],'Ký mã hiệu':[gcode_.kymahieuinq],'Mô tả':[gcode_.mota]}))
+                            html_1 = df_kmh.to_html(index=False,justify='center')
+                            displaydf = "Gcode has 'ký mã hiệu'{} is existed at <b>index STT {}</b><br>" + html_1
+                            message = format_html(displaydf,df.loc[i,'Ký mã hiệu'],df.loc[i,'STT'])
+                            messages.append(message)
+                    else:
+                        list_mota = Gcode.objects.values_list('mota',flat=True)
+                        df_kmh = pd.DataFrame(columns=['Gcode','Ký mã hiệu','Mô tả'])
+                        if len(list_mota) > 0:
+                            for item in list_mota:
+                                str_search = df.loc[i,'Mô tả']
+                                txtmota = item 
+                                specialChars = "!#$%^&*().@~?<>+-,~`" 
+                                for specialChar in specialChars:
+                                    str_search = str_search.replace(specialChar,' ')
+                                    txtmota = txtmota.replace(specialChar,' ')
+                                resultcheck = fuzz.token_sort_ratio(str_search,txtmota)
+                                if resultcheck == 100:
+                                    gcode_ = Gcode.objects.get(mota=item)
+                                    df_kmh = df_kmh.append(pd.DataFrame({'Gcode':[gcode_.ma],'Ký mã hiệu':[gcode_.kymahieuinq],'Mô tả':[gcode_.mota]}))
+                                    html_1 = df_kmh.to_html(index=False,justify='center')
+                                    displaydf = "Description of Gcode is existed at <b>index STT {}</b><br>" + html_1
+                                    message = format_html(displaydf,df.loc[i,'STT'])
+                                    messages.append(message)
+            if len(messages) <=0:
+                list_gcode = Gcode.objects.values_list('ma',flat=True)
+                Lastest_index = 0
+                Lastest_gcode = ''
+                if len(list_gcode)>0:
+                    for i in range(len(list_gcode),0,-1):
+                        if bool(re.match("G\d\d\d\d\d+",list_gcode[i])) == True:
+                            Lastest_gcode = list_gcode[i]
+                            break
+                if Lastest_gcode == '' or len(list_gcode)<=0:
+                    Lastest_index = 0
+                else:
+                    Lastest_index =  int(Lastest_gcode[1:])
+                for r in range(0, df.shape[0]):
+                    if df.loc[r,'Gcode']=='nan':
+                        df.at[r,'Gcode']='G'+ "{:06n}".format(Lastest_index+1)
+                        Lastest_index+=1
+                for r in range(0, df.shape[0]):
+                    ngaywin = None
+                    ngayout = None
+                    markup = None
+                    kmh = None
+                    if pd.isnull(df.loc[r,'Ngày Win'])==False:
+                        ngaywin = df.loc[r,'Ngày Win']
+                    if pd.isnull(df.loc[r,'Ngày Out'])==False:
+                        ngayout = df.loc[r,'Ngày Out']
+                    if df.loc[r,'Ký mã hiệu']!='nan':
+                        kmh = df.loc[r,'Ký mã hiệu']
+                    if pd.isnull(df.loc[r,'Markup định mức'])==False:
+                        markup = df.loc[r,'Markup định mức']
+                    gcode = Gcode(
+                        ma=df.loc[r,'Gcode'],
+                        kymahieuinq=kmh,
+                        mota=df.loc[r,'Mô tả'],
+                        markupdinhmuc=markup,
+                        ngaywin = ngaywin,
+                        ngayout = ngayout
+                        )
+                    gcode.save() 
+                message = format_html("Data Gcode has been successfully import")
+                messages.append(message)
+            html = df.to_html(index=False,justify='center')
+            html = html.replace('nan','')
+            html = html.replace('NaN','')
+            html = html.replace('NaT','')
+            context = {'import_list': html,'messages':messages,'warnings':warnings}
+            return render(request, 'gcodedb/gcode_list.html', context)
+    context = {'messages':messages}
+    return render(request, 'gcodedb/gcode_list.html', context)
 
 def importxls_contractdetail(request):
     if request.method == 'POST':
@@ -422,7 +539,6 @@ def importxls_offer(request):
                         g1code=df.loc[r,'Gcode-Inquiry'],
                         gcode = Gcode.objects.get(ma=df.loc[r,'Gcode']),
                         inquiry = Inquiry.objects.get(inquirycode=df.loc[r,'Inquiry']),
-                        kymahieuinq = df.loc[r,'Ký mã hiệu'],
                         unitinq = df.loc[r,'Đơn vị'],
                         qtyinq = df.loc[r,'Số lượng'],
                         supplier = Supplier.objects.get(suppliercode=df.loc[r,'Supplier']),
@@ -665,9 +781,9 @@ def importxls_kho(request):
                             " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:hdb_list'))
                             messages.append(message)
                         elif POdetail.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
-                            message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            warn = format_html("Gcode-Contract '{}-{}' doesn't exist in PO detail at <b>index STT {}</b>, you can import it"
                             " at link: <a href='{}'>Create Gcode in PO</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:po_list'))
-                            messages.append(message)
+                            warnings.append(warn)
                         if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
                             message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
                             " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
@@ -746,6 +862,15 @@ def importxls_giaohang(request):
                             message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
                             " at link: <a href='{}'>Create Gcode in FREIGHT & WAREHOUSE</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:kho_list'))
                             messages.append(message)
+                        else:
+                            if POdetail.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist in PO detail at <b>index STT {}</b>, you can import it"
+                                " at link: <a href='{}'>Create Gcode in PO</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:po_list'))
+                                warnings.append(warn)
+                            if Kho.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist in FREIGHT & WAREHOUSE at <b>index STT {}</b>, you can import it"
+                                " at link: <a href='{}'>Create Gcode in FREIGHT & WAREHOUSE</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:kho_list'))
+                                warnings.append(warn)
                         if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
                             message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
                             " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
@@ -818,10 +943,23 @@ def importxls_phat(request):
                             message = format_html("Contract '{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
                             " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['STT'],reverse('gcodedb:contractdetail_list'))
                             messages.append(message)
-                        elif Giaohang.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                        elif G2code.objects.filter(g1code__gcode__ma=row['Gcode'],contract__contractcode=row['Contract No.']).count()<=0:
                             message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
-                            " at link: <a href='{}'>Create Gcode in Delivery</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:giaohang_list'))
+                            " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:hdb_list'))
                             messages.append(message)
+                        else:
+                            if POdetail.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist in PO detail at <b>index STT {}</b>, you can import it"
+                                " at link: <a href='{}'>Create Gcode in PO</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:po_list'))
+                                warnings.append(warn)
+                            if Kho.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist in FREIGHT & WAREHOUSE at <b>index STT {}</b>, you can import it"
+                                " at link: <a href='{}'>Create Gcode in FREIGHT & WAREHOUSE</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:kho_list'))
+                                warnings.append(warn)
+                            if Giaohang.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                                " at link: <a href='{}'>Create Gcode in Delivery</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:giaohang_list'))
+                                warnings.append(warn)
                         if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
                             message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
                             " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
@@ -895,6 +1033,23 @@ def importxls_danhgiancc(request):
                             message = format_html("Contract '{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
                             " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['STT'],reverse('gcodedb:contractdetail_list'))
                             messages.append(message)
+                        elif G2code.objects.filter(g1code__gcode__ma=row['Gcode'],contract__contractcode=row['Contract No.']).count()<=0:
+                            message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:hdb_list'))
+                            messages.append(message)
+                        else:
+                            if POdetail.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist in PO detail at <b>index STT {}</b>, you can import it"
+                                " at link: <a href='{}'>Create Gcode in PO</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:po_list'))
+                                warnings.append(warn)
+                            if Kho.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist in FREIGHT & WAREHOUSE at <b>index STT {}</b>, you can import it"
+                                " at link: <a href='{}'>Create Gcode in FREIGHT & WAREHOUSE</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:kho_list'))
+                                warnings.append(warn)
+                            if Giaohang.objects.filter(g2code__g1code__gcode__ma=row['Gcode'],g2code__contract__contractcode=row['Contract No.']).count()<=0:
+                                warn = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
+                                " at link: <a href='{}'>Create Gcode in Delivery</a>",row['Gcode'],row['Contract No.'],row['STT'],reverse('gcodedb:giaohang_list'))
+                                warnings.append(warn)
                         if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
                             message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
                             " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
@@ -1124,7 +1279,7 @@ def importxls_scanorder(request):
                             df_copy.loc[index,'Inquiry'] = g1code.inquiry.inquirycode
                             df_copy.loc[index,'Khách hàng'] = g1code.inquiry.client.clientcode
                             df_copy.loc[index,'Mô tả'] = g1code.gcode.mota
-                            df_copy.loc[index,'Ký mã hiệu'] = g1code.kymahieuinq
+                            df_copy.loc[index,'Ký mã hiệu'] = g1code.gcode.kymahieuinq
                             df_copy.loc[index,'Đơn vị'] = g1code.unitinq
                             df_copy.loc[index,'Số lượng'] = g1code.qtyinq
                             df_copy.loc[index,'NSX'] = g1code.nsxinq

@@ -96,7 +96,8 @@ class GDV(models.Model):
 class Gcode(models.Model):
     ma = models.CharField(max_length=20)
     mota = models.TextField()
-    markupdinhmuc = models.FloatField()
+    kymahieuinq = models.CharField(max_length=100,null=True,blank=True)
+    markupdinhmuc = models.FloatField(null=True,blank=True)
     ngaywin = models.DateField(null=True, blank=True)
     ngayout = models.DateField(null=True, blank= True)
     class Meta:
@@ -114,7 +115,6 @@ class G1code(models.Model):
     g1code = models.CharField(max_length=40)
     gcode = models.ForeignKey(Gcode, on_delete=PROTECT, related_name= "fk_g1codegcode")
     inquiry = models.ForeignKey(Inquiry,on_delete=PROTECT, related_name= "fk_g1codeinquiry")
-    kymahieuinq = models.CharField(max_length=100)
     unitinq = models.CharField(max_length = 20,choices = UNITS_CHOICES,default = 'pcs')
     qtyinq = models.FloatField()
     supplier = models.ForeignKey(Supplier,on_delete=PROTECT, related_name= "fk_g1codesupplier")
@@ -182,7 +182,7 @@ class G2code(models.Model):
         return self.g1code.supplier.suppliercode
     @property
     def kymahieu(self):
-        return self.g1code.kymahieuinq
+        return self.g1code.gcode.kymahieuinq
     @property
     def nsx(self):
         return self.g1code.nsxinq
