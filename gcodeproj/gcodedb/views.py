@@ -18,6 +18,7 @@ from django.urls import reverse
 from fuzzywuzzy import fuzz,process
 from django.contrib.auth.decorators import login_required
 from .decorators import allowed_permission, allowed_users, unauthenticated_user
+from  django.contrib.auth import authenticate,login
 
 class PostListView(ListView):
    queryset = Gcode.objects.all().order_by('-ma')
@@ -838,11 +839,29 @@ def reportseller_list(request):
     context = {'reportseller_list':html}
     return render(request, 'gcodedb/reportseller_list.html', context)
 
-@login_required(login_url='gcodedb:login')
+@login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_scanorder','gcodedb.export_scanorder'})
 def scanorder_list(request):
     return render(request, 'gcodedb/scanorder_list.html')
 
-@login_required(login_url='gcodedb:login')
+@login_required(login_url='gcodedb:loginpage')
 def home(request):
     return render(request,'gcodedb/home.html')
+
+def loginpage(request):
+    message = []
+    if request.user.is_authenticated:
+        return redirect('gcodedb:home')
+    else:
+        if request.method == 'POST':
+            name = request.POST.get('Username')
+            pw = request.POST.get('Password')
+            user = authenticate(username=name, password=pw)
+            if user is not None:
+                login(request,user)
+                return redirect('gcodedb:home')
+            else:
+                msg = format_html('<i>Username or password is wrong<i>')
+                message.append(msg)
+    context = {'message':message}
+    return render(request,'gcodedb/login.html',context)

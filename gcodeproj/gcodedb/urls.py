@@ -146,6 +146,6 @@ urlpatterns = [
     path('scanorder/export/xls/<int:id>', exportxls.exportxls_scanorder,name='exportxls_scanorder'),
 
     path('', views.home, name='home'),
-    path('login/',auth_views.LoginView.as_view(template_name="gcodedb/login.html"), name="login"),
+    path('login/',views.loginpage, name="loginpage"),
     path('logout/',auth_views.LogoutView.as_view(next_page='/'),name='logout'),
 ]

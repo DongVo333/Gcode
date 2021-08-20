@@ -1,14 +1,35 @@
 {% extends "base.html" %}
+{% load static %}
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+{% endblock %}
 {% block title %}Login{% endblock %}
 {% block content %}
-<form method="POST">
-    {% csrf_token %}
-    {% for key, value in form.errors.items %}
-        {{value}}
-    {% endfor %}
-    <p><label>Tài khoản:</label>{{form.username}}</p>
-    <p><label>Mật khẩu:</label>{{form.password}}</p>
-    <input type="hidden" name="next" value="/"/>
-    <input type="submit" value="Login"/>
-</form>
+<div id="id01" class="modal" style="display:block">
+  
+    <form class="modal-content animate" method="POST">
+        {% csrf_token %}
+      <div class="imgcontainer">
+        <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+        <!-- <img src="img_avatar2.png" alt="Avatar" class="avatar"> -->
+      </div>
+  
+      <div class="container">
+        <label for="uname"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="Username" required>
+  
+        <label for="psw"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="Password" required>
+        {% if message %}
+            {% for msg in message%}
+                <p class = 'msgerror'>{{msg}}</p>
+            {% endfor %}
+        {% endif %}
+        <button type="submit">Login</button>
+        <label>
+          <input type="checkbox" checked="checked" name="remember"> Remember me
+        </label>
+      </div>
+    </form>
+  </div>
 {% endblock content %}
