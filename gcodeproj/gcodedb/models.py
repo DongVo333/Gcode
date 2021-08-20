@@ -1,10 +1,6 @@
 from django.db import models
-from django.db.models.aggregates import Max
-from django.db.models.base import Model, ModelBase
-from django.db.models.deletion import PROTECT, PROTECT
-from django.forms import ModelForm
-from django.db.models import F
-from django.forms.fields import CharField
+from django.db.models.deletion import PROTECT
+
 
 UNITS_CHOICES = (
     ("bộ", "bộ"),
@@ -32,6 +28,7 @@ STATUS_CHOICES =(
     ("Open","Open"),
     ("Close","Close"),
 )
+
 class AnnotationManager(models.Manager):
 
     def __init__(self, **kwargs):

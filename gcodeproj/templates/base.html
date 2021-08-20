@@ -169,7 +169,12 @@
                 <a href="/reportseller">Seller</a>
             </div> 
         </div> 
-        <a href="#Logout" class="active" style="float: right;">LOGOUT</a>
+        {% if user.username %}
+            <a href="/logout" class="active" style="float: right;">LOGOUT</a>
+            <p style="float: right;color:white;margin:10px 5px;">{{user.username}}</p>
+        {% else %}
+            <a href="/login" class="active" style="float: right;margin:0px">LOGIN</a>
+        {% endif %}
         <a href="javascript:void(0);" class="icon" onclick="myFunction()">
             <i class="fa fa-bars"></i>
         </a>

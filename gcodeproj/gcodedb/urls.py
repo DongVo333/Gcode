@@ -1,11 +1,12 @@
 from django.urls import path,include
 from . import views,importxls,exportxls
+from django.contrib.auth import views as auth_views
 
 app_name = "gcodedb"
 
 urlpatterns = [
     path('offer/insert/', views.offer_form,name='offer_insert'),
-    path('', importxls.importxls_offer,name='importxls_offer'),
+    path('offer/', importxls.importxls_offer,name='importxls_offer'),
     path('offer/update/<int:id>/', views.offer_form,name='offer_update'), 
     path('offer/delete/<int:id>/',views.offer_delete,name='offer_delete'),
     path('offer/export/xls', exportxls.exportxls_offer, name='exportxls_offer'),
@@ -143,4 +144,8 @@ urlpatterns = [
     path('scanorder/', views.scanorder_list,name='scanorder_list'),
     path('scanorder/import/xls', importxls.importxls_scanorder,name='importxls_scanorder'),
     path('scanorder/export/xls/<int:id>', exportxls.exportxls_scanorder,name='exportxls_scanorder'),
+
+    path('', views.home, name='home'),
+    path('login/',auth_views.LoginView.as_view(template_name="gcodedb/login.html"), name="login"),
+    path('logout/',auth_views.LogoutView.as_view(next_page='/'),name='logout'),
 ]

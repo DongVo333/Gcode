@@ -16,6 +16,8 @@ import pandas as pd
 import numpy as np
 from django.urls import reverse
 from fuzzywuzzy import fuzz,process
+from django.contrib.auth.decorators import login_required
+from .decorators import allowed_permission, allowed_users, unauthenticated_user
 
 class PostListView(ListView):
    queryset = Gcode.objects.all().order_by('-ma')
@@ -836,5 +838,11 @@ def reportseller_list(request):
     context = {'reportseller_list':html}
     return render(request, 'gcodedb/reportseller_list.html', context)
 
+@login_required(login_url='gcodedb:login')
+@allowed_permission(allowed_roles={'gcodedb.view_scanorder','gcodedb.export_scanorder'})
 def scanorder_list(request):
     return render(request, 'gcodedb/scanorder_list.html')
+
+@login_required(login_url='gcodedb:login')
+def home(request):
+    return render(request,'gcodedb/home.html')
