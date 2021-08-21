@@ -11,7 +11,14 @@
         {% csrf_token %}
       <div class="imgcontainer">
         <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
-        <!-- <img src="img_avatar2.png" alt="Avatar" class="avatar"> -->
+        <p style = "font-size: 0;font-family: Segoe Script;"> 
+          <span onmouseover="change(this)" onmouseout="normalblue(this)" style="color:blue;text-shadow: 1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue;font-size: 50px;">G</span>
+          <span onmouseover="change(this)" onmouseout="normalblue(this)" style="color:blue;text-shadow: 1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue;font-size: 50px;">-</span>
+          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">c</span>
+          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">o</span>
+          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">d</span>
+          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">e</span>
+        </p>
       </div>
   
       <div class="container">
@@ -33,3 +40,20 @@
     </form>
   </div>
 {% endblock content %}
+{% block extra_script %}
+<script>
+  function change(x) {
+    x.style.color = "yellow";
+    x.style.textShadow = "1px 1px 1px black, 0 0 25px yellow, 0 0 5px #8B8000"
+  }
+  
+  function normalblue(x) {
+    x.style.color = "blue";
+    x.style.textShadow = "1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue"
+  }
+  function nomalred(x) {
+    x.style.color = "red";
+    x.style.textShadow = "1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000"
+  }
+  </script>
+  {% endblock %}
