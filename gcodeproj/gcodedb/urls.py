@@ -68,11 +68,6 @@ urlpatterns = [
     path('danhgiacode/import/xls', importxls.importxls_danhgiacode, name='importxls_danhgiacode'),
     path('danhgiacode/export/xls', exportxls.exportxls_danhgiacode, name='exportxls_danhgiacode'),
 
-    path('searchclient/',views.NestedSearch, name='searchclient'),
-    path('create/', views.create, name="create"),
-    path('list/', views.list, name="list"),
-    path('search/', views.search, name='search'),  
-
     path('inquiry/insert/', views.inquiry_form,name='inquiry_insert'),
     path('inquiry/', views.inquiry_list,name='inquiry_list'),
     path('inquiry/update/<int:id>/', views.inquiry_form,name='inquiry_update'), 

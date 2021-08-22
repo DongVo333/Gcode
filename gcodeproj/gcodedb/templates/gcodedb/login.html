@@ -6,39 +6,37 @@
 {% block title %}Login{% endblock %}
 {% block content %}
 <div id="id01" class="modal" style="display:block">
-  
-    <form class="modal-content animate" method="POST">
-        {% csrf_token %}
-      <div class="imgcontainer">
-        <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
-        <p style = "font-size: 0;font-family: Segoe Script;"> 
-          <span onmouseover="change(this)" onmouseout="normalblue(this)" style="color:blue;text-shadow: 1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue;font-size: 50px;">G</span>
-          <span onmouseover="change(this)" onmouseout="normalblue(this)" style="color:blue;text-shadow: 1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue;font-size: 50px;">-</span>
-          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">c</span>
-          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">o</span>
-          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">d</span>
-          <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">e</span>
-        </p>
-      </div>
-  
-      <div class="container">
-        <label for="uname"><b>Username</b></label>
-        <input type="text" placeholder="Enter Username" name="Username" required>
-  
-        <label for="psw"><b>Password</b></label>
-        <input type="password" placeholder="Enter Password" name="Password" required>
-        {% if message %}
-            {% for msg in message%}
-                <p class = 'msgerror'>{{msg}}</p>
-            {% endfor %}
-        {% endif %}
-        <button type="submit">Login</button>
-        <label>
-          <input type="checkbox" checked="checked" name="remember"> Remember me
-        </label>
-      </div>
-    </form>
-  </div>
+  <form class="modal-content" method="POST">
+      {% csrf_token %}
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+      <p style = "font-size: 0;font-family: Segoe Script;"> 
+        <span onmouseover="change(this)" onmouseout="normalblue(this)" style="color:blue;text-shadow: 1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue;font-size: 50px;">G</span>
+        <span onmouseover="change(this)" onmouseout="normalblue(this)" style="color:blue;text-shadow: 1px 1px 1px black, 0 0 25px blue, 0 0 5px darkblue;font-size: 50px;">-</span>
+        <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">c</span>
+        <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">o</span>
+        <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">d</span>
+        <span onmouseover="change(this)" onmouseout="nomalred(this)" style="color: red;text-shadow: 1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000;font-size: 50px;">e</span>
+      </p>
+    </div>
+    <div class="container">
+      <label for="uname"><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="Username" required>
+
+      <label for="psw"><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" name="Password" required>
+      {% if message %}
+          {% for msg in message%}
+              <label class = 'msgerror'>{{msg}}</label>
+          {% endfor %}
+      {% endif %}
+      <button type="submit">Login</button>
+      <label>
+        <input type="checkbox" checked="checked" name="remember"> Remember me
+      </label>
+    </div>
+  </form>
+</div>
 {% endblock content %}
 {% block extra_script %}
 <script>
@@ -55,5 +53,14 @@
     x.style.color = "red";
     x.style.textShadow = "1px 1px 1px black, 0 0 25px red, 0 0 5px #8B0000"
   }
-  </script>
-  {% endblock %}
+  // Get the modal
+  var modal = document.getElementById('id01');
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+      if (event.target == modal) {
+          modal.style.display = "none";
+      }
+  }
+</script>
+{% endblock %}

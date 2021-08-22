@@ -1,17 +1,13 @@
-from datetime import date, datetime
-from logging import error, warning
+from datetime import date
 from os import replace
 from re import split
 from numpy import NAN, NaN, empty, result_type
 from pandas._libs.tslibs import NaT
-from pandas.core.dtypes.missing import isnull, na_value_for_dtype
+from pandas.core.dtypes.missing import isnull
 from pandas.core.frame import DataFrame
 import xlrd
-from xlrd.formula import dump_formula
 from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV,Gcode,Inquiry,Client,Kho,POdetail,Phat,Supplier,Lydowin,Lydoout,Giaohang,Sales, Tienve,ScanOrder
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView,CreateView,FormView
-from django.http import HttpResponse
 from django.utils.dateparse import parse_date
 import pandas as pd
 import numpy as np
@@ -20,6 +16,8 @@ import json
 from django.utils.html import format_html
 from fuzzywuzzy import fuzz,process
 import re
+from django.contrib.auth.decorators import login_required
+from .decorators import allowed_permission
 
 pd.options.display.float_format = '{:,.2f}'.format
 
@@ -65,6 +63,8 @@ def msgcheckimport(df,list_column,list_column_required,list_column_float,list_co
                     messages.append(message)
     return messages
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_client'})
 def importxls_client(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -86,6 +86,8 @@ def importxls_client(request):
         return redirect('/client/')     
     return render(request, 'gcodedb/client_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_gcode'})
 def importxls_gcode(request):
     messages=  []
     warnings = []
@@ -226,6 +228,8 @@ def importxls_gcode(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/gcode_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_contract'})
 def importxls_contractdetail(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -266,6 +270,8 @@ def importxls_contractdetail(request):
         return redirect('/contractdetail/')     
     return render(request, 'gcodedb/contractdetail_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_inquiry'})
 def importxls_inquiry(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -290,6 +296,8 @@ def importxls_inquiry(request):
         return redirect('/inquiry/')     
     return render(request, 'gcodedb/inquiry_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_gdv'})
 def importxls_gdv(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -312,6 +320,8 @@ def importxls_gdv(request):
         return redirect('/gdv/')     
     return render(request, 'gcodedb/gdv_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_supplier'})
 def importxls_supplier(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -336,6 +346,8 @@ def importxls_supplier(request):
         return redirect('/supplier/')     
     return render(request, 'gcodedb/supplier_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_reasonwin'})
 def importxls_lydowin(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -358,6 +370,8 @@ def importxls_lydowin(request):
         return redirect('/lydowin/')     
     return render(request, 'gcodedb/lydowin_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_reasonout'})
 def importxls_lydoout(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -380,6 +394,8 @@ def importxls_lydoout(request):
         return redirect('/lydoout/')     
     return render(request, 'gcodedb/lydoout_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_danhgiacode'})
 def importxls_danhgiacode(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -398,37 +414,8 @@ def importxls_danhgiacode(request):
         return redirect('/danhgiacode/')     
     return render(request, 'gcodedb/danhgiacode_list.html')
 
-def importxls_khoall(request):
-    if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Kho")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            g2code_ = G2code.objects.get(g2code=sheet.cell(r,1).value)
-            counter = Kho.objects.filter(g2code=g2code_).count()
-            g2codekho = Kho()
-            if counter>0:
-                g2codekho = Kho.objects.get(g2code=g2code_)
-                g2codekho.qtykho = sheet.cell(r,2).value
-                g2codekho.dongiafreight = sheet.cell(r,3).value
-                g2codekho.ngaynhapkho = xlrd.xldate.xldate_as_datetime(sheet.cell(r,4).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2codekho.gdvkho = GDV.objects.get(gdvcode=sheet.cell(r,5).value)
-                g2codekho.dateupdate = xlrd.xldate.xldate_as_datetime(sheet.cell(r,6).value,workbook.datemode).strftime("%Y-%m-%d")
-                g2codekho.save()
-            else:
-                g2codekho = Kho(
-        		    g2code = g2code_,
-        		    qtykho=sheet.cell(r,2).value,
-                    dongiafreight=sheet.cell(r,3).value,
-                    ngaynhapkho=xlrd.xldate.xldate_as_datetime(sheet.cell(r,4).value,workbook.datemode).strftime("%Y-%m-%d"),
-                    gdvkho=GDV.objects.get(gdvcode=sheet.cell(r,5).value),
-                    dateupdate=xlrd.xldate.xldate_as_datetime(sheet.cell(r,6).value,workbook.datemode).strftime("%Y-%m-%d"),
-        		    )
-                g2codekho.save()  
-        return redirect('/kho/')     
-    return render(request, 'gcodedb/kho_list.html')
-
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_g1code'})
 def importxls_offer(request):
     messages=  []
     warnings = []
@@ -577,6 +564,8 @@ def importxls_offer(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/offer_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_g2code'})
 def importxls_hdb(request):
     messages=  []
     warnings = []
@@ -645,6 +634,8 @@ def importxls_hdb(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/hdb_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_podetail'})
 def importxls_po(request):
     messages=  []
     warnings = []
@@ -738,6 +729,8 @@ def importxls_po(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/po_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_warehouse'})
 def importxls_kho(request):
     messages=  []
     warnings = []
@@ -820,6 +813,8 @@ def importxls_kho(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/kho_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_delivery'})
 def importxls_giaohang(request):
     messages=  []
     warnings = []
@@ -905,6 +900,8 @@ def importxls_giaohang(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/giaohang_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_punishment'})
 def importxls_phat(request):
     messages=  []
     warnings = []
@@ -996,6 +993,8 @@ def importxls_phat(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/phat_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_danhgiancc'})
 def importxls_danhgiancc(request):
     messages=  []
     warnings = []
@@ -1115,6 +1114,8 @@ def importxls_danhgiancc(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/danhgiancc_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_accounting'})
 def importxls_tienve(request):
     messages=  []
     warnings = []
@@ -1182,6 +1183,8 @@ def importxls_tienve(request):
     context = {'messages':messages}
     return render(request, 'gcodedb/tienve_list.html', context)
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.import_sales'})
 def importxls_sales(request):
     if request.method == 'POST':
         new_persons = request.FILES['myfile']
@@ -1204,6 +1207,7 @@ def importxls_sales(request):
         return redirect('/sales/')     
     return render(request, 'gcodedb/sales_list.html')
 
+@login_required(login_url='gcodedb:loginpage')
 def profit_show(request,contract):
     messages=  []
     df = pd.DataFrame(columns=['STT','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','NSX','Xuất xứ','Supplier','Số lượng bán',

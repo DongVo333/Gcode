@@ -17,10 +17,10 @@ import numpy as np
 from django.urls import reverse
 from fuzzywuzzy import fuzz,process
 from django.contrib.auth.decorators import login_required
-from .decorators import allowed_permission, allowed_users, unauthenticated_user
+from .decorators import allowed_permission
 from  django.contrib.auth import authenticate,login
 
-class PostListView(ListView):
+""" class PostListView(ListView):
    queryset = Gcode.objects.all().order_by('-ma')
    template_name = 'gcodedb/show.html'
    context_object_name = 'Gcodes'
@@ -28,21 +28,9 @@ class PostDetailView(DetailView):
    model = Gcode
    template_name = 'gcodedb/detail.html'
    context_object_name = 'gcodekey'
+ """
 
-def export_users_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="GcodeList.csv"'
-
-    writer = csv.writer(response)
-    writer.writerow(['ID', 'Gcode', 'Mo ta','Markup dinh muc'])
-
-    users = Gcode.objects.all().values_list('id', 'ma', 'mota','markupdinhmuc')
-    for user in users:
-        writer.writerow(user)
-
-    return response
-
-def savedata(request):
+""" def savedata(request):
     form = GcodeForm()
     if request.method == 'POST':
         form = GcodeForm(request.POST)
@@ -142,12 +130,16 @@ def CreateOffer(request):
             print(formset.errors)
     context['formset'] = formset
     context['form'] = form
-    return render(request, 'gcodedb/createoffer.html', context)
+    return render(request, 'gcodedb/createoffer.html', context) """
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def inquiry_list(request):
 	inquiry_list = Inquiry.objects.all()
 	return render(request, 'gcodedb/inquiry_list.html', {'inquiry_list':inquiry_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def inquiry_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -167,15 +159,21 @@ def inquiry_form(request, id=None):
         return redirect('/inquiry/')
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def inquiry_delete(request,id):
     inquiry = Inquiry.objects.get(pk=id)
     inquiry.delete()
     return redirect('/inquiry/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def client_list(request):
 	client_list = Client.objects.all()
 	return render(request, 'gcodedb/client_list.html', {'client_list':client_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def client_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -195,11 +193,15 @@ def client_form(request, id=None):
         return redirect('/client/')
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def client_delete(request,id):
     client = Client.objects.get(pk=id)
     client.delete()
     return redirect('/client/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def gcode_list(request):
     msg = []
     msgresult = ""
@@ -234,8 +236,10 @@ def gcode_list(request):
         else: 
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/gcode_list.html', {'msgresult':msgresult})
-                                    #highest = process.extractOne(setitem,list_lydowin)
-                                    #if highest[1] < 90:
+
+
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})                        
 def gcode_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -255,15 +259,21 @@ def gcode_form(request, id=None):
         return redirect('/gcode/')
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def gcode_delete(request,id):
     gcode = Gcode.objects.get(pk=id)
     gcode.delete()
     return redirect('/gcode/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def gdv_list(request):
 	gdv_list = GDV.objects.all()
 	return render(request, 'gcodedb/gdv_list.html', {'gdv_list':gdv_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def gdv_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -283,15 +293,21 @@ def gdv_form(request, id=None):
         return redirect('/gdv/')
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def gdv_delete(request,id):
     gdv = GDV.objects.get(pk=id)
     gdv.delete()
     return redirect('/gdv/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def supplier_list(request):
 	supplier_list = Supplier.objects.all()
 	return render(request, 'gcodedb/supplier_list.html', {'supplier_list':supplier_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def supplier_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -311,15 +327,21 @@ def supplier_form(request, id=None):
         return redirect('/supplier/')
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def supplier_delete(request,id):
     supplier = Supplier.objects.get(pk=id)
     supplier.delete()
     return redirect('/supplier/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def contractdetail_list(request):
 	contractdetail_list = Contract.objects.all()
 	return render(request, 'gcodedb/contractdetail_list.html', {'contractdetail_list':contractdetail_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def contractdetail_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -339,15 +361,21 @@ def contractdetail_form(request, id=None):
         return redirect('/contractdetail/')
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def contractdetail_delete(request,id):
     contract = Contract.objects.get(pk=id)
     contract.delete()
     return redirect('/contractdetail/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def lydowin_list(request):
 	lydowin_list = Lydowin.objects.all()
 	return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def lydowin_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -366,15 +394,21 @@ def lydowin_form(request, id=None):
             form.save()
         return redirect('/lydowin/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def lydowin_delete(request,id):
     varlydowin = Lydowin.objects.get(pk=id)
     varlydowin.delete()
     return redirect('/lydowin/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def lydoout_list(request):
 	lydoout_list = Lydoout.objects.all()
 	return render(request, 'gcodedb/lydoout_list.html', {'lydoout_list':lydoout_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def lydoout_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -393,11 +427,15 @@ def lydoout_form(request, id=None):
             form.save()
         return redirect('/lydoout/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def lydoout_delete(request,id):
     varlydoout = Lydoout.objects.get(pk=id)
     varlydoout.delete()
     return redirect('/lydoout/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def kho_list(request):
     msg = []
     msgresult = ""
@@ -417,6 +455,8 @@ def kho_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/kho_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def kho_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -437,15 +477,21 @@ def kho_form(request, id=None):
             kho_.save()
         return redirect('/kho/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def kho_delete(request,id):
     kho = Kho.objects.get(pk=id)
     kho.delete()
     return redirect('/kho/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def offer_list(request):
 	offer_list = G1code.objects.all()
 	return render(request, 'gcodedb/offer_list.html', {'offer_list':offer_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def offer_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -476,15 +522,21 @@ def offer_form(request, id=None):
             print(form.add_error)
         return redirect('/offer/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def offer_delete(request,id):
     g1codes = G1code.objects.filter(pk = id)
     g1codes.delete()
     return redirect('/offer/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def sales_list(request):
 	sales_list = Sales.objects.all()
 	return render(request, 'gcodedb/sales_list.html', {'sales_list':sales_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def sales_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -503,11 +555,15 @@ def sales_form(request, id=None):
             form.save()
         return redirect('/sales/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def sales_delete(request,id):
     varsales = Sales.objects.get(pk=id)
     varsales.delete()
     return redirect('/sales/')
-        
+
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})       
 def hdb_list(request):
     msg = []
     msgresult = ""
@@ -524,6 +580,8 @@ def hdb_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/hdb_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def hdb_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -547,11 +605,15 @@ def hdb_form(request, id=None):
             print(form.add_error)
         return redirect('/hdb/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def hdb_delete(request,id):
     g2codes = G2code.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/hdb/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def po_list(request):
     msg = []
     msgresult = ""
@@ -569,6 +631,8 @@ def po_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/po_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def po_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -591,11 +655,15 @@ def po_form(request, id=None):
             print(form.add_error)
         return redirect('/po/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def po_delete(request,id):
     g2codes = POdetail.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/po/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def giaohang_list(request):
     msg = []
     msgresult = ""
@@ -615,6 +683,8 @@ def giaohang_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/giaohang_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def giaohang_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -637,11 +707,15 @@ def giaohang_form(request, id=None):
             print(form.add_error)
         return redirect('/giaohang/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def giaohang_delete(request,id):
     g2codes = Giaohang.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/giaohang/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def tienve_list(request):
     msg = []
     msgresult = ""
@@ -661,6 +735,8 @@ def tienve_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/tienve_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def tienve_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -681,11 +757,15 @@ def tienve_form(request, id=None):
             print(form.add_error)
         return redirect('/tienve/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def tienve_delete(request,id):
     g2codes = Tienve.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/tienve/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def danhgiancc_list(request):
     msg = []
     msgresult = ""
@@ -705,6 +785,8 @@ def danhgiancc_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/danhgiancc_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def danhgiancc_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -730,15 +812,21 @@ def danhgiancc_form(request, id=None):
             print(form.add_error)
         return redirect('/danhgiancc/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def danhgiancc_delete(request,id):
     g2codes = DanhgiaNCC.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/danhgiancc/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def danhgiacode_list(request):
 	danhgiacode_list = Danhgiacode.objects.all()
 	return render(request, 'gcodedb/danhgiacode_list.html', {'danhgiacode_list':danhgiacode_list})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def danhgiacode_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -759,11 +847,15 @@ def danhgiacode_form(request, id=None):
             print(form.add_error)
         return redirect('/danhgiacode/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def danhgiacode_delete(request,id):
     g2codes = Danhgiacode.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/danhgiacode/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def phat_list(request):
     msg = []
     msgresult = ""
@@ -783,6 +875,8 @@ def phat_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/phat_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def phat_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -805,11 +899,14 @@ def phat_form(request, id=None):
             print(form.add_error)
         return redirect('/phat/')
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
 def phat_delete(request,id):
     g2codes = Phat.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/phat/')
 
+@login_required(login_url='gcodedb:loginpage')
 def profit_list(request):
     msg = []
     msgresult = ""
@@ -829,6 +926,7 @@ def profit_list(request):
             msgresult = format_html("No results could be found for your search query")
     return render(request, 'gcodedb/profit_list.html', {'msg':msg,'msgresult':msgresult})
 
+@login_required(login_url='gcodedb:loginpage')
 def reportseller_list(request):
     df = pd.DataFrame(columns=['Gcode-Inquiry','Result','Giao dịch viên'])
     for item in G1code.objects.all():
@@ -863,5 +961,6 @@ def loginpage(request):
             else:
                 msg = format_html('<i>Username or password is wrong<i>')
                 message.append(msg)
+                print(msg)
     context = {'message':message}
     return render(request,'gcodedb/login.html',context)

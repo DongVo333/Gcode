@@ -9,7 +9,8 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
 import pandas as pd
-import xlsxwriter
+from django.contrib.auth.decorators import login_required
+from .decorators import allowed_permission
 from django.utils.html import format_html
 
 style_head_row = xlwt.easyxf(" align:wrap off,vert center,horiz center;borders:left THIN,right THIN,top THIN,bottom THIN;font:name Arial,colour_index white,bold on,height 0xA0;pattern:pattern solid,fore-colour ocean_blue;") 
@@ -25,6 +26,8 @@ fmts = [
 style_number_row.num_format_str = fmts[1]
 style_date_row.num_format_str = fmts[0]
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_client'})
 def exportxls_client(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Client.xls"'
@@ -43,6 +46,8 @@ def exportxls_client(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_gcode'})
 def exportxls_gcode(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Gcode.xls"'
@@ -62,7 +67,9 @@ def exportxls_gcode(request):
         ws.write(row_num, col_num, gcode.ngayout, style_date_row)
     wb.save(response)
     return response
-    
+
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_contract'})    
 def exportxls_contractdetail(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Contract.xls"'
@@ -90,6 +97,8 @@ def exportxls_contractdetail(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_inquiry'}) 
 def exportxls_inquiry(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Inquiry.xls"'
@@ -108,6 +117,8 @@ def exportxls_inquiry(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_gdv'}) 
 def exportxls_gdv(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="GDV.xls"'
@@ -125,6 +136,8 @@ def exportxls_gdv(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_supplier'}) 
 def exportxls_supplier(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Supplier.xls"'
@@ -143,6 +156,8 @@ def exportxls_supplier(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_reasonwin'}) 
 def exportxls_lydowin(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Lydowin.xls"'
@@ -160,6 +175,8 @@ def exportxls_lydowin(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_reasonout'}) 
 def exportxls_lydoout(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Lydoout.xls"'
@@ -177,6 +194,8 @@ def exportxls_lydoout(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_danhgiacode'}) 
 def exportxls_danhgiacode(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Danh gia code.xls"'
@@ -193,6 +212,8 @@ def exportxls_danhgiacode(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_all_g1code'}) 
 def exportxls_offer_all(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Offer.xls"'
@@ -240,6 +261,8 @@ def exportxls_offer_all(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_g1code'}) 
 def exportxls_offer(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Offer.xlsx"'
@@ -282,6 +305,8 @@ def exportxls_offer(request):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_g2code'}) 
 def exportxls_hdb(request,id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Contract.xlsx"'
@@ -330,6 +355,8 @@ def exportxls_hdb(request,id):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_all_g2code'}) 
 def exportxls_hdb_all(request,id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Gcode-Contract.xls"'
@@ -354,6 +381,8 @@ def exportxls_hdb_all(request,id):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_all_podetail'}) 
 def exportxls_poall(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Po.xls"'
@@ -381,6 +410,8 @@ def exportxls_poall(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_podetail'}) 
 def exportxls_po(request,po):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="POdetail.xlsx"'
@@ -429,6 +460,8 @@ def exportxls_po(request,po):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_warehouse'}) 
 def exportxls_kho(request,po):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Nhapkho.xlsx"'
@@ -482,6 +515,8 @@ def exportxls_kho(request,po):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_delivery'}) 
 def exportxls_giaohang(request,contract):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Delivery.xlsx"'
@@ -536,6 +571,8 @@ def exportxls_giaohang(request,contract):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_punishment'}) 
 def exportxls_phat(request,contract):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Punishment.xlsx"'
@@ -583,6 +620,8 @@ def exportxls_phat(request,contract):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_danhgiancc'}) 
 def exportxls_danhgiancc(request,contract):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="DanhgiaNCC.xlsx"'
@@ -638,6 +677,8 @@ def exportxls_danhgiancc(request,contract):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_accounting'}) 
 def exportxls_tienve(request,contract):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Accounting.xlsx"'
@@ -689,6 +730,8 @@ def exportxls_tienve(request,contract):
     return response
 
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_sales'}) 
 def exportxls_sales(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Sales.xls"'
@@ -706,6 +749,7 @@ def exportxls_sales(request):
     wb.save(response)
     return response
 
+@login_required(login_url='gcodedb:loginpage')
 def exportxls_profit(request,contract):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Profit.xlsx"'
@@ -780,6 +824,8 @@ def exportxls_profit(request,contract):
     writer.save()
     return response
 
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_scanorder'}) 
 def exportxls_scanorder(request,id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Scan Order.xlsx"'
