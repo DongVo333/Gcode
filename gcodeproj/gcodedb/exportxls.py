@@ -750,6 +750,7 @@ def exportxls_sales(request):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_profit'}) 
 def exportxls_profit(request,contract):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Profit.xlsx"'

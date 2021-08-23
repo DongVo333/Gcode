@@ -26,9 +26,9 @@
 <br>
 {{ phat_list|safe }}
 <br>
-{% if messages %}
+{% if messages_ %}
     <ul class="messagelist">
-        {% for message in messages %}
+        {% for message in messages_ %}
             <li>{{ message }}</li>
         {% endfor %}
     </ul>

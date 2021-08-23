@@ -1,7 +1,7 @@
 from django.urls import path,include
 from . import views,importxls,exportxls
 from django.contrib.auth import views as auth_views
-
+from django.conf.urls import handler404,handler500
 app_name = "gcodedb"
 
 urlpatterns = [
@@ -144,3 +144,6 @@ urlpatterns = [
     path('login/',views.loginpage, name="loginpage"),
     path('logout/',auth_views.LogoutView.as_view(next_page='/'),name='logout'),
 ]
+
+handler404 = 'gcodedb.views.error404'
+#handler500 = 'gcodedb.views.error500'

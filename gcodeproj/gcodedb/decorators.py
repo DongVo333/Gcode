@@ -1,6 +1,7 @@
 from django.contrib.auth import decorators
-from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.http import HttpResponse,HttpResponseRedirect
+from django.shortcuts import redirect, render
+from django.contrib import messages
 
 def unauthenticated_user(view_func):
     def wrapper_func(request, *args, **kwargs):
@@ -19,7 +20,7 @@ def allowed_users(allowed_group=[]):
             if group in allowed_group:
                 return view_func(request,*args,**kwargs)
             else:
-                return HttpResponse('You are not authorized to enter this page')
+                return HttpResponseRedirect(request.path_info)
         return wrapper_func
     return decorator
 def allowed_permission(allowed_roles={}):
@@ -31,6 +32,7 @@ def allowed_permission(allowed_roles={}):
             if allowed_roles.issubset(roles):
                 return view_func(request,*args,**kwargs)
             else:
-                return HttpResponse('You are not authorized to enter this page')
+                messages.error(request, 'You are not authorized to access this page.<br>Please contact the system administrator')
+                return redirect(request.META['HTTP_REFERER'])
         return wrapper_func
     return decorator

@@ -20,9 +20,9 @@
 {{ profit_list|safe }}
 <br>
 <br>
-{% if messages %}
+{% if messages_ %}
     <ul class="messagelist">
-        {% for message in messages %}
+        {% for message in messages_ %}
             {{ message }}
         {% endfor %}
     </ul>

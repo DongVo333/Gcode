@@ -133,13 +133,13 @@ def CreateOffer(request):
     return render(request, 'gcodedb/createoffer.html', context) """
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_inquiry'})
 def inquiry_list(request):
 	inquiry_list = Inquiry.objects.all()
 	return render(request, 'gcodedb/inquiry_list.html', {'inquiry_list':inquiry_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_inquiry'})
 def inquiry_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -160,20 +160,20 @@ def inquiry_form(request, id=None):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_inquiry'})
 def inquiry_delete(request,id):
     inquiry = Inquiry.objects.get(pk=id)
     inquiry.delete()
     return redirect('/inquiry/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_client'})
 def client_list(request):
 	client_list = Client.objects.all()
 	return render(request, 'gcodedb/client_list.html', {'client_list':client_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_client'})
 def client_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -194,14 +194,14 @@ def client_form(request, id=None):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_client'})
 def client_delete(request,id):
     client = Client.objects.get(pk=id)
     client.delete()
     return redirect('/client/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_gcode'})
 def gcode_list(request):
     msg = []
     msgresult = ""
@@ -239,7 +239,7 @@ def gcode_list(request):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})                        
+@allowed_permission(allowed_roles={'gcodedb.view_gcode'})                        
 def gcode_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -260,20 +260,20 @@ def gcode_form(request, id=None):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_gcode'})
 def gcode_delete(request,id):
     gcode = Gcode.objects.get(pk=id)
     gcode.delete()
     return redirect('/gcode/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_seller'})
 def gdv_list(request):
 	gdv_list = GDV.objects.all()
 	return render(request, 'gcodedb/gdv_list.html', {'gdv_list':gdv_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_seller'})
 def gdv_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -294,20 +294,20 @@ def gdv_form(request, id=None):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_seller'})
 def gdv_delete(request,id):
     gdv = GDV.objects.get(pk=id)
     gdv.delete()
     return redirect('/gdv/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_supplier'})
 def supplier_list(request):
 	supplier_list = Supplier.objects.all()
 	return render(request, 'gcodedb/supplier_list.html', {'supplier_list':supplier_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_supplier'})
 def supplier_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -328,20 +328,20 @@ def supplier_form(request, id=None):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_supplier'})
 def supplier_delete(request,id):
     supplier = Supplier.objects.get(pk=id)
     supplier.delete()
     return redirect('/supplier/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_contract'})
 def contractdetail_list(request):
 	contractdetail_list = Contract.objects.all()
 	return render(request, 'gcodedb/contractdetail_list.html', {'contractdetail_list':contractdetail_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_contract'})
 def contractdetail_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -362,20 +362,20 @@ def contractdetail_form(request, id=None):
 
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_contract'})
 def contractdetail_delete(request,id):
     contract = Contract.objects.get(pk=id)
     contract.delete()
     return redirect('/contractdetail/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_reasonwin'})
 def lydowin_list(request):
 	lydowin_list = Lydowin.objects.all()
 	return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_reasonwin'})
 def lydowin_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -395,20 +395,20 @@ def lydowin_form(request, id=None):
         return redirect('/lydowin/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_reasonwin'})
 def lydowin_delete(request,id):
     varlydowin = Lydowin.objects.get(pk=id)
     varlydowin.delete()
     return redirect('/lydowin/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_reasonout'})
 def lydoout_list(request):
 	lydoout_list = Lydoout.objects.all()
 	return render(request, 'gcodedb/lydoout_list.html', {'lydoout_list':lydoout_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_reasonout'})
 def lydoout_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -428,14 +428,14 @@ def lydoout_form(request, id=None):
         return redirect('/lydoout/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_reasonout'})
 def lydoout_delete(request,id):
     varlydoout = Lydoout.objects.get(pk=id)
     varlydoout.delete()
     return redirect('/lydoout/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_warehouse'})
 def kho_list(request):
     msg = []
     msgresult = ""
@@ -456,7 +456,7 @@ def kho_list(request):
     return render(request, 'gcodedb/kho_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_warehouse'})
 def kho_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -478,20 +478,20 @@ def kho_form(request, id=None):
         return redirect('/kho/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_warehouse'})
 def kho_delete(request,id):
     kho = Kho.objects.get(pk=id)
     kho.delete()
     return redirect('/kho/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_g1code'})
 def offer_list(request):
 	offer_list = G1code.objects.all()
 	return render(request, 'gcodedb/offer_list.html', {'offer_list':offer_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_g1code'})
 def offer_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -523,20 +523,20 @@ def offer_form(request, id=None):
         return redirect('/offer/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_g1code'})
 def offer_delete(request,id):
     g1codes = G1code.objects.filter(pk = id)
     g1codes.delete()
     return redirect('/offer/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_sales'})
 def sales_list(request):
 	sales_list = Sales.objects.all()
 	return render(request, 'gcodedb/sales_list.html', {'sales_list':sales_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_sales'})
 def sales_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -556,14 +556,14 @@ def sales_form(request, id=None):
         return redirect('/sales/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_sales'})
 def sales_delete(request,id):
     varsales = Sales.objects.get(pk=id)
     varsales.delete()
     return redirect('/sales/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})       
+@allowed_permission(allowed_roles={'gcodedb.view_g2code'})       
 def hdb_list(request):
     msg = []
     msgresult = ""
@@ -581,7 +581,7 @@ def hdb_list(request):
     return render(request, 'gcodedb/hdb_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_g2code'})
 def hdb_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -606,14 +606,14 @@ def hdb_form(request, id=None):
         return redirect('/hdb/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_g2code'})
 def hdb_delete(request,id):
     g2codes = G2code.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/hdb/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_podetail'})
 def po_list(request):
     msg = []
     msgresult = ""
@@ -632,7 +632,7 @@ def po_list(request):
     return render(request, 'gcodedb/po_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_podetail'})
 def po_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -656,14 +656,14 @@ def po_form(request, id=None):
         return redirect('/po/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_podetail'})
 def po_delete(request,id):
     g2codes = POdetail.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/po/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_delivery'})
 def giaohang_list(request):
     msg = []
     msgresult = ""
@@ -684,7 +684,7 @@ def giaohang_list(request):
     return render(request, 'gcodedb/giaohang_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_delivery'})
 def giaohang_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -708,14 +708,14 @@ def giaohang_form(request, id=None):
         return redirect('/giaohang/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_delivery'})
 def giaohang_delete(request,id):
     g2codes = Giaohang.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/giaohang/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_accounting'})
 def tienve_list(request):
     msg = []
     msgresult = ""
@@ -736,7 +736,7 @@ def tienve_list(request):
     return render(request, 'gcodedb/tienve_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_accounting'})
 def tienve_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -758,14 +758,14 @@ def tienve_form(request, id=None):
         return redirect('/tienve/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_accounting'})
 def tienve_delete(request,id):
     g2codes = Tienve.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/tienve/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_danhgiancc'})
 def danhgiancc_list(request):
     msg = []
     msgresult = ""
@@ -786,7 +786,7 @@ def danhgiancc_list(request):
     return render(request, 'gcodedb/danhgiancc_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_danhgiancc'})
 def danhgiancc_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -813,20 +813,20 @@ def danhgiancc_form(request, id=None):
         return redirect('/danhgiancc/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_danhgiancc'})
 def danhgiancc_delete(request,id):
     g2codes = DanhgiaNCC.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/danhgiancc/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_danhgiacode'})
 def danhgiacode_list(request):
 	danhgiacode_list = Danhgiacode.objects.all()
 	return render(request, 'gcodedb/danhgiacode_list.html', {'danhgiacode_list':danhgiacode_list})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_danhgiacode'})
 def danhgiacode_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -848,14 +848,14 @@ def danhgiacode_form(request, id=None):
         return redirect('/danhgiacode/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.delete_danhgiacode'})
 def danhgiacode_delete(request,id):
     g2codes = Danhgiacode.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/danhgiacode/')
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_punishment'})
 def phat_list(request):
     msg = []
     msgresult = ""
@@ -876,7 +876,7 @@ def phat_list(request):
     return render(request, 'gcodedb/phat_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_punishment'})
+@allowed_permission(allowed_roles={'gcodedb.view_punishment'})
 def phat_form(request, id=None):
     if request.method == "GET":
         if id == None:
@@ -907,6 +907,7 @@ def phat_delete(request,id):
     return redirect('/phat/')
 
 @login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.view_profit'})
 def profit_list(request):
     msg = []
     msgresult = ""
@@ -927,6 +928,7 @@ def profit_list(request):
     return render(request, 'gcodedb/profit_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.view_sellerreport'})
 def reportseller_list(request):
     df = pd.DataFrame(columns=['Gcode-Inquiry','Result','Giao dịch viên'])
     for item in G1code.objects.all():
@@ -964,3 +966,8 @@ def loginpage(request):
                 print(msg)
     context = {'message':message}
     return render(request,'gcodedb/login.html',context)
+
+def error404(request, exception):
+    return render(request, 'gcodedb/404.html')
+def error500(request):
+    return render(request, 'gcodedb/500.html')

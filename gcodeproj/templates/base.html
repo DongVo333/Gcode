@@ -138,6 +138,61 @@
             font-weight:bold;
         }
         body {font-family: Arial, Helvetica, sans-serif;margin-top: 0px; margin-left: 0px;}
+        .modal__overlay {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal__window {
+            max-width: 500px;
+            background: #ffffff;
+            border: 1px solid #ffffff;
+            font-size: 16px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal__titlebar {
+            height: 40px;
+            background: blue;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal__title {
+            margin-left: 15px;
+            font-weight: bold;
+            color:white;
+        }
+        .modal__img{
+            margin-left: 8px;
+            width: 10%;
+        }
+        .modal__close {
+        margin-right: 7px;
+        right: 24px;
+        top: 0;
+        color: #000;
+        font-size: 35px;
+        font-weight: bold;
+        }
+
+        .modal__close:hover,
+        .modal__close:focus {
+        color: red;
+        cursor: pointer;
+        }
+        .modal__content {
+            padding: 15px;
+            font-size: 0.9em;
+        }
     </style>
     {% block css %}{% endblock %}
     <title>{% block title %} {% endblock %} </title>
@@ -206,8 +261,17 @@
 <!--     <div class="footer">
         <p><a href="/">BitrixGT</a>| <a href="/">BitrixEP</a></p>
     </div> -->
-
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+            <script type="text/javascript">
+                document.addEventListener("DOMContentLoaded", () => ModalWindow.init());
+              </script>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 </body>
+
 <script>
     function myFunction() {
       var x = document.getElementById("myTopnav");
@@ -217,5 +281,48 @@
         x.className = "topnav";
       }
     }
+    const ModalWindow = {
+    init() {
+        document.body.addEventListener("click", e => {
+            if (e.target.classList.contains("modal__close")) {
+                this.closeModal(e.target);
+            }
+        });
+      
+      this.openModal();
+    },
+
+    getHtmlTemplate(modalOptions) {
+        return `
+            <div class="modal__overlay">
+                <div class="modal__window">
+                    <div class="modal__titlebar">
+                        <img class = "modal__img" src="{% static 'images/error_not_permit.png' %}">
+                        <span class="modal__title">${modalOptions.title}</span>
+                        <span class="modal__close" title="Close">&times;</span>
+                    </div>
+                    <div class="modal__content">
+                        ${modalOptions.content}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    openModal(modalOptions = {}) {
+        modalOptions = Object.assign({
+            title: 'No Permissions',
+            content: 'You are not authorized to access this page.<br>Please contact the system administrator'
+        }, modalOptions);
+
+        const modalTemplate = this.getHtmlTemplate(modalOptions);
+        document.body.insertAdjacentHTML("afterbegin", modalTemplate);
+    },
+
+    closeModal(closeButton) {
+        const modalOverlay = closeButton.parentElement.parentElement.parentElement;
+        document.body.removeChild(modalOverlay);
+    }
+};
 </script>
 </html>
