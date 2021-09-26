@@ -1,9 +1,33 @@
-{% extends "base.html" %}
-{% block title %}Not Found{% endblock %}
-{% block content %}
-<h3>404
-    Oops!
-    The page you are looking for was not found.
-    Perhaps you can find it in the lists below
-    </h3>
-{% endblock content %}
+<!DOCTYPE html>
+<html>
+<head>
+{% load static %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+table, th, td {
+  border-collapse: collapse;
+}
+
+table.center {
+  margin-left: auto; 
+  margin-right: auto;
+}
+</style>
+</head>
+<body>
+<table class="center">
+  <tr>
+    <td>
+        <h1>500</h1></h1>
+        <h3>
+            Oops!
+            The page you are looking for was not found.<br>
+            <a href="/"><b>Go back to Home</b></a>
+        </h3>
+    </td>
+    <td><img src="{% static 'images/404.png'%}"></td>
+  </tr>
+</table>
+
+</body>
+</html>

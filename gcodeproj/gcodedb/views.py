@@ -19,6 +19,7 @@ from fuzzywuzzy import fuzz,process
 from django.contrib.auth.decorators import login_required
 from .decorators import allowed_permission
 from  django.contrib.auth import authenticate,login
+from django.template import Context, loader
 
 """ class PostListView(ListView):
    queryset = Gcode.objects.all().order_by('-ma')
@@ -969,5 +970,9 @@ def loginpage(request):
 
 def error404(request, exception):
     return render(request, 'gcodedb/404.html')
+
+
+def error404(request,*args,**argv):
+    return render(request,"gcodedb/404.html")
 def error500(request):
-    return render(request, 'gcodedb/500.html')
+    return render(request,"gcodedb/500.html")
