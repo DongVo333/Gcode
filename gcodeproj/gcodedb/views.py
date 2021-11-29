@@ -6,7 +6,7 @@ from django.forms import ModelForm, formsets, inlineformset_factory,modelformset
 from django.views.generic import CreateView, ListView, UpdateView
 from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, POdetail, Phat, Sales,Supplier,Lydowin,Lydoout, Tienve
 from django.db import transaction,IntegrityError
-from .forms import DanhgiaNCCForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
+from .forms import DanhgiaNCCForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, MyForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
 from .filters import ClientFilter
 from django.db.models import Q
 from datetime import date
@@ -372,8 +372,9 @@ def contractdetail_delete(request,id):
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_reasonwin'})
 def lydowin_list(request):
-	lydowin_list = Lydowin.objects.all()
-	return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list})
+    lydowin_list = Lydowin.objects.all()
+    myform_ = MyForm()
+    return render(request, 'gcodedb/lydowin_list.html', {'lydowin_list':lydowin_list, 'myform':myform_})
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_reasonwin'})

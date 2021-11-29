@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block css %}
+
+{% endblock %}
 {% block content %}
 {% load static %}
 <table class="table table-borderless">
@@ -37,6 +40,8 @@
         {% endfor %}
     </tbody>
 </table>
+{{ myform.media }}
+{{ myform }}
 {% endblock content %}
 
 {% block extra_script %}

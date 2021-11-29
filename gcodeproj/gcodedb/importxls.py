@@ -1,4 +1,5 @@
 from datetime import date
+from .forms import MyForm
 from os import replace
 from re import split
 from numpy import NAN, NaN, empty, result_type
@@ -419,6 +420,7 @@ def importxls_danhgiacode(request):
 def importxls_offer(request):
     messages_=  []
     warnings = []
+    myform = MyForm()
     if request.method == 'POST':
         try:
             new_persons = request.FILES['myfile']
@@ -559,9 +561,9 @@ def importxls_offer(request):
                 message = format_html("Data Offer has been successfully import")
                 messages_.append(message)
             html = df.to_html(index=False,justify='center')
-            context = {'offer_list': html,'messages_':messages_,'warnings':warnings}
+            context = {'offer_list': html,'messages_':messages_,'warnings':warnings,'myform':myform}
             return render(request, 'gcodedb/offer_list.html', context)
-    context = {'messages_':messages_}
+    context = {'messages_':messages_, 'myform':myform}
     return render(request, 'gcodedb/offer_list.html', context)
 
 @login_required(login_url='gcodedb:loginpage')

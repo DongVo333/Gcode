@@ -4,6 +4,45 @@ from django.forms import widgets
 from django.forms.widgets import NumberInput, Textarea, Widget
 from .models import DanhgiaNCC, G1code, G2code, Gcode, Client, Giaohang, Inquiry,GDV, Kho, POdetail, Phat, Sales, Supplier,Contract,Lydowin,Lydoout, Tienve, Danhgiacode
 from django.conf import settings
+from django.contrib.admin.widgets import FilteredSelectMultiple
+
+""" class ProjectPersonnelForm(forms.Form):
+    class Media:
+        # Django also includes a few javascript files necessary
+        # for the operation of this form element. You need to
+        # include <script src="/admin/jsi18n"></script>
+        # in the template.
+        css = {
+            'all': ('admin/css/widgets.css',)
+        }
+
+    def __init__(self, *args, **kwargs):
+        pid = kwargs.pop('pid')
+
+        r = super(ProjectPersonnelForm, self).__init__(
+            *args, **kwargs)
+
+        p = G1code.objects.get(pk=pid)
+        qs = Lydowin.objects.filter(
+            pk__in=[u.pk for u in p.all_lydowin_not_in_g1code()]
+        ).order_by('lydowincode')
+
+        self.fields['personnel'] = \
+            forms.ModelMultipleChoiceField(
+                queryset=qs,
+                widget=FilteredSelectMultiple(
+                    'Personnel', is_stacked=False),
+                label='')
+
+        return r """
+
+class MyForm(forms.Form):
+    tags = forms.ModelMultipleChoiceField(queryset=Lydowin.objects.all(),
+                                        required=True,
+                                        widget=FilteredSelectMultiple("Lydowin",is_stacked=False))
+    class Media:
+        css = {'all':('/admin/css/widgets.css', 'admin/css/overrides.css'),}
+        js = ('/admin/jquery.js','/admin/jsi18n/')
 
 class InputDate(forms.DateInput):
     input_type = 'date'
