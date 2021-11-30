@@ -4,7 +4,7 @@ from numpy import NaN
 import xlwt
 from tablib import Dataset
 from xlwt.Workbook import Workbook
-from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, Lydowin, POdetail, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve
+from .models import Contract, Danhgiagcode, G1code, Nhaplieuban, GDV, Gcode,Inquiry,Client, Lydowin, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve,Nhaplieumua,Nhaplieunhapkhau
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -205,7 +205,7 @@ def exportxls_danhgiacode(request):
     columns = ['ID','Đánh giá code']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
-    for danhgia in Danhgiacode.objects.all():
+    for danhgia in Danhgiagcode.objects.all():
         row_num += 1
         ws.write(row_num, 0, danhgia.id, style_data_row)
         ws.write(row_num, 1, danhgia.danhgiacode, style_data_row)
@@ -264,6 +264,8 @@ def exportxls_offer_all(request):
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_g1code'}) 
 def exportxls_offer(request):
+    current_user = request.user
+    print (current_user.username)
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Offer.xlsx"'
     list_null = []
@@ -302,12 +304,22 @@ def exportxls_offer(request):
             worksheet.set_column(col,col, None, float_format)
         else:
             worksheet.set_column(col,col, None, text_format)
+        username = request.user.username
+    Unit_list=['Set','Pcs']
+    worksheet.data_validation(0,4,100,4, {'validate': 'list',
+                                 'source': Unit_list})
+    """ worksheet.data_validation(0,4,100,4, {'validate': 'integer',
+                                  'criteria': 'between',
+                                  'minimum': 1,
+                                  'maximum': 100,
+                                  'input_title': 'Enter an integer:',
+                                  'input_message': 'between 1 and 100'}) """
     writer.save()
     return response
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_g2code'}) 
-def exportxls_hdb(request,id):
+def exportxls_nlb(request,id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Contract.xlsx"'
     df = pd.DataFrame(columns=['STT','Inquiry','Gcode','Contract No.','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','Đơn giá chào',
@@ -357,7 +369,7 @@ def exportxls_hdb(request,id):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_all_g2code'}) 
-def exportxls_hdb_all(request,id):
+def exportxls_nlb_all(request,id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Gcode-Contract.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
@@ -366,12 +378,12 @@ def exportxls_hdb_all(request,id):
     columns = ['ID','Gcode-Contract', 'Contract No.','Đơn giá chào','PO No.','Status','Gcode-Inquiry','Ghi chú','Giao dịch viên','Ngày cập nhật']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
-    for g2code_ in G2code.objects.all():
+    for g2code_ in Nhaplieuban.objects.all():
         row_num += 1
         ws.write(row_num, 0, g2code_.id, style_data_row)
         ws.write(row_num, 1, "", style_data_row)
         ws.write(row_num, 2, "", style_data_row)
-        ws.write(row_num, 3, g2code_.dongiachaohdb, style_number_row)
+        ws.write(row_num, 3, g2code_.dongiachaonlb, style_number_row)
         ws.write(row_num, 4, "", style_data_row)
         ws.write(row_num, 5, "Chưa đặt", style_data_row)
         ws.write(row_num, 6, g2code_.g1code.g1code, style_data_row)
@@ -382,8 +394,8 @@ def exportxls_hdb_all(request,id):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.export_all_podetail'}) 
-def exportxls_poall(request):
+@allowed_permission(allowed_roles={'gcodedb.export_all_nlbdetail'}) 
+def exportxls_nlball(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Po.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
@@ -392,7 +404,7 @@ def exportxls_poall(request):
     columns = ['ID','Gcode-Contract', 'Mô tả','Ký hiệu mã','Đơn vị','Số lượng','Supplier','Xuất xứ','NSX','Đơn giá mua','Ghi chú','Giao dịch viên','Ngày cập nhật']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
-    for g2code_ in POdetail.objects.all():
+    for g2code_ in Nhaplieumua.objects.all():
         row_num += 1
         ws.write(row_num, 0, g2code_.id, style_data_row)
         ws.write(row_num, 1, g2code_.g2code.g2code, style_data_row)
@@ -411,13 +423,13 @@ def exportxls_poall(request):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.export_podetail'}) 
-def exportxls_po(request,po):
+@allowed_permission(allowed_roles={'gcodedb.export_nhaplieumua'}) 
+def exportxls_nlm(request,po):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="POdetail.xlsx"'
     df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','NSX','Xuất xứ',
     'Supplier','Đơn giá mua','Ghi Chú','Giao dịch viên'])
-    g2code_list = G2code.objects.filter(pono=po)
+    g2code_list = Nhaplieuban.objects.filter(pono=po)
     stt = 1
     for item in g2code_list:
         df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.contract.contractcode],'Gcode':[item.gcode],
@@ -462,14 +474,14 @@ def exportxls_po(request,po):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_warehouse'}) 
-def exportxls_kho(request,po):
+def exportxls_nlnk(request,po):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Nhapkho.xlsx"'
     df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
     'Đơn giá freight','Ngày hàng về kho','Ghi Chú','Giao dịch viên'])
-    podetail_list = POdetail.objects.filter(g2code__pono=po)
+    nlm_list = Nhaplieumua.objects.filter(g2code__nlbno=po)
     stt = 1
-    for item in podetail_list:
+    for item in nlm_list:
         df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.g2code.contract.contractcode],'Gcode':[item.gcode],
         'Mô tả':[item.motapo],'Ký mã hiệu':[item.kymahieupo],'Đơn vị':[item.unitpo],'Số lượng':[item.g2code.qtychuanhapkho]}))
         stt +=1
@@ -523,7 +535,7 @@ def exportxls_giaohang(request,contract):
     df = pd.DataFrame(columns=['STT','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
     'Ngày giao hàng','Ghi Chú','Giao dịch viên'])
 
-    g2code_list = Kho.objects.filter(g2code__contract__contractcode=contract)
+    g2code_list = Nhaplieunhapkhau.objects.filter(g2code__contract__contractcode=contract)
     stt = 1
     for item in g2code_list:
         df = df.append(pd.DataFrame({'STT':[stt],'Contract No.':[contract],'Gcode':[item.gcode],
@@ -578,7 +590,7 @@ def exportxls_phat(request,contract):
     response['Content-Disposition'] = 'attachment; filename="Punishment.xlsx"'
     df = pd.DataFrame(columns=['STT','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng',
     'Tổng phạt','Lý do phạt','Ghi Chú','Giao dịch viên'])
-    g2code_list = Giaohang.objects.filter(g2code__contract__contractcode=contract)
+    g2code_list = Nhaplieunhapkhau.objects.filter(g2code__contract__contractcode=contract)
     stt = 1
     for item in g2code_list:
         df = df.append(pd.DataFrame({'STT':[stt],'Contract No.':[contract],'Gcode':[item.gcode],
@@ -620,62 +632,6 @@ def exportxls_phat(request,contract):
     writer.save()
     return response
 
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.export_danhgiancc'}) 
-def exportxls_danhgiancc(request,contract):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="DanhgiaNCC.xlsx"'
-    df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị',
-    'Số lượng','NSX','Xuất xứ','Supplier','Đơn giá mua','Thành tiền mua','Ghi Chú','Giao dịch viên'])
-    for danhgia in Danhgiacode.objects.all():
-        df[danhgia.danhgiacode]=None
-    g2code_list = POdetail.objects.filter(g2code__contract__contractcode=contract)
-    stt = 1
-    for item in g2code_list:
-        df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[item.pono],'Contract No.':[contract],'Gcode':[item.gcode],
-        'Mô tả':[item.motapo],'Ký mã hiệu':[item.kymahieupo],'Đơn vị':[item.unitpo],'Số lượng':[item.qtypo],
-        'NSX':[item.nsxpo],'Xuất xứ':[item.xuatxupo],'Supplier':[item.supplier],'Đơn giá mua':[item.dongiamuapo],'Thành tiền mua':[item.thanhtienmuapo]}))
-        stt +=1
-    writer = pd.ExcelWriter(response, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Đánh giá NCC', startrow=1, header=False,index=False)
-    workbook  = writer.book
-    worksheet = writer.sheets['Đánh giá NCC']
-    #Format header 
-    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
-    'fg_color': '#4788F9','font_color': 'white','border': 1})
-    noedit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
-    'fg_color': '#FC7575','font_color': 'white','border': 1})
-    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
-    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
-    'num_format': '#,##0.00'})
-    danhgia_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
-    'fg_color': '#F9B747','font_color': 'black','border': 1})
-    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
-    'num_format': 'dd/mm/yyyy'})
-    list_header_noedit = ['PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị',
-    'Số lượng','NSX','Xuất xứ','Supplier','Đơn giá mua','Thành tiền mua']
-    list_index_fm_noedit = []
-    for item in list_header_noedit:
-        list_index_fm_noedit.append(df.columns.get_loc(item))
-    for col_num, value in enumerate(df.columns.values):
-        if col_num in list_index_fm_noedit:
-            worksheet.write(0, col_num, value, noedit_format)
-        elif col_num <= df.columns.get_loc('Giao dịch viên'):
-            worksheet.write(0, col_num, value, header_format)
-        else:
-           worksheet.write(0, col_num, value, danhgia_format) 
-    # Add some cell formats.
-    list_column_fm_float = ['Đơn giá mua','Thành tiền mua']
-    list_index_fm_float = []
-    for item in list_column_fm_float:
-        list_index_fm_float.append(df.columns.get_loc(item))
-    for col in range(0,len(df.columns)):
-        if col in list_index_fm_float:
-            worksheet.set_column(col,col, None, float_format)
-        else:
-            worksheet.set_column(col,col, None, text_format)
-    writer.save()
-    return response
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_accounting'}) 
@@ -684,12 +640,12 @@ def exportxls_tienve(request,contract):
     response['Content-Disposition'] = 'attachment; filename="Accounting.xlsx"'
     df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Client','Gcode','Mô tả','Ký mã hiệu','Đơn vị',
     'NSX','Xuất xứ','Supplier','Số lượng','Đơn giá tiền về','Thành tiền','Ghi Chú'])
-    g2code_list = G2code.objects.filter(contract__contractcode=contract)
+    g2code_list = Nhaplieuban.objects.filter(contract__contractcode=contract)
     stt = 1
     for item in g2code_list:
         df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[item.pono],'Contract No.':[contract],'Client':[item.contract.client.clientcode],
         'Gcode':[item.gcode],'Mô tả':[item.mota],'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],
-        'Số lượng':[item.qty],'Đơn giá tiền về':[item.dongiachaohdb],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],'Supplier':[item.supplier]}))
+        'Số lượng':[item.qty],'Đơn giá tiền về':[item.dongiachaonlb],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],'Supplier':[item.supplier]}))
         stt +=1
     df['Thành tiền']= df['Số lượng']*df['Đơn giá tiền về']
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
@@ -759,20 +715,20 @@ def exportxls_profit(request,contract):
     'Đơn giá mua offer','Đơn giá mua PO' ,'Đơn giá freight','Tổng phạt',
     'Lợi nhuận chưa đặt hàng','Lợi nhuận chưa về kho','Lợi nhuận chưa giao hàng','Lợi nhuận thực tế',
     'Lợi nhuận tổng','Tiền về thực tế','Tiền về dự kiến'])
-    g2code_list = G2code.objects.filter(contract__contractcode=contract)
+    g2code_list = Nhaplieuban.objects.filter(contract__contractcode=contract)
     stt = 1
     for item in g2code_list:
-        lncdh = item.qtychuadat*(item.dongiachaohdb-item.dongiamuainq)
-        lncvk = item.qtychuanhapkho*(item.dongiachaohdb-item.dongiamuapo)
-        lncgh = item.qtychuagiao*(item.dongiachaohdb-item.dongiamuapo-item.dongiafreight)
-        lntt = item.qtygiaohang*(item.dongiachaohdb-item.dongiamuapo-item.dongiafreight)-item.tongphat
+        lncdh = item.qtychuadat*(item.dongiachaonlb-item.dongiamuainq)
+        lncvk = item.qtychuanhapkho*(item.dongiachaonlb-item.dongiamuapo)
+        lncgh = item.qtychuagiao*(item.dongiachaonlb-item.dongiamuapo-item.dongiafreight)
+        lntt = item.qtygiaohang*(item.dongiachaonlb-item.dongiamuapo-item.dongiafreight)-item.tongphat
         lntong = lncdh+lncgh+lncvk+lntt
-        tvdk = item.qty*item.dongiachaohdb-item.tongphat-item.tongtienve
+        tvdk = item.qty*item.dongiachaonlb-item.tongphat-item.tongtienve
 
         df = df.append(pd.DataFrame({'STT':[stt],'Contract No.':[contract],'Gcode':[item.gcode],'Mô tả':[item.mota],
         'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],'Supplier':[item.supplier],
         'Số lượng bán':[item.qty],'Số lượng mua':[item.qtypo],'Số lượng nhập kho':[item.qtykho],
-        'Số lượng giao':[item.qtygiaohang],'Số lượng phạt':[item.qtyphat],'Đơn giá bán':[item.dongiachaohdb],
+        'Số lượng giao':[item.qtygiaohang],'Số lượng phạt':[item.qtyphat],'Đơn giá bán':[item.dongiachaonlb],
         'Đơn giá mua offer':[item.dongiamuainq],'Đơn giá mua PO':[item.dongiamuapo] ,'Đơn giá freight':[item.dongiafreight],
         'Tổng phạt':[item.tongphat],'Lợi nhuận chưa đặt hàng':[lncdh],'Lợi nhuận chưa về kho':[lncvk],
         'Lợi nhuận chưa giao hàng':[lncgh],'Lợi nhuận thực tế':[lntt],
@@ -805,6 +761,7 @@ def exportxls_profit(request,contract):
             worksheet.write(0, col_num, value, profit_format)
         else:
             worksheet.write(0, col_num, value, header_format)
+            
     # Add some cell formats.
     list_column_fm_float = ['Số lượng bán',
     'Số lượng mua','Số lượng nhập kho','Số lượng giao','Số lượng phạt','Đơn giá bán',

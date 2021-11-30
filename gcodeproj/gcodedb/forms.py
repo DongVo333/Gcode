@@ -2,7 +2,7 @@ from django import forms
 from django.db.models import fields
 from django.forms import widgets
 from django.forms.widgets import NumberInput, Textarea, Widget
-from .models import DanhgiaNCC, G1code, G2code, Gcode, Client, Giaohang, Inquiry,GDV, Kho, POdetail, Phat, Sales, Supplier,Contract,Lydowin,Lydoout, Tienve, Danhgiacode
+from .models import G1code, Nhaplieuban, Gcode, Client, Inquiry,GDV, Nhaplieunhapkhau, Nhaplieumua, Phat, Sales, Supplier,Contract,Lydowin,Lydoout, Tienve, Danhgiagcode
 from django.conf import settings
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
@@ -160,19 +160,17 @@ class ContractForm(forms.ModelForm):
             'contractnoclient',
             'datesign',
             'client',
-            'dealine1',
-            'dealine2', 
+            'sales',
             'sellcost',
             'status',
             'datedeliverylatest',
         ]
         labels = {
-            'contractcode':'Contract',
+            'contractcode':'Contract No.',
             'contractnoclient':'Contract No. (Client)',
             'datesign':'Ngày ký kết',
             'client':'Khách hàng',
-            'dealine1':'Deadline 1',
-            'dealine2':'Deadline 2', 
+            'sales': 'Sales', 
             'sellcost': 'Giá bán',
             'status':'Trạng thái',
             'datedeliverylatest': 'Ngày giao hàng cuối cùng',
@@ -180,8 +178,6 @@ class ContractForm(forms.ModelForm):
         widgets = {
             'datedeliverylatest':InputDate(),
             'datesign':InputDate(),
-            'dealine1':InputDate(),
-            'dealine2':InputDate(),
         }
 
 class LydowinForm(forms.ModelForm):
@@ -206,9 +202,9 @@ class LydooutForm(forms.ModelForm):
 			'detail': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
-class KhoForm(forms.ModelForm):
+class NlnkForm(forms.ModelForm):
     class Meta:
-        model = Kho
+        model = Nhaplieunhapkhau
         exclude = ['dateupdate',
         ]
         widgets = {
@@ -225,9 +221,9 @@ class SalesForm(forms.ModelForm):
             'fullname':'Tên đầy đủ',
         }
 
-class HDBForm(forms.ModelForm):
+class NlbForm(forms.ModelForm):
     class Meta:
-        model = G2code
+        model = Nhaplieuban
         exclude = [
             'dateupdate',
             'g2code',
@@ -235,9 +231,9 @@ class HDBForm(forms.ModelForm):
         widgets = {
             'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
-class POForm(forms.ModelForm):
+class NlmForm(forms.ModelForm):
     class Meta:
-        model = POdetail
+        model = Nhaplieumua
         exclude = [
             'dateupdate',
         ]
@@ -246,16 +242,6 @@ class POForm(forms.ModelForm):
             'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
-class GiaohangForm(forms.ModelForm):
-    class Meta:
-        model = Giaohang
-        exclude = [
-            'dateupdate',
-        ]
-        widgets = {
-            'ngaygiaohang':InputDate,
-            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
-        }
 
 class TienveForm(forms.ModelForm):
     class Meta:
@@ -265,26 +251,9 @@ class TienveForm(forms.ModelForm):
             'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
-class DanhgiaNCCForm(forms.ModelForm):
+class DanhgiagcodeForm(forms.ModelForm):
     class Meta:
-        model = DanhgiaNCC
-        exclude = [
-            'dateupdate',
-        ]
-        labels ={
-            'g2code':'Gcode-Contract',
-            'danhgiacode':'Đánh giá code',
-            'comment':'Comment',
-            'gdvdanhgia':'Giao dịch viên',
-        }
-        widgets = {
-            'comment':Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
-            'danhgiacode':forms.CheckboxSelectMultiple,
-        }
-
-class DanhgiacodeForm(forms.ModelForm):
-    class Meta:
-        model = Danhgiacode
+        model = Danhgiagcode
         fields = '__all__'
 
 class PhatForm(forms.ModelForm):

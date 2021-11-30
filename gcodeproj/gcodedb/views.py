@@ -4,9 +4,9 @@ from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import ModelForm, formsets, inlineformset_factory,modelformset_factory,formset_factory
 from django.views.generic import CreateView, ListView, UpdateView
-from .models import Contract, DanhgiaNCC, Danhgiacode, G1code, G2code, GDV, Gcode, Giaohang,Inquiry,Client, Kho, POdetail, Phat, Sales,Supplier,Lydowin,Lydoout, Tienve
+from .models import Contract, Danhgiagcode, G1code, Nhaplieuban, GDV, Gcode, Inquiry,Client, Nhaplieunhapkhau, Nhaplieumua, Phat, Sales,Supplier,Lydowin,Lydoout, Tienve
 from django.db import transaction,IntegrityError
-from .forms import DanhgiaNCCForm, DanhgiacodeForm, GcodeForm, GiaohangForm, HDBForm, KhoForm, MyForm, OfferForm, POForm, PhatForm, SalesForm, SearchQueryForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
+from .forms import DanhgiagcodeForm, GcodeForm, NlbForm, NlnkForm, MyForm, OfferForm, NlmForm, PhatForm, SalesForm, ClientForm, InquiryForm,GDVForm,SupplierForm,ContractForm,LydooutForm,LydowinForm, TienveForm
 from .filters import ClientFilter
 from django.db.models import Q
 from datetime import date
@@ -438,53 +438,53 @@ def lydoout_delete(request,id):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_warehouse'})
-def kho_list(request):
+def nlnk_list(request):
     msg = []
     msgresult = ""
     if request.method == "POST":
-        po_set = set()
-        podetail_list = POdetail.objects.filter(g2code__pono__icontains=request.POST.get("ponosearch")).values_list('g2code', flat=True)
+        nlm_set = set()
+        podetail_list = Nhaplieumua.objects.filter(g2code__pono__icontains=request.POST.get("ponosearch")).values_list('g2code', flat=True)
         for g2code in podetail_list:
-            po_set.add(G2code.objects.get(pk=g2code).pono)
-        if len(po_set)> 0: 
-            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(po_set))
-            for item in po_set:
-                g2code_list = POdetail.objects.filter(g2code__pono=item)
+            nlm_set.add(Nhaplieuban.objects.get(pk=g2code).pono)
+        if len(nlm_set)> 0: 
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(nlm_set))
+            for item in nlm_set:
+                g2code_list = Nhaplieumua.objects.filter(g2code__pono=item)
                 message = format_html("PO No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item,g2code_list.count(),reverse('gcodedb:exportxls_kho', args=[item]))
+                item,g2code_list.count(),reverse('gcodedb:exportxls_nlnk', args=[item]))
                 msg.append(message)
         else: 
             msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/kho_list.html', {'msg':msg,'msgresult':msgresult})
+    return render(request, 'gcodedb/nlnk_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_warehouse'})
-def kho_form(request, id=None):
+def nlnk_form(request, id=None):
     if request.method == "GET":
         if id == None:
-            form = KhoForm()
+            form = NlnkForm()
         else:
-            kho = Kho.objects.get(pk=id)
-            form = KhoForm(instance=kho)
-        return render(request, "gcodedb/kho_form.html", {'form': form})
+            nlnk = Nhaplieunhapkhau.objects.get(pk=id)
+            form = NlnkForm(instance=nlnk)
+        return render(request, "gcodedb/nlnk_form.html", {'form': form})
     else:
         if id == None:
-            form = KhoForm(request.POST)
+            form = NlnkForm(request.POST)
         else:
-            kho = Kho.objects.get(pk=id)
-            form = KhoForm(request.POST,instance= kho)
+            nlnk = Nhaplieunhapkhau.objects.get(pk=id)
+            form = NlnkForm(request.POST,instance= nlnk)
         if form.is_valid():
-            kho_ = form.save(commit=False)
-            kho_.dateupdate = date.today()
-            kho_.save()
-        return redirect('/kho/')
+            nlnk_ = form.save(commit=False)
+            nlnk_.dateupdate = date.today()
+            nlnk_.save()
+        return redirect('/nlnk/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.delete_warehouse'})
-def kho_delete(request,id):
-    kho = Kho.objects.get(pk=id)
-    kho.delete()
-    return redirect('/kho/')
+def nlnk_delete(request,id):
+    nlnk = Nhaplieunhapkhau.objects.get(pk=id)
+    nlnk.delete()
+    return redirect('/nlnk/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_g1code'})
@@ -566,7 +566,7 @@ def sales_delete(request,id):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_g2code'})       
-def hdb_list(request):
+def nlb_list(request):
     msg = []
     msgresult = ""
     if request.method == "POST":
@@ -576,28 +576,28 @@ def hdb_list(request):
             for item in inquiry_list:
                 g1code_list = G1code.objects.filter(inquiry=item, resultinq ="Win")
                 message = format_html("Inquiry <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item.inquirycode,g1code_list.count(),reverse('gcodedb:exportxls_hdb', args=[item.id]))
+                item.inquirycode,g1code_list.count(),reverse('gcodedb:exportxl_nlb', args=[item.id]))
                 msg.append(message)
         else: 
             msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/hdb_list.html', {'msg':msg,'msgresult':msgresult})
+    return render(request, 'gcodedb/nlb_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_g2code'})
-def hdb_form(request, id=None):
+def nlb_form(request, id=None):
     if request.method == "GET":
         if id == None:
-            form = HDBForm()
+            form = NlbForm()
         else:
-            g2codes = G2code.objects.get(pk = id)
-            form = HDBForm(instance=g2codes)
-        return render(request, "gcodedb/hdb_form.html", {'form': form})
+            g2codes = Nhaplieuban.objects.get(pk = id)
+            form = NlbForm(instance=g2codes)
+        return render(request, "gcodedb/nlb_form.html", {'form': form})
     else:
         if id == None:
-            form = HDBForm(request.POST)
+            form = NlbForm(request.POST)
         else:
-            g2codes = G2code.objects.get(pk = id)
-            form = HDBForm(request.POST,instance= g2codes)
+            g2codes = Nhaplieuban.objects.get(pk = id)
+            form = NlbForm(request.POST,instance= g2codes)
         if form.is_valid():
             g2codes = form.save(commit=False)
             g2codes.dateupdate = date.today()
@@ -605,50 +605,50 @@ def hdb_form(request, id=None):
             g2codes.save()
         else:
             print(form.add_error)
-        return redirect('/hdb/')
+        return redirect('/nlb/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.delete_g2code'})
-def hdb_delete(request,id):
-    g2codes = G2code.objects.filter(pk = id)
+def nlb_delete(request,id):
+    g2codes = Nhaplieuban.objects.filter(pk = id)
     g2codes.delete()
-    return redirect('/hdb/')
+    return redirect('/nlb/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_podetail'})
-def po_list(request):
+def nlm_list(request):
     msg = []
     msgresult = ""
     if request.method == "POST":
-        g2code_list = G2code.objects.filter(pono__icontains=request.POST.get("ponosearch")).values_list('pono', flat=True)
-        po_set =set(g2code_list)
-        if len(po_set)> 0: 
-            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(po_set))
-            for item in po_set:
-                g2code_list = G2code.objects.filter(pono=item)
+        g2code_list = Nhaplieuban.objects.filter(pono__icontains=request.POST.get("ponosearch")).values_list('pono', flat=True)
+        nlm_set =set(g2code_list)
+        if len(nlm_set)> 0: 
+            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(nlm_set))
+            for item in nlm_set:
+                g2code_list = Nhaplieuban.objects.filter(pono=item)
                 message = format_html("PO No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
                 item,g2code_list.count(),reverse('gcodedb:exportxls_po',args=[item,]))
                 msg.append(message)
         else: 
             msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/po_list.html', {'msg':msg,'msgresult':msgresult})
+    return render(request, 'gcodedb/nlm_list.html', {'msg':msg,'msgresult':msgresult})
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.view_podetail'})
-def po_form(request, id=None):
+@allowed_permission(allowed_roles={'gcodedb.view_nlm'})
+def nlm_form(request, id=None):
     if request.method == "GET":
         if id == None:
-            form = POForm()
+            form = NlmForm()
         else:
-            g2codes = POdetail.objects.get(pk = id)
-            form = POForm(instance=g2codes)
-        return render(request, "gcodedb/po_form.html", {'form': form})
+            g2codes = Nhaplieumua.objects.get(pk = id)
+            form = NlmForm(instance=g2codes)
+        return render(request, "gcodedb/nlm_form.html", {'form': form})
     else:
         if id == None:
-            form = POForm(request.POST)
+            form = NlmForm(request.POST)
         else:
-            g2codes = POdetail.objects.get(pk = id)
-            form = POForm(request.POST,instance= g2codes)
+            g2codes = Nhaplieumua.objects.get(pk = id)
+            form = NlmForm(request.POST,instance= g2codes)
         if form.is_valid():
             g2codes = form.save(commit=False)
             g2codes.dateupdate = date.today()
@@ -659,62 +659,10 @@ def po_form(request, id=None):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.delete_podetail'})
-def po_delete(request,id):
-    g2codes = POdetail.objects.filter(pk = id)
+def nlm_delete(request,id):
+    g2codes = Nhaplieumua.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/po/')
-
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.view_delivery'})
-def giaohang_list(request):
-    msg = []
-    msgresult = ""
-    if request.method == "POST":
-        contract_set = set()
-        contract_list = Kho.objects.filter(g2code__contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
-        for g2code in contract_list:
-            contract_set.add(G2code.objects.get(pk=g2code).contract.contractcode)
-        if len(contract_set)> 0: 
-            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
-            for item in contract_set:
-                g2code_list = Kho.objects.filter(g2code__contract__contractcode=item)
-                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item,g2code_list.count(),reverse('gcodedb:exportxls_giaohang', args=[item]))
-                msg.append(message)
-        else: 
-            msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/giaohang_list.html', {'msg':msg,'msgresult':msgresult})
-
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.view_delivery'})
-def giaohang_form(request, id=None):
-    if request.method == "GET":
-        if id == None:
-            form = GiaohangForm()
-        else:
-            g2codes = Giaohang.objects.get(pk = id)
-            form = GiaohangForm(instance=g2codes)
-        return render(request, "gcodedb/giaohang_form.html", {'form': form})
-    else:
-        if id == None:
-            form = GiaohangForm(request.POST)
-        else:
-            g2codes = Giaohang.objects.get(pk = id)
-            form = GiaohangForm(request.POST,instance= g2codes)
-        if form.is_valid():
-            g2codes = form.save(commit=False)
-            g2codes.dateupdate = date.today()
-            g2codes.save()
-        else:
-            print(form.add_error)
-        return redirect('/giaohang/')
-
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.view_delivery'})
-def giaohang_delete(request,id):
-    g2codes = Giaohang.objects.filter(pk = id)
-    g2codes.delete()
-    return redirect('/giaohang/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_accounting'})
@@ -723,13 +671,13 @@ def tienve_list(request):
     msgresult = ""
     if request.method == "POST":
         contract_set = set()
-        contract_list = G2code.objects.filter(contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
+        contract_list = Nhaplieuban.objects.filter(contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
         for g2code in contract_list:
-            contract_set.add(G2code.objects.get(g2code=g2code).contract.contractcode)
+            contract_set.add(Nhaplieuban.objects.get(g2code=g2code).contract.contractcode)
         if len(contract_set)> 0: 
             msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
             for item in contract_set:
-                g2code_list = G2code.objects.filter(contract__contractcode=item)
+                g2code_list = Nhaplieuban.objects.filter(contract__contractcode=item)
                 message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
                 item,g2code_list.count(),reverse('gcodedb:exportxls_tienve', args=[item]))
                 msg.append(message)
@@ -766,65 +714,12 @@ def tienve_delete(request,id):
     g2codes.delete()
     return redirect('/tienve/')
 
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.view_danhgiancc'})
-def danhgiancc_list(request):
-    msg = []
-    msgresult = ""
-    if request.method == "POST":
-        contract_set = set()
-        contract_list = POdetail.objects.filter(g2code__contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
-        for g2code in contract_list:
-            contract_set.add(G2code.objects.get(pk=g2code).contract.contractcode)
-        if len(contract_set)> 0: 
-            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
-            for item in contract_set:
-                g2code_list = POdetail.objects.filter(g2code__contract__contractcode=item)
-                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item,g2code_list.count(),reverse('gcodedb:exportxls_danhgiancc', args=[item]))
-                msg.append(message)
-        else: 
-            msgresult = format_html("No results could be found for your search query")
-    return render(request, 'gcodedb/danhgiancc_list.html', {'msg':msg,'msgresult':msgresult})
 
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.view_danhgiancc'})
-def danhgiancc_form(request, id=None):
-    if request.method == "GET":
-        if id == None:
-            form = DanhgiaNCCForm()
-        else:
-            g2codes = DanhgiaNCC.objects.get(pk = id)
-            form = DanhgiaNCCForm(instance=g2codes)
-        return render(request, "gcodedb/danhgiancc_form.html", {'form': form})
-    else:
-        if id == None:
-            form = DanhgiaNCCForm(request.POST)
-        else:
-            g2codes = DanhgiaNCC.objects.get(pk = id)
-            form = DanhgiaNCCForm(request.POST,instance= g2codes)
-        if form.is_valid():
-            g2codes = form.save(commit=False)
-            g2codes.dateupdate = date.today()
-            g2codes.save()
-            danhgiacodes = form.cleaned_data.get('danhgiacode')
-            for item in danhgiacodes:
-                g2codes.danhgiacode.add(item)
-        else:
-            print(form.add_error)
-        return redirect('/danhgiancc/')
-
-@login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.delete_danhgiancc'})
-def danhgiancc_delete(request,id):
-    g2codes = DanhgiaNCC.objects.filter(pk = id)
-    g2codes.delete()
-    return redirect('/danhgiancc/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_danhgiacode'})
 def danhgiacode_list(request):
-	danhgiacode_list = Danhgiacode.objects.all()
+	danhgiacode_list = Danhgiagcode.objects.all()
 	return render(request, 'gcodedb/danhgiacode_list.html', {'danhgiacode_list':danhgiacode_list})
 
 @login_required(login_url='gcodedb:loginpage')
@@ -832,17 +727,17 @@ def danhgiacode_list(request):
 def danhgiacode_form(request, id=None):
     if request.method == "GET":
         if id == None:
-            form = DanhgiacodeForm()
+            form = DanhgiagcodeForm()
         else:
-            g2codes = Danhgiacode.objects.get(pk = id)
-            form = DanhgiacodeForm(instance=g2codes)
+            g2codes = Danhgiagcode.objects.get(pk = id)
+            form = DanhgiagcodeForm(instance=g2codes)
         return render(request, "gcodedb/danhgiacode_form.html", {'form': form})
     else:
         if id == None:
-            form = DanhgiacodeForm(request.POST)
+            form = DanhgiagcodeForm(request.POST)
         else:
-            g2codes = Danhgiacode.objects.get(pk = id)
-            form = DanhgiacodeForm(request.POST,instance= g2codes)
+            g2codes = Danhgiagcode.objects.get(pk = id)
+            form = DanhgiagcodeForm(request.POST,instance= g2codes)
         if form.is_valid():
             form.save()
         else:
@@ -852,7 +747,7 @@ def danhgiacode_form(request, id=None):
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.delete_danhgiacode'})
 def danhgiacode_delete(request,id):
-    g2codes = Danhgiacode.objects.filter(pk = id)
+    g2codes = Danhgiagcode.objects.filter(pk = id)
     g2codes.delete()
     return redirect('/danhgiacode/')
 
@@ -863,13 +758,13 @@ def phat_list(request):
     msgresult = ""
     if request.method == "POST":
         contract_set = set()
-        contract_list = Giaohang.objects.filter(g2code__contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
+        contract_list = Nhaplieunhapkhau.objects.filter(g2code__contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
         for g2code in contract_list:
-            contract_set.add(G2code.objects.get(pk=g2code).contract.contractcode)
+            contract_set.add(Nhaplieuban.objects.get(pk=g2code).contract.contractcode)
         if len(contract_set)> 0: 
             msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
             for item in contract_set:
-                g2code_list = Giaohang.objects.filter(g2code__contract__contractcode=item)
+                g2code_list = Nhaplieunhapkhau.objects.filter(g2code__contract__contractcode=item)
                 message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
                 item,g2code_list.count(),reverse('gcodedb:exportxls_phat', args=[item]))
                 msg.append(message)
@@ -915,13 +810,13 @@ def profit_list(request):
     msgresult = ""
     if request.method == "POST":
         contract_set = set()
-        contract_list = G2code.objects.filter(contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('contract', flat=True)
+        contract_list = Nhaplieuban.objects.filter(contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('contract', flat=True)
         for contract in contract_list:
             contract_set.add(Contract.objects.get(pk=contract).contractcode)
         if len(contract_set)> 0: 
             msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
             for item in contract_set:
-                g2code_list = G2code.objects.filter(contract__contractcode=item)
+                g2code_list = Nhaplieuban.objects.filter(contract__contractcode=item)
                 message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to view detail</a>",
                 item,g2code_list.count(),reverse('gcodedb:profit_show', args=[item]))
                 msg.append(message)
