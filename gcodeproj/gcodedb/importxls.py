@@ -554,60 +554,63 @@ def importxls_nlb(request):
     if request.method == 'POST':
         try:
             new_persons = request.FILES['myfile']
-            df = pd.read_excel(new_persons, sheet_name='Contract')
+            df = pd.read_excel(new_persons, sheet_name='Nhập liệu bán')
         except Exception as e: 
             message = format_html("Import File Error: {}",e)
             messages_.append(message)
         else:
-            list_column = ['STT','Inquiry','Gcode','Contract No.','Số lượng','Đơn giá chào',
-            'PO No.','Ghi Chú','Giao dịch viên']
-            list_column_required = ['STT','Inquiry','Gcode','Contract No.','Số lượng','Đơn giá chào',
-            'PO No.','Giao dịch viên']
-            list_column_float = ['Số lượng','Đơn giá chào']
-            list_column_date = []
+            list_column = ['Stt','Gcode','Contract No.','Khách hàng','Sales manager',
+            'Ngày ký Contract','Deadline giao hàng cho khách hàng','Description','MNF','Unit','Quantity bán',
+            'Unit pirce (VND)','Ext Price (VND)']
+            list_column_required = ['Stt','Gcode','Contract No.',
+            'Deadline giao hàng cho khách hàng','MNF','Unit','Quantity bán',
+            'Unit pirce (VND)']            
+            list_column_float = ['Quantity bán','Unit pirce (VND)']
+            list_column_date = ['Deadline giao hàng cho khách hàng']
             messages_.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
             if len(messages_) <=0:
                 df_obj = df.select_dtypes(['object'])
                 df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
                 duplicateRowsDF = df[df.duplicated(subset=['Gcode','Contract No.'],keep=False)]
                 if duplicateRowsDF.shape[0]:
-                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'STT'].tolist())
+                    message = format_html("Data Import is duplicate at <b>index STT {}</b>",df.loc[duplicateRowsDF.index.to_list(),'Stt'].tolist())
                     messages_.append(message)
                 else:
                     for index,row in df.iterrows():
-                        if Nhaplieuban.objects.filter(g1code__gcode__ma__icontains=row['Gcode'],contract__contractcode__icontains=row['Contract No.']).count()>0:
-                            message = format_html("Gcode-Contract '{}-{}' is existed at <b>index STT {}</b>",row['Gcode'],row['Contract No.'],row['STT'])
+                        if Gcode.objects.filter(gcode__icontains=row['Gcode']).count()>0:
+                            message = format_html("Gcode '{}' doesn't existed at <b>index STT {}</b>,you shall import Gcode before importing again"
+                            " at link: <a href='{}'>Create Gcode</a>",row['Gcode'],row['STT'],reverse('gcodedb:gcode_list'))
                             messages_.append(message)
                         if Contract.objects.filter(contractcode=row['Contract No.']).count()<=0:
                             message = format_html("Contract '{}' doesn't exist at <b>index STT {}</b>, you shall import Contract before importing again"
-                            " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['STT'],reverse('gcodedb:contractdetail_list'))
-                            messages_.append(message)
-                        if G1code.objects.filter(gcode__ma=row['Gcode'],inquiry__inquirycode=row['Inquiry']).count()<=0:
-                            message = format_html("Offer '{}-{}' doesn't exist at <b>index STT {}</b>, you shall import Gcode before importing again"
-                            " at link: <a href='{}'>Create Offer</a>",row['Gcode'],row['Inquiry'],row['STT'],reverse('gcodedb:offer_list'))
-                            messages_.append(message)
-                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
-                            message = format_html("Seller '{}' doesn't exist at <b>index STT {}</b>, you shall import Seller before importing again"
-                            " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['STT'],reverse('gcodedb:gdv_list'))
+                            " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['STT'],reverse('gcodedb:contract_list'))
                             messages_.append(message)
             if len(messages_) <=0:
                 df[list_column_float]= df[list_column_float].astype('float64')
-                df['Thành tiền chào'] = df['Số lượng']*df['Đơn giá chào']
-                for i in range(0,df.shape[0]):
-                    df.loc[i,'Gcode-Contract'] = str(df.loc[i,'Gcode']) + '-' + df.loc[i,'Contract No.'] 
-                for r in range(0, df.shape[0]):
-                    g2code = Nhaplieuban(
-                        g2code=df.loc[r,'Gcode-Contract'],
-                        contract = Contract.objects.get(contractcode = df.loc[r,'Contract No.']),
-                        dongiachaonlb = df.loc[r,'Đơn giá chào'],
-                        pono  = df.loc[r,'PO No.'],
-                        status = "Contract",
-                        g1code = G1code.objects.get(gcode__ma=df.loc[r,'Gcode'],inquiry__inquirycode=df.loc[r,'Inquiry']),
-                        ghichu = str(df.loc[r,'Ghi Chú']),
-                        gdvnlb = GDV.objects.get(gdvcode = df.loc[r,'Giao dịch viên']),
-                        dateupdate = date.today(),
-                        )
-                    g2code.save()  
+                df['Ext Price (VND)'] = df['Quantity bán']*df['Unit pirce (VND)']
+                for r in range(0, df.shape[0]): 
+                    if Nhaplieuban.objects.filter(gcodeban__icontains=df.loc[r,'Gcode'],contractno=df.loc[r,'Contract No.']).count()>0:
+                        g2code = Nhaplieuban.objects.get(gcodeban__icontains=df.loc[r,'Gcode'],contractno=df.loc[r,'Contract No.'])
+                        g2code.dongiachaohdb = df.loc[r,'Unit pirce (VND)'],
+                        g2code.deadlinegh = df.loc[r,'Deadline giao hàng cho khách hàng'],
+                        g2code.MNFban = df.loc[r,'MNF'],
+                        g2code.qtyban = df.loc[r,'Quantity bán'],
+                        g2code.unitban = df.loc[r,'Unit'],
+                        g2code.gdvhdb = GDV.objects.get(gdvcode = request.user.username),
+                        g2code.dateupdate = date.today(),
+                    else:
+                        g2code = Nhaplieuban(
+                            gcodeban= Gcode.objects.get(gcode = df.loc[r,'Gcode']),
+                            contractno = Contract.objects.get(contractcode = df.loc[r,'Contract No.']),
+                            dongiachaohdb = df.loc[r,'Đơn giá chào'],
+                            deadlinegh = df.loc[r,'Đơn giá chào'],
+                            MNFban = df.loc[r,'Đơn giá chào'],
+                            qtyban = df.loc[r,'Đơn giá chào'],
+                            unitban = df.loc[r,'Đơn giá chào'],
+                            gdvhdb = GDV.objects.get(gdvcode = request.user.username),
+                            dateupdate = date.today(),
+                            )
+                        g2code.save()  
                 message = format_html("Data Contract has been successfully import")
                 messages_.append(message)
             html = df.to_html(index=False,justify='center')

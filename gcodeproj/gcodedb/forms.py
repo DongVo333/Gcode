@@ -52,14 +52,15 @@ class GcodeForm(forms.ModelForm):
         model=Gcode
         fields="__all__"
         labels = {
-            'ma':'Gcode',
-            'mota':'Mô tả',
+            'gcode':'Gcode',
+            'descriptionban':'Mô tả',
+            'PNban':'Part Number',
             'markupdinhmuc':'Markup định mức',
             'ngaywin':'Ngày Win gần nhất',
             'ngayout':'Ngày Out gần nhất',
         }
         widgets = {
-            'mota':forms.Textarea(attrs={'cols':30,'rows':1, 'id':'autosize'}),
+            'descriptionban':forms.Textarea(attrs={'cols':30,'rows':1, 'id':'autosize'}),
             'ngaywin':InputDate(),
             'ngayout':InputDate(),
         }
@@ -205,10 +206,34 @@ class LydooutForm(forms.ModelForm):
 class NlnkForm(forms.ModelForm):
     class Meta:
         model = Nhaplieunhapkhau
-        exclude = ['dateupdate',
+        fields = [
+            'g2code',
+            'nlhrkksupplier',
+            'ntthcmtkvam',
+            'qtykho',
+            'ttkh',
+            'dgnk',
+            'nghttckh',
+            'qtygh',
+            'bcgh',
+            'ghichu',
         ]
+        labels = {
+            'g2code':'ID item Gcode-Contract',
+            'nlhrkksupplier':'Ngày lấy hàng ra khỏi kho Supplier',
+            'ntthcmtkvam':'Ngày thực tế hàng có mặt tại kho VAM',
+            'qtykho':'Quantity nhập kho',
+            'ttkh':'Tình trạng kiểm hàng',
+            'dgnk':'Đơn giá nhập kho',
+            'nghttckh':'Ngày giao hàng thực tế cho KH',
+            'qtygh':'Quantity giao hàng',
+            'bcgh':'Báo cáo giao hàng',
+            'ghichu':'Ghi chú cho giao hàng',
+        }
         widgets = {
-            'ngaynhapkho':InputDate(),
+            'nghttckh':InputDate(),
+            'nlhrkksupplier':InputDate(),
+            'ntthcmtkvam':InputDate(),
             'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
         }
 
@@ -224,22 +249,117 @@ class SalesForm(forms.ModelForm):
 class NlbForm(forms.ModelForm):
     class Meta:
         model = Nhaplieuban
-        exclude = [
-            'dateupdate',
-            'g2code',
+        fields = [
+            'gcodeban',
+            'contractno',
+            'dongiachaohdb',
+            'status',
+            'deadlinegh',
+            'MNFban',
+            'qtyban',
+            'unitban',
         ]
+        labels = {
+            'gcodeban':'ID Gcode',
+            'contractno':'Contract No.',
+            'dongiachaohdb':'Unit Price (VND)',
+            'status':'Status',
+            'deadlinegh':'Deadline giao hàng cho khách hàng',
+            'MNFban':'MNF',
+            'qtyban':'Quantity bán',
+            'unitban': 'Unit',
+        }
+
         widgets = {
-            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'deadlinegh':InputDate(),
         }
 class NlmForm(forms.ModelForm):
     class Meta:
         model = Nhaplieumua
-        exclude = [
-            'dateupdate',
+        fields = [
+            'g2code',
+            'pono',
+            'supplier',
+            'datesignpo',
+            'deliveryterm',
+            'qhxk',
+            'deadlinegatvam',
+            'pamhvamts',
+            'nttd1',
+            'stttd1',
+            'nttd2',
+            'stttd2',
+            'nttdn',
+            'stttdn',
+            'descriptionmua',
+            'MNFmua',
+            'origin',
+            'PNmua',
+            'unitmua',
+            'qtymua',
+            'currency',
+            'unitprice',
+            'thueVAT',
+            'certificate',
+            'danhgiagcode',
+            'reasondelay',
+            'ctrrkt',
+            'vdkk',
+            'ykcpal',
+            'ykcsales',
+            'ttgqkk',
+            'datesignpoplan',
+            'budget',
         ]
+        labels = {
+            'g2code':'ID Item Gcode-Contract',
+            'pono':'PO No.',
+            'supplier':'Supplier',
+            'datesignpo':'Ngày ký PO',
+            'deliveryterm':'Delivery term',
+            'qhxk':'Quốc gia xuất khẩu',
+            'deadlinegatvam':'Deadline hàng có mặt tại kho Vam',
+            'pamhvamts':'PAMH (Vam / TS)',
+            'nttd1':'Ngày thanh toán đợt 1',
+            'stttd1':'Số tiền thanh toán đợt 1 (currency bao gồm VAT / GST)',
+            'nttd2':'Ngày thanh toán đợt 2',
+            'stttd2':'Số tiền thanh toán đợt 2 (currency bao gồm VAT / GST)',
+            'nttdn':'Ngày thanh toán đợt n',
+            'stttdn':'Số tiền thanh toán đợt n (currency bao gồm VAT / GST)',
+            'descriptionmua':'Description',
+            'MNFmua':'MNF',
+            'origin':'Origin',
+            'PNmua':'Part Number',
+            'unitmua':'Unit',
+            'qtymua':'Quantity',
+            'currency':'Currency',
+            'dongiaban':'Unit pirce (currency)',
+            'thueVAT':'Thuế VAT / GST (currency)',
+            'certificate':'Certificate',
+            'danhgiagcode':'Đánh giá Gcode',
+            'reasondelay':'Lý do hàng trễ so với deadline',
+            'ctrrkt': 'Chi tiết rủi ro kỹ thuật',
+            'vdkk':'Vấn đề khó khăn',
+            'ykcpal':'Ý kiến của Pal',
+            'ykcsales':'Ý kiến của Sales',
+            'ttgqkk':'Tình trạng giải quyết khó khăn',
+            'datesignpoplan':'Ngày ký PO (plan)',
+            'budget':'Budget (VND)',
+        }
         widgets = {
-			'motapo': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
-            'ghichu': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'datesignpo':InputDate(),
+            'deadlinegatvam':InputDate(),
+            'nttd1':InputDate(),
+            'nttd2':InputDate(),
+            'nttdn':InputDate(),
+            'datesignpoplan':InputDate(),
+			'descriptionmua': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'reasondelay': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'ctrrkt': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'vdkk': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'ykcpal': Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+            'ykcsales':Textarea(attrs={'cols':30, 'rows':1, 'id':'autosize'}),
+
         }
 
 

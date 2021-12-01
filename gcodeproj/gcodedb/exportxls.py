@@ -4,7 +4,7 @@ from numpy import NaN
 import xlwt
 from tablib import Dataset
 from xlwt.Workbook import Workbook
-from .models import Contract, Danhgiagcode, G1code, Nhaplieuban, GDV, Gcode,Inquiry,Client, Lydowin, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve,Nhaplieumua,Nhaplieunhapkhau
+from .models import Contract, Danhgiagcode, G1code, Nhaplieuban, GDV, Gcode,Inquiry,Client, Lydowin, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve,Nhaplieumua,Nhaplieunhapkhau, Unit
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -319,22 +319,23 @@ def exportxls_offer(request):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_g2code'}) 
-def exportxls_nlb(request,id):
+def exportxls_nlb(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Contract.xlsx"'
-    df = pd.DataFrame(columns=['STT','Inquiry','Gcode','Contract No.','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','Đơn giá chào',
-            'PO No.','Supplier','STT in ITB','Group in ITB','Xuất xứ','NSX','Ghi Chú','Giao dịch viên'])  
-    g1code_list = G1code.objects.filter(inquiry__pk=id,resultinq = "Win")
+    response['Content-Disposition'] = 'attachment; filename="Nhaplieuban.xlsx"'
+    df = pd.DataFrame(columns=['Stt','Gcode','Contract No.','Khách hàng','Sales manager',
+    'Ngày ký Contract','Deadline giao hàng cho khách hàng','Description','MNF','Unit','Quantity bán',
+    'Unit pirce (VND)','Ext Price (VND)','GDV'])  
+    """ g1code_list = G1code.objects.filter(inquiry__pk=id,resultinq = "Win")
     stt = 1
     for item in g1code_list:
         df = df.append(pd.DataFrame({'STT':[stt],'Inquiry':[item.inquiry.inquirycode],'Gcode':[item.gcode.ma],'Mô tả':[item.gcode.mota],'Ký mã hiệu':[item.gcode.kymahieuinq],
         'Đơn vị':[item.unitinq],'Số lượng':[item.qtyinq],'Đơn giá chào':[item.dongiachaoinq],'Supplier':[item.supplier.suppliercode],
         'STT in ITB':[item.sttitb],'Group in ITB':[item.groupitb],'Xuất xứ':[item.xuatxuinq],'NSX':[item.nsxinq]}))
-        stt +=1
+        stt +=1 """
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Contract', startrow=1, header=False,index=False)
+    df.to_excel(writer, sheet_name='Nhập liệu bán', startrow=1, header=False,index=False)
     workbook  = writer.book
-    worksheet = writer.sheets['Contract']
+    worksheet = writer.sheets['Nhập liệu bán']
     #Format header 
     header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
     'fg_color': '#4788F9','font_color': 'white','border': 1})
@@ -343,27 +344,44 @@ def exportxls_nlb(request,id):
     text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
     float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
     'num_format': '#,##0.00'})
-    #date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
-    list_header_noedit = ['Inquiry','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','Supplier','Xuất xứ','NSX']
-    list_index_fm_noedit = []
-    for item in list_header_noedit:
-        list_index_fm_noedit.append(df.columns.get_loc(item))
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
     for col_num, value in enumerate(df.columns.values):
-        if col_num in list_index_fm_noedit:
-            worksheet.write(0, col_num, value, noedit_format)
-        else:
-            worksheet.write(0, col_num, value, header_format)
+        worksheet.write(0, col_num, value, header_format)
     # Add some cell formats.
-    list_column_fm_float = ['Số lượng','Đơn giá chào']
+    list_column_fm_float = ['Quantity bán','Unit pirce (VND)','Ext Price (VND)']
     list_index_fm_float = []
     for item in list_column_fm_float:
         list_index_fm_float.append(df.columns.get_loc(item))
-    #worksheet.set_column('F:F', None, fm_float)
+    list_column_fm_date = ['Deadline giao hàng cho khách hàng']
+    list_index_fm_date = []
+    for item in list_column_fm_date:
+        list_index_fm_date.append(df.columns.get_loc(item))
+
+    list_unit = []
+    for item in Unit.objects.all():
+        list_unit.append(item.unit) 
+    unit_col = df.columns.get_loc('Unit')
+    worksheet.data_validation(0,unit_col,100,unit_col,{'validate': 'list',
+                                 'source': list_unit})
+    list_sales = []
+    for item in Sales.objects.all():
+        list_sales.append(item.salescode)
+    sales_col = df.columns.get_loc('Sales manager')
+    worksheet.data_validation(0,sales_col,100,sales_col,{'validate': 'list',
+                                 'source': list_sales})
+
     for col in range(0,len(df.columns)):
         if col in list_index_fm_float:
             worksheet.set_column(col,col, None, float_format)
+        elif col in list_index_fm_date:
+            worksheet.set_column(col,col, None, date_format)
         else:
             worksheet.set_column(col,col, None, text_format)
+    for column in range(2, 101):
+        cell_location = 'M{0}'.format(column)
+        formula = '=IF($K{0}*$L{0}=0,"",$K{0}*$L{0})'.format(column)
+        worksheet.write_formula(cell_location, formula, float_format)
+
     writer.save()
     return response
 
@@ -448,7 +466,7 @@ def exportxls_nlm(request,po):
     text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
     float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
     'num_format': '#,##0.00'})
-    #date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
     list_header_noedit = ['PO No.','Contract No.','Gcode']
     list_index_fm_noedit = []
     for item in list_header_noedit:

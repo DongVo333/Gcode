@@ -154,7 +154,6 @@ class Nhaplieuban(models.Model):
     dongiachaohdb = models.FloatField(null=True)
     status = models.CharField(max_length=30,null=True)
     deadlinegh = models.DateField()
-    descriptionban = models.TextField(null=True,blank= True)
     MNFban = models.CharField(max_length=30,null=True)
     qtyban = models.FloatField()
     unitban = models.ForeignKey(Unit,on_delete=PROTECT, related_name='fk_nlbunit',null=True)
@@ -200,6 +199,7 @@ class Nhaplieumua(models.Model):
     ykcsales = models.TextField(null=True, blank= True)
     ttgqkk = models.ForeignKey(Tinhtrangiaiquyetkhokhan,on_delete=PROTECT, related_name='fk_nlmttgqkk',null=True)
     datesignpoplan = models.DateField(null=True)
+    budget = models.FloatField()
     dateupdate  = models.DateField()
 
 class Nhaplieunhapkhau(models.Model):

@@ -14,11 +14,10 @@ urlpatterns = [
     path('offer/export/xls', exportxls.exportxls_offer, name='exportxls_offer'),
 
     path('nlb/insert/', views.nlb_form,name='nlb_insert'),
-    path('nlb/', views.nlb_list,name='nlb_list'),
+    path('nlb/', views.nlb_list,name='importxls_nlb'),
     path('nlb/update/<int:id>/', views.nlb_form,name='nlb_update'), 
     path('nlb/delete/<int:id>/',views.nlb_delete,name='nlb_delete'),
-    path('nlb/import/xls', importxls.importxls_nlb, name='importxls_nlb'),
-    path('nlb/export/xls/<int:id>', exportxls.exportxls_nlb, name='exportxls_nlb'),
+    path('nlb/export/xls/', exportxls.exportxls_nlb, name='exportxls_nlb'),
 
     path('nlm/insert/', views.nlm_form,name='nlm_insert'),
     path('nlm/', views.nlm_list,name='nlm_list'),

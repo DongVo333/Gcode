@@ -1,30 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="POST" action="{% url 'gcodedb:hdb_list'%}">
-    {% csrf_token %}
-    <label for="inquirysearch">Nhập Inquiry No.:</label>
-    <input type="text" id="inquirysearch" name="inquirysearch"><br>
-    <button type="submit">Search Inquiry</button>
-</form>
-<br>
-{{msgresult}}
-{% if msg %}
-    <ul class="messagelist">
-        {% for message in msg %}
-            <li>{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
-<br>
-<br>
-<form method="POST" action="{% url 'gcodedb:importxls_hdb' %}" enctype="multipart/form-data">
+<a href="{% url 'gcodedb:exportxls_nlb' %}">Export Form to Excel</a>
+<form method="POST" action="{% url 'gcodedb:importxls_nlb' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="file" name="myfile" accept=".xls,.xlsx">
     <button type="submit">Import Excel</button>
 </form>
 <br>
 <br>
-{{ hdb_list|safe }}
+{{ nlb_list|safe }}
 <br>
 {% if messages_ %}
     <ul class="messagelist">
