@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models.base import ModelState
 from django.db.models.deletion import PROTECT
+from django.db.models.fields import IntegerField
+from numpy import integer
 
 
 
@@ -13,6 +15,9 @@ STATUS_CHOICES =(
     ("Close","Close"),
 )
 
+class Yearcode(models.Model):
+    nowyear = models.IntegerField()
+    yearcode = models.CharField(max_length=3)
 
 class Currency (models.Model):
     Tenngoaite = models.CharField(max_length=50)
@@ -102,7 +107,9 @@ class Danhgiagcode(models.Model):
 class Gcode(models.Model):
     gcode = models.CharField(max_length=20)
     descriptionban = models.TextField()
+    descriptionmua = models.TextField()
     PNban = models.CharField(max_length=100,null=True,blank=True)
+    PNmua = models.CharField(max_length=100,null=True,blank=True)
     markupdinhmuc = models.FloatField(null=True,blank=True)
     ngaywin = models.DateField(null=True, blank=True)
     ngayout = models.DateField(null=True, blank= True)
@@ -149,11 +156,12 @@ class G1code(models.Model):
         else:
             return None
 class Nhaplieuban(models.Model):
-    gcodeban = models.ForeignKey(Gcode,on_delete=PROTECT, related_name='fk_nlbcontract',null=True)
+    gcodeban = models.CharField(max_length= 20, null=True)
     contractno = models.ForeignKey(Contract,on_delete=PROTECT, related_name='fk_nlbcontract',null=True)
     dongiachaohdb = models.FloatField(null=True)
     status = models.CharField(max_length=30,null=True)
     deadlinegh = models.DateField()
+    descriptionban = models.TextField()
     MNFban = models.CharField(max_length=30,null=True)
     qtyban = models.FloatField()
     unitban = models.ForeignKey(Unit,on_delete=PROTECT, related_name='fk_nlbunit',null=True)
@@ -237,4 +245,4 @@ class Tienve(models.Model):
         return (self.qtytienve or 0)*(self.dongiatienve or 0)
     
 class ScanOrder(models.Model):
-    gcode = models.ManyToManyField(Gcode,related_name='fk_scanordergcode',null=True)
+    gcode = models.ManyToManyField(Nhaplieuban,related_name='fk_scanordergcode',null=True)

@@ -14,7 +14,7 @@ urlpatterns = [
     path('offer/export/xls', exportxls.exportxls_offer, name='exportxls_offer'),
 
     path('nlb/insert/', views.nlb_form,name='nlb_insert'),
-    path('nlb/', views.nlb_list,name='importxls_nlb'),
+    path('nlb/', importxls.importxls_nlb,name='importxls_nlb'),
     path('nlb/update/<int:id>/', views.nlb_form,name='nlb_update'), 
     path('nlb/delete/<int:id>/',views.nlb_delete,name='nlb_delete'),
     path('nlb/export/xls/', exportxls.exportxls_nlb, name='exportxls_nlb'),
@@ -77,12 +77,12 @@ urlpatterns = [
     path('supplier/export/xls', exportxls.exportxls_supplier, name='exportxls_supplier'),
 
    
-    path('contractdetail/insert/', views.contractdetail_form,name='contractdetail_insert'),
-    path('contractdetail/', views.contractdetail_list,name='contractdetail_list'),
-    path('contractdetail/update/<int:id>/', views.contractdetail_form,name='contractdetail_update'), 
-    path('contractdetail/delete/<int:id>/',views.contractdetail_delete,name='contractdetail_delete'),
-    path('contractdetail/import/xls', importxls.importxls_contractdetail, name='importxls_contractdetail'),
-    path('contractdetail/export/xls', exportxls.exportxls_contractdetail, name='exportxls_contractdetail'),
+    path('contract/insert/', views.contract_form,name='contract_insert'),
+    path('contract/', views.contract_list,name='contract_list'),
+    path('contract/update/<int:id>/', views.contract_form,name='contract_update'), 
+    path('contract/delete/<int:id>/',views.contract_delete,name='contract_delete'),
+    path('contract/import/xls', importxls.importxls_contract, name='importxls_contract'),
+    path('contract/export/xls', exportxls.exportxls_contract, name='exportxls_contract'),
     
     path('lydowin/insert/', views.lydowin_form,name='lydowin_insert'),
     path('lydowin/', views.lydowin_list,name='lydowin_list'),

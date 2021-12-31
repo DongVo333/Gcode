@@ -48,13 +48,13 @@ def exportxls_client(request):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_gcode'})
-def exportxls_gcode(request):
+def exportxls_gcode_all(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Gcode.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Gcode')
     row_num = 0
-    columns = ['ID','Gcode', 'Mô tả', 'Markup định mức','Ngày Out gần nhất','Ngày Win gần nhất']
+    columns = ['STT','Gcode','Part number','Description','Markup định mức','Ngày Win','Ngày Out']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
     for gcode in Gcode.objects.all():
@@ -69,8 +69,67 @@ def exportxls_gcode(request):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_gcode'})
+def exportxls_gcode(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Gcode.xlsx"'
+    df = pd.DataFrame(columns=['STT','Gcode','Part number','Description','Markup định mức'])  
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Gcode', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Gcode']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    noedit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#FC7575','font_color': 'white','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
+    for col_num, value in enumerate(df.columns.values):
+        worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Markup định mức']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    list_column_fm_date = ['Deadline giao hàng cho khách hàng']
+    list_index_fm_date = []
+    for item in list_column_fm_date:
+        list_index_fm_date.append(df.columns.get_loc(item))
+
+    list_unit = []
+    for item in Unit.objects.all():
+        list_unit.append(item.unit) 
+    unit_col = df.columns.get_loc('Unit')
+    worksheet.data_validation(0,unit_col,100,unit_col,{'validate': 'list',
+                                 'source': list_unit})
+    list_sales = []
+    for item in Sales.objects.all():
+        list_sales.append(item.salescode)
+    sales_col = df.columns.get_loc('Sales manager')
+    worksheet.data_validation(0,sales_col,100,sales_col,{'validate': 'list',
+                                 'source': list_sales})
+
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        elif col in list_index_fm_date:
+            worksheet.set_column(col,col, None, date_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    for column in range(2, 101):
+        cell_location = 'M{0}'.format(column)
+        formula = '=IF($K{0}*$L{0}=0,"",$K{0}*$L{0})'.format(column)
+        worksheet.write_formula(cell_location, formula, float_format)
+
+    writer.save()
+    return response
+
+@login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_contract'})    
-def exportxls_contractdetail(request):
+def exportxls_contract(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Contract.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
@@ -367,7 +426,7 @@ def exportxls_nlb(request):
     for item in Sales.objects.all():
         list_sales.append(item.salescode)
     sales_col = df.columns.get_loc('Sales manager')
-    worksheet.data_validation(0,sales_col,100,sales_col,{'validate': 'list',
+    worksheet.data_validation(0,sales_col,100,sales_col,{'validate': 'list','show_error':0,
                                  'source': list_sales})
 
     for col in range(0,len(df.columns)):
@@ -412,8 +471,8 @@ def exportxls_nlb_all(request,id):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.export_all_nlbdetail'}) 
-def exportxls_nlball(request):
+@allowed_permission(allowed_roles={'gcodedb.export_all_nlm'}) 
+def exportxls_nlm_all(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Po.xls"'
     wb = xlwt.Workbook(encoding='utf-8')

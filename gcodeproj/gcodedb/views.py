@@ -337,20 +337,20 @@ def supplier_delete(request,id):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_contract'})
-def contractdetail_list(request):
-	contractdetail_list = Contract.objects.all()
-	return render(request, 'gcodedb/contractdetail_list.html', {'contractdetail_list':contractdetail_list})
+def contract_list(request):
+	contract_list = Contract.objects.all()
+	return render(request, 'gcodedb/contract_list.html', {'contract_list':contract_list})
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_contract'})
-def contractdetail_form(request, id=None):
+def contract_form(request, id=None):
     if request.method == "GET":
         if id == None:
             form = ContractForm()
         else:
             contract = Contract.objects.get(pk=id)
             form = ContractForm(instance=contract)
-        return render(request, "gcodedb/contractdetail_form.html", {'form': form})
+        return render(request, "gcodedb/contract_form.html", {'form': form})
     else:
         if id == None:
             form = ContractForm(request.POST)
@@ -359,15 +359,15 @@ def contractdetail_form(request, id=None):
             form = ContractForm(request.POST,instance= contract)
         if form.is_valid():
             form.save()
-        return redirect('/contractdetail/')
+        return redirect('/contract/')
 
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.delete_contract'})
-def contractdetail_delete(request,id):
+def contract_delete(request,id):
     contract = Contract.objects.get(pk=id)
     contract.delete()
-    return redirect('/contractdetail/')
+    return redirect('/contract/')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_reasonwin'})
@@ -758,9 +758,9 @@ def phat_list(request):
     msgresult = ""
     if request.method == "POST":
         contract_set = set()
-        contract_list = Nhaplieunhapkhau.objects.filter(g2code__contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
+        contract_list = Nhaplieunhapkhau.objects.filter(g2code__contractno__contractcode__icontains=request.POST.get("contractsearch")).values_list('g2code', flat=True)
         for g2code in contract_list:
-            contract_set.add(Nhaplieuban.objects.get(pk=g2code).contract.contractcode)
+            contract_set.add(Nhaplieuban.objects.get(pk=g2code).contractno.contractcode)
         if len(contract_set)> 0: 
             msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(contract_set))
             for item in contract_set:
