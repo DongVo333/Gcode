@@ -227,44 +227,87 @@ def importxls_gcode(request):
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.import_contract'})
 def importxls_contract(request):
+    messages_=  []
+    warnings = []
     if request.method == 'POST':
-        new_persons = request.FILES['myfile']
-        workbook = xlrd.open_workbook(file_contents=new_persons.read())
-        sheet = workbook.sheet_by_name("Contract")
-        norow = sheet.nrows
-        for r in range(1, norow):
-            counter = Contract.objects.filter(contractcode=str(sheet.cell(r,1).value)).count()
-            contract = Contract()
-            if counter>0:
-                contract = Contract.objects.get(contractcode=str(sheet.cell(r,1).value))
-                contract.contractnoclient = sheet.cell(r,2).value
-                ngayky = xlrd.xldate.xldate_as_datetime(sheet.cell(r,3).value,workbook.datemode).strftime("%Y-%m-%d")
-                contract.datesign = ngayky
-                contract.client =Client.objects.get(clientcode=sheet.cell(r,4).value) 
-                deadline1 = xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,workbook.datemode).strftime("%Y-%m-%d")
-                contract.dealine1 = deadline1
-                deadline2 = xlrd.xldate.xldate_as_datetime(sheet.cell(r,6).value,workbook.datemode).strftime("%Y-%m-%d")
-                contract.dealine2 = deadline2
-                contract.sellcost = float(sheet.cell(r,7).value)
-                contract.status = sheet.cell(r,8).value
-                datedeliverylatest = xlrd.xldate.xldate_as_datetime(sheet.cell(r,9).value,workbook.datemode).strftime("%Y-%m-%d")
-                contract.datedeliverylatest = datedeliverylatest
-                contract.save()
-            else:
-                contract = Contract(
-        		    contractcode=str(sheet.cell(r,1).value),
-        		    contractnoclient=sheet.cell(r,2).value,
-                    datesign=xlrd.xldate.xldate_as_datetime(sheet.cell(r,3).value,0).strftime("%Y-%m-%d"),
-        		    client=Client.objects.get(clientcode=sheet.cell(r,4).value),
-                    dealine1=xlrd.xldate.xldate_as_datetime(sheet.cell(r,5).value,0).strftime("%Y-%m-%d"),
-                    dealine2=xlrd.xldate.xldate_as_datetime(sheet.cell(r,6).value,0).strftime("%Y-%m-%d"),
-                    sellcost=float(sheet.cell(r,7).value),
-                    status=sheet.cell(r,8).value,
-                    datedeliverylatest=xlrd.xldate.xldate_as_datetime(sheet.cell(r,9).value,0).strftime("%Y-%m-%d"),
-        		    )
-                contract.save()
-        return redirect('/contractdetail/')     
-    return render(request, 'gcodedb/contractdetail_list.html')
+        try:
+            new_persons = request.FILES['myfile']
+            df = pd.read_excel(new_persons, sheet_name='Contract')
+        except Exception as e: 
+            message = format_html("Import File Error: {}",e)
+            messages_.append(message)
+        else:
+            list_column = ['Stt','Contract No.', 'Contract No. (Client)', 'Ngày ký kết','Khách hàng',
+    'Sales','Deadline giao hàng NLB','Deadline giao hàng NLM','Giá bán','Trạng thái','Ngày giao hàng cuối cùng']
+            list_column_required = ['Stt','Contract No.', 'Ngày ký kết','Khách hàng',
+    'Sales','Deadline giao hàng NLB']            
+            list_column_float = ['Giá bán']
+            list_column_date = ['Ngày ký kết','Deadline giao hàng NLB','Deadline giao hàng NLM','Ngày giao hàng cuối cùng']
+            messages_.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
+            if len(messages_) <=0:
+                df_obj = df.select_dtypes(['object'])
+                df[df_obj.columns] = df_obj.apply(lambda x: x.str.strip())
+                duplicateRowsDF = df[df.duplicated(subset=['Contract No.'],keep=False)]
+                if duplicateRowsDF.shape[0]:
+                    message = format_html("Data Import is duplicate at <b>index Stt {}</b>",df.loc[duplicateRowsDF.index.to_list(),'Stt'].tolist())
+                    messages_.append(message)
+                else:
+                    noclient = set()
+                    nosale = set()
+                    for index,row in df.iterrows():
+                        if Client.objects.filter(clientcode=row['Khách hàng']).count()<=0:
+                            noclient.add(row['Khách hàng'])
+                        if Sales.objects.filter(salescode=row['Sales']).count()<=0:
+                            nosale.add(row['Sales'])
+                        if Contract.objects.filter(contractcode=row['Contract No.']).count()<=0:
+                            warning = format_html("Contract '{}' is existed, you shall be update it", row['Contract No.'])
+                            warnings.append(warning)
+                    if len(nosale)>=0:
+                        for item in nosale:
+                            message = format_html("Sales '{}' doesn't exist, please contact with administrator to add Sales", item)
+                            messages_.append(message)
+                    if len(noclient)>=0:
+                        for item in noclient:
+                            message = format_html("Client '{}' doesn\'t exist, you shall import Client before importing again"
+                            " at link: <a href='{}'>Create Client</a>",item,reverse('gcodedb:client_list'))
+                            messages_.append(message)
+            if len(messages_) <=0:
+                df[list_column_float]= df[list_column_float].astype('float64')
+                for r in range(0, df.shape[0]): 
+                    if Contract.objects.filter(contractcode__icontains=df.loc[r,'Contract No.']).count()>0:
+                        contract_temp = Contract.objects.get(contractcode__icontains=df.loc[r,'Contract No.'])
+                        contract_temp.contractnoclient = df.loc[r,'Contract No. (Client)']
+                        contract_temp.datesign = df.loc[r,'Ngày ký kết']
+                        contract_temp.client = Client.objects.get(clientcode=df.loc[r,'Khách hàng'])
+                        contract_temp.sales = Sales.objects.get(df.loc[r,'Sales'])
+                        contract_temp.deadlineghnlb = df.loc[r,'Deadline giao hàng NLB']
+                        contract_temp.deadlineghnlm = df.loc[r,'Deadline giao hàng NLM']
+                        contract_temp.sellcost = df.loc[r,'Giá bán']
+                        contract_temp.nguoicapnhat = request.user.username
+                    else:
+                        contract_temp = Contract(
+                            contractcode   = df.loc[r,'Contract No.'],
+                            contractnoclient  = df.loc[r,'Contract No. (Client)'],
+                            datesign   = df.loc[r,'Ngày ký kết'],
+                            client = Client.objects.get(clientcode=df.loc[r,'Khách hàng']),
+                            sales = Sales.objects.get(df.loc[r,'Sales']),
+                            deadlineghnlb = df.loc[r,'Deadline giao hàng NLB'],
+                            deadlineghnlm = df.loc[r,'Deadline giao hàng NLM'],
+                            sellcost = df.loc[r,'Giá bán'],
+                            status  = "Open",
+                            nguoicapnhat = request.user.username,
+                            )
+                        contract_temp.save()  
+                message = format_html("Data Contract has been successfully import")
+                messages_.append(message)
+            html = df.to_html(index=False,justify='center')
+            html = html.replace('nan','')
+            html = html.replace('NaN','')
+            html = html.replace('NaT','')
+            context = {'nlb_list': html,'messages_':messages_,'warnings':warnings}
+            return render(request, 'gcodedb/contract.html', context)
+    context = {'messages_':messages_} 
+    return render(request, 'gcodedb/contract.html', context)
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.import_inquiry'})
@@ -542,7 +585,7 @@ def importxls_offer(request):
     return render(request, 'gcodedb/offer_list.html', context)
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.import_g2code'})
+@allowed_permission(allowed_roles={'gcodedb.import_contract_temp'})
 def importxls_nlb(request):
     messages_=  []
     warnings = []
@@ -554,14 +597,12 @@ def importxls_nlb(request):
             message = format_html("Import File Error: {}",e)
             messages_.append(message)
         else:
-            list_column = ['Stt','Gcode','Contract No.','Khách hàng','Sales manager',
-            'Ngày ký Contract','Deadline giao hàng cho khách hàng','Description','MNF','Unit','Quantity bán',
-            'Unit pirce (VND)','Ext Price (VND)']
+            list_column = ['Stt','Gcode','Contract No.','Description','MNF','Unit','Quantity bán',
+            'Unit price (VND)','Ext Price (VND)','GDV']
             list_column_required = ['Stt','Contract No.','Description',
-            'Deadline giao hàng cho khách hàng','MNF','Unit','Quantity bán',
-            'Unit pirce (VND)']            
-            list_column_float = ['Quantity bán','Unit pirce (VND)']
-            list_column_date = ['Deadline giao hàng cho khách hàng']
+            'MNF','Unit','Quantity bán','Unit price (VND)','GDV']            
+            list_column_float = ['Quantity bán','Unit price (VND)']
+            list_column_date = []
             messages_.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
             if len(messages_) <=0:
                 df_obj = df.select_dtypes(['object'])
@@ -575,6 +616,7 @@ def importxls_nlb(request):
                         message = format_html("Wrong definition for yearcode")
                         messages_.append(message)
                     nocontract = set()
+                    nogdv = set()
                     for index,row in df.iterrows():
                         if Contract.objects.filter(contractcode=row['Contract No.']).count()<=0:
                             nocontract.add(row['Contract No.'])
@@ -583,10 +625,16 @@ def importxls_nlb(request):
                             df.at[row,'Gcode'] = findgcode.gcodeban
                             warning = format_html("Gcode '{}' is updated <b>index Stt {}</b>",row['Gcode'],row['Stt'])
                             warnings.append(warning)
+                        if GDV.objects.filter(gdvcode=row['GDV']).count()<=0:
+                            nogdv.add(row['GDV'])
                     if len(nocontract)>=0:
                         for item in nocontract:
                             message = format_html("Contract '{}' doesn't exist, you shall import Contract before importing again"
                             " at link: <a href='{}'>Create Contract</a>",item,reverse('gcodedb:contract_list'))
+                            messages_.append(message)
+                    if len(nogdv)>=0:
+                        for item in nogdv:
+                            message = format_html("GDV '{}' doesn't exist, contact to administrator to add GDV",item)
                             messages_.append(message)
             if len(messages_) <=0:
                 list_gcode = Nhaplieuban.objects.values_list('gcodeban',flat=True)
@@ -605,30 +653,31 @@ def importxls_nlb(request):
                 else:
                     Lastest_index =  int(Lastest_gcode[1:])
                 df[list_column_float]= df[list_column_float].astype('float64')
-                df['Ext Price (VND)'] = df['Quantity bán']*df['Unit pirce (VND)']
+                df['Ext Price (VND)'] = df['Quantity bán']*df['Unit price (VND)']
                 for r in range(0, df.shape[0]): 
                     if Nhaplieuban.objects.filter(gcodeban__icontains=df.loc[r,'Description'],contractno=df.loc[r,'Contract No.']).count()>0:
                         g2code = Nhaplieuban.objects.get(gcodeban__icontains=df.loc[r,'Description'],contractno=df.loc[r,'Contract No.'])
                         df.at[r,'Gcode'] = g2code.gcodeban
-                        g2code.dongiachaohdb = df.loc[r,'Unit pirce (VND)']
+                        g2code.dongiachaohdb = df.loc[r,'Unit price (VND)']
                         g2code.deadlinegh = df.loc[r,'Deadline giao hàng cho khách hàng']
                         g2code.descriptionban = df.loc[r,'Description']
                         g2code.MNFban = df.loc[r,'MNF']
                         g2code.qtyban = df.loc[r,'Quantity bán']
                         g2code.unitban = df.loc[r,'Unit']
-                        g2code.gdvhdb = GDV.objects.get(gdvcode = request.user.username)
+                        g2code.gdvhdb = GDV.objects.get(gdvcode=df.loc[r,'GDV'])
+                        g2code.nguoicapnhat = request.user.username
                         g2code.dateupdate = date.today()
                     else:
                         g2code = Nhaplieuban(
                             gcodeban = yc.yearcode + "{:05n}".format(Lastest_index+1),
                             contractno = Contract.objects.get(contractcode = df.loc[r,'Contract No.']),
-                            dongiachaohdb = df.loc[r,'Unit pirce (VND)'],
-                            deadlinegh = df.loc[r,'Deadline giao hàng cho khách hàng'],
+                            dongiachaohdb = df.loc[r,'Unit price (VND)'],
                             descriptionban = df.loc[r,'Description'],
                             MNFban = df.loc[r,'MNF'],
                             qtyban = df.loc[r,'Quantity bán'],
                             unitban = df.loc[r,'Unit'],
-                            gdvhdb = GDV.objects.get(gdvcode = request.user.username),
+                            gdvhdb = GDV.objects.get(gdvcode=df.loc[r,'GDV']),
+                            nguoicapnhat = request.user.username,
                             dateupdate = date.today(),
                             )
                         Lastest_index+=1
@@ -637,6 +686,9 @@ def importxls_nlb(request):
                 message = format_html("Data Contract has been successfully import")
                 messages_.append(message)
             html = df.to_html(index=False,justify='center')
+            html = html.replace('nan','')
+            html = html.replace('NaN','')
+            html = html.replace('NaT','')
             context = {'nlb_list': html,'messages_':messages_,'warnings':warnings}
             return render(request, 'gcodedb/nlb_list.html', context)
     context = {'messages_':messages_}

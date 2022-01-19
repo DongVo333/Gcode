@@ -77,8 +77,11 @@ class Contract (models.Model):
     datesign  = models.DateField()
     client  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_contractclient")
     sales = models.ForeignKey(Sales,on_delete=PROTECT, related_name= "fk_contractsales")
+    deadlineghnlb = models.DateField()
+    deadlineghnlm = models.DateField()
     sellcost = models.FloatField()
     status = models.CharField(max_length=5, choices=STATUS_CHOICES, default="Open" )
+    nguoicapnhat = models.CharField(max_length=10)
     datedeliverylatest = models.DateField()
     def __str__(self):
         return self.contractcode
@@ -160,12 +163,12 @@ class Nhaplieuban(models.Model):
     contractno = models.ForeignKey(Contract,on_delete=PROTECT, related_name='fk_nlbcontract',null=True)
     dongiachaohdb = models.FloatField(null=True)
     status = models.CharField(max_length=30,null=True)
-    deadlinegh = models.DateField()
     descriptionban = models.TextField()
     MNFban = models.CharField(max_length=30,null=True)
     qtyban = models.FloatField()
     unitban = models.ForeignKey(Unit,on_delete=PROTECT, related_name='fk_nlbunit',null=True)
     gdvhdb = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_nlbgdv',null=True)
+    nguoicapnhat = models.CharField(max_length=10)
     dateupdate  = models.DateField()
     def __str__(self):
         return str(self.g2code)
@@ -208,6 +211,7 @@ class Nhaplieumua(models.Model):
     ttgqkk = models.ForeignKey(Tinhtrangiaiquyetkhokhan,on_delete=PROTECT, related_name='fk_nlmttgqkk',null=True)
     datesignpoplan = models.DateField(null=True)
     budget = models.FloatField()
+    nguoicapnhat = models.CharField(max_length=10)
     dateupdate  = models.DateField()
 
 class Nhaplieunhapkhau(models.Model):
@@ -222,6 +226,7 @@ class Nhaplieunhapkhau(models.Model):
     bcgh = models.ForeignKey(Baocaogiaohang,on_delete=PROTECT,related_name='fk_nlnkbcgh')
     ghichu = models.TextField(null=True,blank= True)
     gdvnlnk = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_nlnkgdv',null=True)
+    nguoicapnhat = models.CharField(max_length=10)
     dateupdate  = models.DateField()
 
 
@@ -232,6 +237,7 @@ class Phat(models.Model):
     lydophat = models.TextField(null=True)
     ghichu = models.TextField(null=True,blank= True)
     gdvphat = models.ForeignKey(GDV,on_delete=PROTECT,related_name='fk_phatgdv',null=True)
+    nguoicapnhat = models.CharField(max_length=10)
     dateupdate  = models.DateField()
 
 class Tienve(models.Model):

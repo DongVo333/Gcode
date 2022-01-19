@@ -338,8 +338,7 @@ def supplier_delete(request,id):
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_contract'})
 def contract_list(request):
-	contract_list = Contract.objects.all()
-	return render(request, 'gcodedb/contract_list.html', {'contract_list':contract_list})
+	return render(request, 'gcodedb/contract_list.html')
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.view_contract'})
@@ -359,7 +358,7 @@ def contract_form(request, id=None):
             form = ContractForm(request.POST,instance= contract)
         if form.is_valid():
             form.save()
-        return redirect('/contract/')
+        return redirect('contract')
 
 
 @login_required(login_url='gcodedb:loginpage')

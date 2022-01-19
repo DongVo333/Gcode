@@ -129,13 +129,13 @@ def exportxls_gcode(request):
 
 @login_required(login_url='gcodedb:loginpage')
 @allowed_permission(allowed_roles={'gcodedb.export_contract'})    
-def exportxls_contract(request):
+def exportxls_contract_all(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Contract.xls"'
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Contract')
     row_num = 0
-    columns = ['ID','Contract', 'Contract No. Client', 'Date Sign','Client','Deadline 1','Deadline 2','Selling Price','Status','Date Delivery Latest']
+    columns = ['ID','Contract No.', 'Contract No. (Client)', 'Ngày ký kết','Khách hàng','Sales','Giá bán','Trạng thái','Ngày giao hàng cuối cùng']
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], style_head_row)
     for contract in Contract.objects.all():
@@ -154,6 +154,65 @@ def exportxls_contract(request):
             ws.write(row_num, 8, contract.status, style_green_row)
         ws.write(row_num, 9, contract.datedeliverylatest, style_date_row)
     wb.save(response)
+    return response
+
+@login_required(login_url='gcodedb:loginpage')
+@allowed_permission(allowed_roles={'gcodedb.export_contract'})    
+def exportxls_contract (request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Contract.xls"'
+    df = pd.DataFrame(columns=['Stt','Contract No.', 'Contract No. (Client)', 'Ngày ký kết','Khách hàng',
+    'Sales','Deadline giao hàng NLB','Deadline giao hàng NLM','Giá bán','Trạng thái','Ngày giao hàng cuối cùng'])  
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Contract', startrow=1, header=False,index=False)
+    workbook  = writer.book
+    worksheet = writer.sheets['Contract']
+    #Format header 
+    header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#4788F9','font_color': 'white','border': 1})
+    noedit_format =workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
+    'fg_color': '#FC7575','font_color': 'white','border': 1})
+    text_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1})
+    float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
+    'num_format': '#,##0.00'})
+    date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
+    for col_num, value in enumerate(df.columns.values):
+        worksheet.write(0, col_num, value, header_format)
+    # Add some cell formats.
+    list_column_fm_float = ['Giá bán']
+    list_index_fm_float = []
+    for item in list_column_fm_float:
+        list_index_fm_float.append(df.columns.get_loc(item))
+    list_column_fm_date = ['Ngày ký kết','Ngày giao hàng cuối cùng','Deadline giao hàng NLB','Deadline giao hàng NLM']
+    list_index_fm_date = []
+    for item in list_column_fm_date:
+        list_index_fm_date.append(df.columns.get_loc(item))
+
+    list_sales = []
+    for item in Sales.objects.all():
+        list_sales.append(item.salescode)
+    sales_col = df.columns.get_loc('Sales')
+    worksheet.data_validation(0,sales_col,100,sales_col,{'validate': 'list',
+                                 'source': list_sales})
+    list_client = []
+    for item in Client.objects.all():
+        list_client.append(item.clientcode)
+    client_col = df.columns.get_loc('Khách hàng')
+    worksheet.data_validation(0,client_col,100,client_col,{'validate': 'list',
+                                 'source': list_client})
+
+    for col in range(0,len(df.columns)):
+        if col in list_index_fm_float:
+            worksheet.set_column(col,col, None, float_format)
+        elif col in list_index_fm_date:
+            worksheet.set_column(col,col, None, date_format)
+        else:
+            worksheet.set_column(col,col, None, text_format)
+    for column in range(2, 101):
+        cell_location = 'I{0}'.format(column)
+        formula = '=IF($G{0}*$H{0}=0,"",$G{0}*$H{0})'.format(column)
+        worksheet.write_formula(cell_location, formula, float_format)
+    writer.save()
     return response
 
 @login_required(login_url='gcodedb:loginpage')
@@ -381,9 +440,8 @@ def exportxls_offer(request):
 def exportxls_nlb(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Nhaplieuban.xlsx"'
-    df = pd.DataFrame(columns=['Stt','Gcode','Contract No.','Khách hàng','Sales manager',
-    'Ngày ký Contract','Deadline giao hàng cho khách hàng','Description','MNF','Unit','Quantity bán',
-    'Unit pirce (VND)','Ext Price (VND)','GDV'])  
+    df = pd.DataFrame(columns=['Stt','Gcode','Contract No.','Description','MNF','Unit','Quantity bán',
+    'Unit price (VND)','Ext Price (VND)','GDV'])  
     """ g1code_list = G1code.objects.filter(inquiry__pk=id,resultinq = "Win")
     stt = 1
     for item in g1code_list:
@@ -407,38 +465,30 @@ def exportxls_nlb(request):
     for col_num, value in enumerate(df.columns.values):
         worksheet.write(0, col_num, value, header_format)
     # Add some cell formats.
-    list_column_fm_float = ['Quantity bán','Unit pirce (VND)','Ext Price (VND)']
+    list_column_fm_float = ['Quantity bán','Unit price (VND)','Ext Price (VND)']
     list_index_fm_float = []
     for item in list_column_fm_float:
         list_index_fm_float.append(df.columns.get_loc(item))
-    list_column_fm_date = ['Deadline giao hàng cho khách hàng']
-    list_index_fm_date = []
-    for item in list_column_fm_date:
-        list_index_fm_date.append(df.columns.get_loc(item))
-
     list_unit = []
     for item in Unit.objects.all():
         list_unit.append(item.unit) 
     unit_col = df.columns.get_loc('Unit')
     worksheet.data_validation(0,unit_col,100,unit_col,{'validate': 'list',
                                  'source': list_unit})
-    list_sales = []
-    for item in Sales.objects.all():
-        list_sales.append(item.salescode)
-    sales_col = df.columns.get_loc('Sales manager')
-    worksheet.data_validation(0,sales_col,100,sales_col,{'validate': 'list','show_error':0,
-                                 'source': list_sales})
-
+    list_gdv = []
+    for item in GDV.objects.all():
+        list_gdv.append(item.gdvcode) 
+    gdv_col = df.columns.get_loc('GDV')
+    worksheet.data_validation(0,gdv_col,100,gdv_col,{'validate': 'list',
+                                 'source': list_gdv})
     for col in range(0,len(df.columns)):
         if col in list_index_fm_float:
             worksheet.set_column(col,col, None, float_format)
-        elif col in list_index_fm_date:
-            worksheet.set_column(col,col, None, date_format)
         else:
             worksheet.set_column(col,col, None, text_format)
     for column in range(2, 101):
-        cell_location = 'M{0}'.format(column)
-        formula = '=IF($K{0}*$L{0}=0,"",$K{0}*$L{0})'.format(column)
+        cell_location = 'I{0}'.format(column)
+        formula = '=IF($G{0}*$H{0}=0,"",$G{0}*$H{0})'.format(column)
         worksheet.write_formula(cell_location, formula, float_format)
 
     writer.save()
