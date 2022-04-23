@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="POST" action="{% url 'gcodedb:po_list'%}">
+<form method="POST" action="{% url 'gcodedb:nlm_list'%}">
     {% csrf_token %}
-    <label for="ponosearch">Nhập PO No.:</label>
-    <input type="text" id="ponosearch" name="ponosearch"><br>
-    <button type="submit">Search PO</button>
+    <label for="contractsearch">Nhập Contract No.:</label>
+    <input type="text" id="contractsearch" name="contractsearch"><br>
+    <button type="submit">Search Contract</button>
 </form>
 <br>
 {{msgresult}}
@@ -17,7 +17,7 @@
 {% endif %}
 <br>
 <br>
-<form method="POST" action="{% url 'gcodedb:importxls_po' %}" enctype="multipart/form-data">
+<form method="POST" action="{% url 'gcodedb:importxls_nlm' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="file" name="myfile" accept=".xls,.xlsx">
     <button type="submit">Import Excel</button>

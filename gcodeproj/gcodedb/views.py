@@ -619,14 +619,14 @@ def nlm_list(request):
     msg = []
     msgresult = ""
     if request.method == "POST":
-        g2code_list = Nhaplieuban.objects.filter(pono__icontains=request.POST.get("ponosearch")).values_list('pono', flat=True)
-        nlm_set =set(g2code_list)
+        contract_list = Nhaplieuban.objects.filter(contractno__contractcode__icontains=request.POST.get("contractsearch")).values_list('contractno', flat=True)
+        nlm_set =set(contract_list)
         if len(nlm_set)> 0: 
             msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(nlm_set))
             for item in nlm_set:
-                g2code_list = Nhaplieuban.objects.filter(pono=item)
-                message = format_html("PO No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item,g2code_list.count(),reverse('gcodedb:exportxls_po',args=[item,]))
+                contract_list = Nhaplieuban.objects.filter(contractno__contractcode=item)
+                message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
+                item,contract_list.count(),reverse('gcodedb:exportxls_nlm',args=[item,]))
                 msg.append(message)
         else: 
             msgresult = format_html("No results could be found for your search query")
@@ -809,7 +809,7 @@ def profit_list(request):
     msgresult = ""
     if request.method == "POST":
         contract_set = set()
-        contract_list = Nhaplieuban.objects.filter(contract__contractcode__icontains=request.POST.get("contractsearch")).values_list('contract', flat=True)
+        contract_list = Nhaplieuban.objects.filter(contractno__contractcode__icontains=request.POST.get("contractsearch")).values_list('contract', flat=True)
         for contract in contract_list:
             contract_set.add(Contract.objects.get(pk=contract).contractcode)
         if len(contract_set)> 0: 

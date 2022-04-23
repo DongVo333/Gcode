@@ -160,7 +160,7 @@ def exportxls_contract_all(request):
 @allowed_permission(allowed_roles={'gcodedb.export_contract'})    
 def exportxls_contract (request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="Contract.xls"'
+    response['Content-Disposition'] = 'attachment; filename="Contract.xlsx"'
     df = pd.DataFrame(columns=['Stt','Contract No.', 'Contract No. (Client)', 'Ngày ký kết','Khách hàng',
     'Sales','Deadline giao hàng NLB','Deadline giao hàng NLM','Giá bán','Trạng thái','Ngày giao hàng cuối cùng'])  
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
@@ -209,9 +209,9 @@ def exportxls_contract (request):
         else:
             worksheet.set_column(col,col, None, text_format)
     for column in range(2, 101):
-        cell_location = 'I{0}'.format(column)
-        formula = '=IF($G{0}*$H{0}=0,"",$G{0}*$H{0})'.format(column)
-        worksheet.write_formula(cell_location, formula, float_format)
+        cell_location = 'H{0}'.format(column)
+        formula = '=IF($G{0}="","",$G{0})'.format(column)
+        worksheet.write_formula(cell_location, formula, date_format)
     writer.save()
     return response
 
@@ -436,7 +436,7 @@ def exportxls_offer(request):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.export_g2code'}) 
+@allowed_permission(allowed_roles={'gcodedb.add_nhaplieuban'}) 
 def exportxls_nlb(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="Nhaplieuban.xlsx"'

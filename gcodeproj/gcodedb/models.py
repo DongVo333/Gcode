@@ -73,16 +73,16 @@ class Unit(models.Model):
 
 class Contract (models.Model):
     contractcode  = models.CharField(max_length=50)
-    contractnoclient = models.CharField(max_length=50)
+    contractnoclient = models.CharField(max_length=50,null=True,blank=True)
     datesign  = models.DateField()
     client  = models.ForeignKey(Client,on_delete=PROTECT, related_name= "fk_contractclient")
     sales = models.ForeignKey(Sales,on_delete=PROTECT, related_name= "fk_contractsales")
     deadlineghnlb = models.DateField()
     deadlineghnlm = models.DateField()
-    sellcost = models.FloatField()
+    sellcost = models.FloatField(null=True,blank=True)
     status = models.CharField(max_length=5, choices=STATUS_CHOICES, default="Open" )
     nguoicapnhat = models.CharField(max_length=10)
-    datedeliverylatest = models.DateField()
+    datedeliverylatest = models.DateField(null=True,blank=True)
     def __str__(self):
         return self.contractcode
 

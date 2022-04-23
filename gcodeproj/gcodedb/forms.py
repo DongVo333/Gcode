@@ -183,6 +183,8 @@ class ContractForm(forms.ModelForm):
         widgets = {
             'datedeliverylatest':InputDate(),
             'datesign':InputDate(),
+            'deadlineghnlb':InputDate(),
+            'deadlineghnlm':InputDate(),
         }
 
 class LydowinForm(forms.ModelForm):
