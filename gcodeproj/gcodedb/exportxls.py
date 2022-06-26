@@ -4,7 +4,7 @@ from numpy import NaN
 import xlwt
 from tablib import Dataset
 from xlwt.Workbook import Workbook
-from .models import Contract, Danhgiagcode, G1code, Nhaplieuban, GDV, Gcode,Inquiry,Client, Lydowin, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve,Nhaplieumua,Nhaplieunhapkhau, Unit
+from .models import Contract, Danhgiagcode, G1code, Nhaplieuban, GDV, Gcode,Inquiry,Client, Lydowin, PAMHop, Phat, Sales, ScanOrder,Supplier,Lydoout, Tienve,Nhaplieumua,Nhaplieunhapkhau, Tinhtrangiaiquyetkhokhan, Unit
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView,CreateView,FormView
 from django.http import HttpResponse
@@ -550,23 +550,30 @@ def exportxls_nlm_all(request):
     return response
 
 @login_required(login_url='gcodedb:loginpage')
-@allowed_permission(allowed_roles={'gcodedb.export_nhaplieumua'}) 
-def exportxls_nlm(request,po):
+@allowed_permission(allowed_roles={'gcodedb.export_nlm'}) 
+def exportxls_nlm(request,contractid):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="POdetail.xlsx"'
-    df = pd.DataFrame(columns=['STT','PO No.','Contract No.','Gcode','Mô tả','Ký mã hiệu','Đơn vị','Số lượng','NSX','Xuất xứ',
-    'Supplier','Đơn giá mua','Ghi Chú','Giao dịch viên'])
-    g2code_list = Nhaplieuban.objects.filter(pono=po)
+    response['Content-Disposition'] = 'attachment; filename="Nhaplieumua.xlsx"'
+    df = pd.DataFrame(columns=['STT','Gcode','PO No.','Contract No.','GDV',
+    'Supplier','Ngày ký PO','Delivery term','Quốc gia xuất khẩu','Deadline hàng có mặt tại kho Vam',
+    'PAMH','Ngày thanh toán đợt 1','Số tiền thanh toán đợt 1 (currency bao gồm VAT / GST)',
+    'Ngày thanh toán đợt 2','Số tiền thanh toán đợt 2 (currency bao gồm VAT / GST)','Ngày thanh toán đợt n',	
+    'Số tiền thanh toán đợt n (currency bao gồm VAT / GST)','Description','MNF','Origin','Part number',
+    'Unit','Quantity mua','Currency','Unit pirce (currency)','Ext Price (currency)',
+    'Thuế VAT / GST (currency)','Certificate','Đánh giá Gcode','Lý do hàng trễ so với deadline',	
+    'Chi tiết rủi ro kỹ thuật','Vấn đề khó khăn','Ý kiến của Pal','Ý kiến của Sales',
+    'Tình trạng giải quyết khó khăn','Ngày ký PO (plan)','Budget (VND)'])
+
+    g2code_list = Nhaplieuban.objects.filter(contractno=contractid)
     stt = 1
     for item in g2code_list:
-        df = df.append(pd.DataFrame({'STT':[stt],'PO No.':[po],'Contract No.':[item.contract.contractcode],'Gcode':[item.gcode],
-        'Mô tả':[item.mota],'Ký mã hiệu':[item.kymahieu],'Đơn vị':[item.unit],'Số lượng':[item.qtychuadat],'NSX':[item.nsx],'Xuất xứ':[item.xuatxu],
-        'Supplier':[item.supplier],'Đơn giá mua':[item.g1code.dongiamuainq]}))
+        df = df.append(pd.DataFrame({'STT':[stt],'Contract No.':[item.contractno.contractcode],'Gcode':[item.gcodeban],
+        'Description':[item.descriptionban],'Unit':[item.unitban],'Quantity mua':[item.qtyban]}))
         stt +=1
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='POdetail', startrow=1, header=False,index=False)
+    df.to_excel(writer, sheet_name='Nhaplieumua', startrow=1, header=False,index=False)
     workbook  = writer.book
-    worksheet = writer.sheets['POdetail']
+    worksheet = writer.sheets['Nhaplieumua']
     #Format header 
     header_format = workbook.add_format({'bold': True,'text_wrap': True,'valign': 'vcenter','align': 'center',
     'fg_color': '#4788F9','font_color': 'white','border': 1})
@@ -576,7 +583,7 @@ def exportxls_nlm(request,po):
     float_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,
     'num_format': '#,##0.00'})
     date_format = workbook.add_format({'text_wrap': True,'valign': 'vcenter','align': 'center','border': 1,'num_format': 'dd/mm/yyyy'})
-    list_header_noedit = ['PO No.','Contract No.','Gcode']
+    list_header_noedit = ['Contract No.','Gcode']
     list_index_fm_noedit = []
     for item in list_header_noedit:
         list_index_fm_noedit.append(df.columns.get_loc(item))
@@ -586,16 +593,56 @@ def exportxls_nlm(request,po):
         else:
             worksheet.write(0, col_num, value, header_format)
     # Add some cell formats.
-    list_column_fm_float = ['Số lượng','Đơn giá mua']
+    list_gdv = []
+    for item in GDV.objects.all():
+        list_gdv.append(item.gdvcode) 
+    gdv_col = df.columns.get_loc('GDV')
+    worksheet.data_validation(0,gdv_col,100,gdv_col,{'validate': 'list','source': list_gdv})
+    list_pamh = []
+    for item in PAMHop.objects.all():
+        list_pamh.append(item.pamhop) 
+    pamh_col = df.columns.get_loc('PAMH')
+    worksheet.data_validation(0,pamh_col,100,pamh_col,{'validate': 'list','source': list_pamh})
+    list_unit = []
+    for item in Unit.objects.all():
+        list_unit.append(item.unit) 
+    unit_col = df.columns.get_loc('Unit')
+    worksheet.data_validation(0,unit_col,100,unit_col,{'validate': 'list','source': list_unit})
+    list_dggcode = []
+    for item in Danhgiagcode.objects.all():
+        list_dggcode.append(item.danhgiagcode) 
+    dggcode_col = df.columns.get_loc('Đánh giá Gcode')
+    worksheet.data_validation(0,dggcode_col,100,dggcode_col,{'validate': 'list','source': list_dggcode})
+    list_ttgqkk = []
+    for item in Tinhtrangiaiquyetkhokhan.objects.all():
+        list_ttgqkk.append(item.ttgqkk) 
+    ttgqkk_col = df.columns.get_loc('Tình trạng giải quyết khó khăn')
+    worksheet.data_validation(0,ttgqkk_col,100,ttgqkk_col,{'validate': 'list','source': list_ttgqkk})
+
+    list_column_fm_float = ['Số tiền thanh toán đợt 1 (currency bao gồm VAT / GST)','Số tiền thanh toán đợt 2 (currency bao gồm VAT / GST)',
+    'Số tiền thanh toán đợt n (currency bao gồm VAT / GST)','Quantity mua','Currency','Unit pirce (currency)',
+    'Ext Price (currency)','Thuế VAT / GST (currency)','Budget (VND)']
     list_index_fm_float = []
     for item in list_column_fm_float:
         list_index_fm_float.append(df.columns.get_loc(item))
+    list_column_fm_date = ['Ngày ký PO','Deadline hàng có mặt tại kho Vam','Ngày thanh toán đợt 1','Ngày thanh toán đợt 2',
+    'Ngày thanh toán đợt n','Ngày ký PO (plan)']
+    list_index_fm_date = []
+    for item in list_column_fm_date:
+        list_index_fm_date.append(df.columns.get_loc(item))
+
     #worksheet.set_column('F:F', None, fm_float)
     for col in range(0,len(df.columns)):
         if col in list_index_fm_float:
             worksheet.set_column(col,col, None, float_format)
+        elif col in list_index_fm_date:
+            worksheet.set_column(col,col, None, date_format)
         else:
             worksheet.set_column(col,col, None, text_format)
+    for column in range(2, 101):
+        cell_location = 'Z{0}'.format(column)
+        formula = '=IF($W{0}*$Y{0}=0,"",$W{0}*$Y{0})'.format(column)
+        worksheet.write_formula(cell_location, formula, float_format)
     writer.save()
     return response
 

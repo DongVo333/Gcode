@@ -24,7 +24,7 @@ urlpatterns = [
     path('nlm/update/<int:id>/', views.nlm_form,name='nlm_update'), 
     path('nlm/delete/<int:id>/',views.nlm_delete,name='nlm_delete'),
     path('nlm/import/xls', importxls.importxls_nlm, name='importxls_nlm'),
-    path('nlm/export/xls/<str:nlm>', exportxls.exportxls_nlm, name='exportxls_nlm'),
+    path('nlm/export/xls/<int:contractid>', exportxls.exportxls_nlm, name='exportxls_nlm'),
 
     path('phat/insert/', views.phat_form,name='phat_insert'),
     path('phat/', views.phat_list,name='phat_list'),

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<form method="POST" action="{% url 'gcodedb:kho_list'%}">
+<form method="POST" action="{% url 'gcodedb:nlnk_list'%}">
     {% csrf_token %}
     <label for="ponosearch">Nhập PO No.:</label>
     <input type="text" id="ponosearch" name="ponosearch"><br>
@@ -18,14 +18,14 @@
 {% endif %}
 <br>
 <br>
-<form method="POST" action="{% url 'gcodedb:importxls_kho' %}" enctype="multipart/form-data">
+<form method="POST" action="{% url 'gcodedb:importxls_nlnk' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="file" name="myfile" accept=".xls,.xlsx">
     <button type="submit">Import Excel</button>
 </form>
 <br>
 <br>
-{{ kho_list|safe }}
+{{ nlnk_list|safe }}
 <br>
 {% if messages_ %}
     <ul class="messagelist">

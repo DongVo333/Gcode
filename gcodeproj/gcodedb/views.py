@@ -622,11 +622,12 @@ def nlm_list(request):
         contract_list = Nhaplieuban.objects.filter(contractno__contractcode__icontains=request.POST.get("contractsearch")).values_list('contractno', flat=True)
         nlm_set =set(contract_list)
         if len(nlm_set)> 0: 
-            msgresult = format_html("Have <b>{}</b> results for your search query as the below:<br>",len(nlm_set))
+            msgresult = format_html("Have <b>{}</b> result for your search query as the below:<br>",len(nlm_set))
             for item in nlm_set:
-                contract_list = Nhaplieuban.objects.filter(contractno__contractcode=item)
+                contract_list = Nhaplieuban.objects.filter(contractno=item)
+                contractname = Contract.objects.get(id = item ).contractcode
                 message = format_html("Contract No. <b>'{}'</b> has {} Gcodes <a href='{}'>Click to export Excel</a>",
-                item,contract_list.count(),reverse('gcodedb:exportxls_nlm',args=[item,]))
+                contractname,contract_list.count(),reverse('gcodedb:exportxls_nlm',args=[item,]))
                 msg.append(message)
         else: 
             msgresult = format_html("No results could be found for your search query")

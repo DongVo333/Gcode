@@ -593,6 +593,7 @@ def importxls_nlb(request):
         try:
             new_persons = request.FILES['myfile']
             df = pd.read_excel(new_persons, sheet_name='Nhập liệu bán')
+            df['Gcode']=df['Gcode'].astype(str)
         except Exception as e: 
             message = format_html("Import File Error: {}",e)
             messages_.append(message)
@@ -623,7 +624,7 @@ def importxls_nlb(request):
                             nocontract.add(row['Contract No.'])
                         elif Nhaplieuban.objects.filter(descriptionban=row['Description'], contractno=Contract.objects.get(contractcode=row['Contract No.'])).count()>0:
                             findgcode = Nhaplieuban.objects.get(descriptionban=row['Description'], contractno=Contract.objects.get(contractcode=row['Contract No.']))
-                            df.at[row,'Gcode'] = findgcode.gcodeban
+                            df.at[index,'Gcode'] = findgcode.gcodeban
                             warning = format_html("Gcode '{}' is updated <b>index Stt {}</b>",row['Gcode'],row['Stt'])
                             warnings.append(warning)
                         if GDV.objects.filter(gdvcode=row['GDV']).count()<=0:
@@ -651,7 +652,7 @@ def importxls_nlb(request):
                 yc = Yearcode.objects.get(nowyear= ny)
                 strcheck  = yc.yearcode + '\d\d\d\d\d'
                 if len(list_gcode)>0:
-                    for i in range(len(list_gcode),0,-1):
+                    for i in range(len(list_gcode)-1,0,-1):
                         if bool(re.match(strcheck,list_gcode[i])) == True:
                             Lastest_gcode = list_gcode[i]
                             break
@@ -662,18 +663,16 @@ def importxls_nlb(request):
                 df[list_column_float]= df[list_column_float].astype('float64')
                 df['Ext Price (VND)'] = df['Quantity bán']*df['Unit price (VND)']
                 for r in range(0, df.shape[0]): 
-                    if Nhaplieuban.objects.filter(gcodeban__icontains=df.loc[r,'Gcode'],contractno=Contract.objects.get(contractcode=df.loc[r,'Contract No.'])).count()>0:
-                        g2code = Nhaplieuban.objects.get(gcodeban__icontains=df.loc[r,'Gcode'],contractno=Contract.objects.get(contractcode=df.loc[r,'Contract No.']))
-                        #df.at[r,'Gcode'] = g2code.gcodeban
+                    if Nhaplieuban.objects.filter(descriptionban=df.loc[r,'Description'],contractno=Contract.objects.get(contractcode=df.loc[r,'Contract No.'])).count()>0:
+                        g2code = Nhaplieuban.objects.get(descriptionban=df.loc[r,'Description'],contractno=Contract.objects.get(contractcode=df.loc[r,'Contract No.']))
                         g2code.dongiachaohdb = df.loc[r,'Unit price (VND)']
-                        g2code.deadlinegh = df.loc[r,'Deadline giao hàng cho khách hàng']
-                        g2code.descriptionban = df.loc[r,'Description']
                         g2code.MNFban = df.loc[r,'MNF']
                         g2code.qtyban = df.loc[r,'Quantity bán']
                         g2code.unitban = Unit.objects.get(unit=df.loc[r,'Unit'])
                         g2code.gdvhdb = GDV.objects.get(gdvcode=df.loc[r,'GDV'])
                         g2code.nguoicapnhat = request.user.username
                         g2code.dateupdate = date.today()
+                        df.at[r,'Gcode'] = g2code.gcodeban
                     else:
                         g2code = Nhaplieuban(
                             gcodeban = yc.yearcode + "{:05n}".format(Lastest_index+1),
@@ -718,12 +717,29 @@ def importxls_nlm(request):
                 message = format_html("Import File Error: {}",e)
             messages_.append(message)
         else:
-            list_column = ['Stt','PO No.','Contract No.','Gcode','Mô tả','Part number','Đơn vị','Số lượng','NSX','Xuất xứ',
-    'Supplier','Đơn giá mua','Ghi Chú','Giao dịch viên']
-            list_column_required = ['Stt','PO No.','Contract No.','Gcode','Mô tả','Part number','Đơn vị','Số lượng','NSX','Xuất xứ',
-    'Supplier','Đơn giá mua','Giao dịch viên']
-            list_column_float = ['Số lượng','Đơn giá mua']
-            list_column_date = []
+            list_column = ['STT','Gcode','PO No.','Contract No.','GDV',
+            'Supplier','Ngày ký PO','Delivery term','Quốc gia xuất khẩu','Deadline hàng có mặt tại kho Vam',
+            'PAMH','Ngày thanh toán đợt 1','Số tiền thanh toán đợt 1 (currency bao gồm VAT / GST)',
+            'Ngày thanh toán đợt 2','Số tiền thanh toán đợt 2 (currency bao gồm VAT / GST)','Ngày thanh toán đợt n',	
+            'Số tiền thanh toán đợt n (currency bao gồm VAT / GST)','Description','MNF','Origin','Part number',
+            'Unit','Quantity mua','Currency','Unit pirce (currency)',
+            'Thuế VAT / GST (currency)','Certificate','Đánh giá Gcode','Lý do hàng trễ so với deadline',	
+            'Chi tiết rủi ro kỹ thuật','Vấn đề khó khăn','Ý kiến của Pal','Ý kiến của Sales',
+            'Tình trạng giải quyết khó khăn','Ngày ký PO (plan)','Budget (VND)']
+            list_column_required = ['STT','Gcode','PO No.','Contract No.','GDV',
+            'Supplier','Ngày ký PO','Delivery term','Quốc gia xuất khẩu','Deadline hàng có mặt tại kho Vam',
+            'PAMH','Ngày thanh toán đợt 1','Số tiền thanh toán đợt 1 (currency bao gồm VAT / GST)',
+            'Ngày thanh toán đợt 2','Số tiền thanh toán đợt 2 (currency bao gồm VAT / GST)','Ngày thanh toán đợt n',	
+            'Số tiền thanh toán đợt n (currency bao gồm VAT / GST)','Description','MNF','Origin','Part number',
+            'Unit','Quantity mua','Currency','Unit pirce (currency)',
+            'Thuế VAT / GST (currency)','Certificate','Đánh giá Gcode','Lý do hàng trễ so với deadline',	
+            'Chi tiết rủi ro kỹ thuật','Vấn đề khó khăn','Ý kiến của Pal','Ý kiến của Sales',
+            'Tình trạng giải quyết khó khăn','Ngày ký PO (plan)','Budget (VND)']
+            list_column_float = ['Số tiền thanh toán đợt 1 (currency bao gồm VAT / GST)','Số tiền thanh toán đợt 2 (currency bao gồm VAT / GST)',
+            'Số tiền thanh toán đợt n (currency bao gồm VAT / GST)','Quantity mua','Unit pirce (currency)','Thuế VAT / GST (currency)',
+            'Budget (VND)']
+            list_column_date = ['Ngày ký PO','Deadline hàng có mặt tại kho Vam','Ngày thanh toán đợt 1',
+            'Ngày thanh toán đợt 2','Ngày thanh toán đợt n']
             messages_.extend(msgcheckimport(df,list_column,list_column_required,list_column_float,list_column_date))
             if len(messages_) <=0:
                 df_obj = df.select_dtypes(['object'])
@@ -742,7 +758,7 @@ def importxls_nlm(request):
                             message = format_html("Contract '{}' doesn't exist at <b>index Stt {}</b>, you shall import Gcode before importing again"
                             " at link: <a href='{}'>Create Contract</a>",row['Contract No.'],row['Stt'],reverse('gcodedb:contractdetail_list'))
                             messages_.append(message)
-                        elif Nhaplieuban.objects.filter(g1code__gcode__gcode=row['Gcode'],contract__contractcode=row['Contract No.']).count()<=0:
+                        elif Nhaplieuban.objects.filter(gcodeban=row['Gcode'],contractno__contractcode=row['Contract No.']).count()<=0:
                             message = format_html("Gcode-Contract '{}-{}' doesn't exist at <b>index Stt {}</b>, you shall import Gcode before importing again"
                             " at link: <a href='{}'>Create Gcode in Contract</a>",row['Gcode'],row['Contract No.'],row['Stt'],reverse('gcodedb:nlb_list'))
                             messages_.append(message)
@@ -750,27 +766,51 @@ def importxls_nlm(request):
                             message = format_html("Supplier '{}' doesn't exist at <b>index Stt {}</b>, you shall import Supplier before importing again"
                             " at link: <a href='{}'>Create Supplier</a>",row['Supplier'],row['Stt'],reverse('gcodedb:supplier_list'))
                             messages_.append(message)
-                        if GDV.objects.filter(gdvcode=row['Giao dịch viên']).count()<=0:
+                        if GDV.objects.filter(gdvcode=row['GDV']).count()<=0:
                             message = format_html("Seller '{}' doesn't exist at <b>index Stt {}</b>, you shall import Seller before importing again"
                             " at link: <a href='{}'>Create Seller</a>",row['Giao dịch viên'],row['Stt'],reverse('gcodedb:gdv_list'))
                             messages_.append(message)
             if len(messages_) <=0:
                 df[list_column_float]= df[list_column_float].astype('float64')
-                df['Thành tiền mua'] = df['Số lượng']*df['Đơn giá mua']
+                df['Ext Price (currency)'] = df['Quantity mua']*df['Unit pirce (currency)']
                 for r in range(0, df.shape[0]):
-                    if Nhaplieumua.objects.filter(g2code__g1code__gcode__gcode=df.loc[r,'Gcode'],g2code__contract__contractcode=df.loc[r,'Contract No.']).count()>0:
-                        nlm = Nhaplieumua.objects.get(g2code__g1code__gcode__gcode=df.loc[r,'Gcode'],g2code__contract__contractcode=df.loc[r,'Contract No.'])
-                        nlm.motapo = df.loc[r,'Mô tả']
-                        nlm.kymahieupo = df.loc[r,'Part number']
-                        nlm.unitpo =df.loc[r,'Đơn vị']
-                        nlm.dongiamuapo = (df.loc[r,'Đơn giá mua'] * df.loc[r,'Số lượng'] + nlm.dongiamuapo * nlm.qtypo)/(nlm.qtypo + df.loc[r,'Số lượng'])
-                        nlm.qtypo = nlm.qtypo + df.loc[r,'Số lượng'],
-                        nlm.supplier =Supplier.objects.get(suppliercode = df.loc[r,'Supplier'])
-                        nlm.xuatxupo = df.loc[r,'Xuất xứ']
-                        nlm.nsxpo = df.loc[r,'NSX']
-                        if df.loc[r,'Ghi Chú'] != "":
-                            nlm.ghichu = nlm.ghichu + '\n' + str(df.loc[r,'Ghi Chú'])
-                        nlm.gdvpo = GDV.objects.get(gdvcode=df.loc[r,'Giao dịch viên'])
+                    if Nhaplieumua.objects.filter(g2code__gcodeban=df.loc[r,'Gcode'],pono=df.loc[r,'PO No.']).count()>0:
+                            g2code
+    pono
+    gdvpo 
+    supplier
+    datesignpo
+    deliveryterm
+    qhxk
+    deadlinegatvam
+    pamhvamts
+    nttd1
+    stttd1
+    nttd2
+    stttd2
+    nttdn
+    stttdn
+    descriptionmua
+    MNFmua
+    origin
+    Pnmua
+    unitmua
+    qtymua
+    currency
+    unitprice
+    thueVAT
+    certificate
+    danhgiagcode
+    reasondelay
+    ctrrkt
+    vdkk
+    ykcpal
+    ykcsales
+    ttgqkk
+    datesignpoplan
+    budget
+    nguoicapnhat
+    dateupdate
                         nlm.dateupdate = date.today()
                         nlm.save()
                     else:

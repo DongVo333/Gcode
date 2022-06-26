@@ -171,7 +171,7 @@ class Nhaplieuban(models.Model):
     nguoicapnhat = models.CharField(max_length=10)
     dateupdate  = models.DateField()
     def __str__(self):
-        return str(self.g2code)
+        return str(self.gcodeban)
     @property
     def thanhtienchaohdb(self):
         return (self.g1code.qtyban or 0)*(self.dongiachaohdb or 0)
